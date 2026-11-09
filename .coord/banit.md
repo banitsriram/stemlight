@@ -5,6 +5,9 @@ claims:
 - stemlight/package.json
 - stemlight/package-lock.json
 - stemlight/index.html
+- stemlight/iwsdk.config.json
+- stemlight/public/scenes/**
+- stemlight/src/vite-env.d.ts
 - stemlight/vite.config.ts
 - stemlight/tsconfig.json
 - stemlight/.gitignore
