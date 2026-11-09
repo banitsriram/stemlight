@@ -17,6 +17,7 @@ claims:
 - stemlight/src/mock/**
 - stemlight/public/pieces/fixture/**
 - stemlight/tests/unit/**
+- stemlight/docs/progress.md
 - stemlight/src/world/**
 - stemlight/src/ui/**
 - stemlight/src/story/**
