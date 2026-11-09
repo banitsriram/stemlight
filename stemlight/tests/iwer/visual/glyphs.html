@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Note glyph check</title>
+<body style="margin:0;background:#07060F">
+<script type="module">
+// Passes when window.__glyphs.ok is true. The grid left on screen is rows of materials by columns of glyphs.
+import { Color, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { loadNoteGlyphs, NOTE_CAP } from '../../../src/world/notes/NoteGlyphs.ts';
+
+const kinds = ['normal', 'glass', 'ghost', 'amber'];
+const names = ['whole', 'half', 'dotted_half', 'quarter', 'dotted_quarter', 'eighth', 'sixteenth', 'beamed_eighths', 'beamed_sixteenths'];
+
+const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(1200, 640);
+document.body.append(renderer.domElement);
+const scene = new Scene();
+scene.background = new Color('#07060F');
+const camera = new PerspectiveCamera(50, 1200 / 640, 0.1, 100);
+camera.position.z = 3.2;
+const notes = await loadNoteGlyphs();
+scene.add(notes.object);
+const c = new Color('#5EE6FF'), amber = new Color('#FFB547');
+
+notes.begin();
+for (const kind of kinds)
+  for (let i = 0; i < NOTE_CAP + 5; i++) // 5 extra to prove the cap holds
+    notes.push(kind, names[i % 9], Math.random() * 4 - 2, Math.random() * 2 - 1, Math.random() * -2, 0.1, c.r, c.g, c.b, 1);
+notes.end();
+renderer.render(scene, camera);
+const info = renderer.info.render;
+const stress = { calls: info.calls, triangles: info.triangles };
+const counts = notes.object.children.map((m) => m.geometry.instanceCount);
+
+notes.begin();
+kinds.forEach((kind, row) => names.forEach((name, col) => {
+  const t = kind === 'amber' ? amber : c;
+  notes.push(kind, name, col * 0.62 - 2.5, 1.0 - row * 0.68, 0, 0.42, t.r, t.g, t.b, 1);
+}));
+notes.end();
+renderer.render(scene, camera);
+
+window.__glyphs = {
+  stress, counts,
+  ok: stress.calls === 4 && stress.triangles === 4 * 2 * NOTE_CAP && counts.every((n) => n === NOTE_CAP),
+};
+</script>
