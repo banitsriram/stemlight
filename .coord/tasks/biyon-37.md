@@ -1,5 +1,5 @@
 # biyon-37: [B] Notes life cycle (pure function of time), cap 1,500
-status: open
+status: done
 blocked_by: biyon-34, biyon-36
 owner: B (banit)
 size: M (0.5 day) | critical path

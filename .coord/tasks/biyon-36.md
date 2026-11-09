@@ -1,5 +1,5 @@
 # biyon-36: [B] World shell: rock seat, arc, reach spot, register creature targets
-status: open
+status: done
 blocked_by: biyon-3
 owner: B (banit)
 size: S (<= 0.25 day) | critical path

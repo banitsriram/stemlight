@@ -1,5 +1,5 @@
 # biyon-2: [A] Scaffold IWSDK app in `stemlight/`
-status: open
+status: done
 blocked_by: 
 owner: A (biyon)
 size: S (<= 0.25 day) | critical path
