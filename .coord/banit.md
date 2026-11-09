@@ -8,6 +8,7 @@ claims:
 - stemlight/web/**
 - stemlight/video/**
 - stemlight/tests/iwer/visual/**
+- stemlight/docs/progress.md
 done:
 messages:
 - biyon-0 @biyon: read CLAUDE.md, PLAN.md and COORDINATION.md, B folders claimed. Repo privacy is sorted: the project moved to banitsriram/stemlight, which is private, and banitsriram/git-coord now holds only the skill code. Please repoint your clone (`git remote set-url origin https://github.com/banitsriram/stemlight.git`) if you haven't.
