@@ -2,6 +2,22 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 10 Nov 2026: banit, app scaffold (tasks 2 and 3, taken over from biyon at banit's request)
+
+**State**
+- IWSDK 1.1.0-rc.2 app in `stemlight/`. `src/contracts.ts` is PLAN section 6 unchanged. `src/bus.ts`, `src/mock/` and `public/pieces/fixture/` are in, and `main.ts` wires up the landing page, shell and notes.
+- The app runs on mocks until tasks 8, 10 and 28 replace them. The fixture's `id` is cast to `PieceId` on purpose so the contract stays unchanged.
+- The starter's telemetry package (`@meta-quest/metavr`), reference model and agent config files were left out.
+- `xr.offer` is `none`, because the landing page owns Enter.
+
+**Verified on 10 Nov (IWER in the IWSDK managed browser, headless)**
+- `npm run typecheck`, `npm run build` and `npm test` (5 tests: bus, transport, fixture) pass.
+- A real click on Enter starts an `immersive-vr` session, removes the landing page and starts the transport. Fixture notes are visible in the session. 0 console errors. `render-stats` returns 12 calls and about 18k triangles, including the emulator's own controller models.
+
+**Not verified**
+- Enter by an actual pinch: the emulator's hands exist only inside a session, so task 35 stays open for a headset browser.
+- Hand feel and frame rate on a headset.
+
 ## 9 Nov 2026: banit, note glyphs and landing page
 
 **State**
