@@ -1,5 +1,5 @@
 # biyon-34: [B] Bravura MSDF atlas + instanced renderer (4 materials)
-status: open
+status: done
 blocked_by: 
 owner: B (banit)
 size: M (0.5 day) | critical path
