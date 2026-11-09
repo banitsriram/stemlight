@@ -2,6 +2,21 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 9 Nov 2026: banit, note glyphs and landing page
+
+**State**
+- Task 34 done. `src/world/notes/NoteGlyphs.ts` draws all 9 contract glyphs from one 512 px MSDF atlas built from Bravura, in 4 materials (normal, glass, ghost, amber). Each frame: `begin()`, `push()` per note, `end()`.
+- Task 35 is coded in `web/landing.ts` but stays open until it is wired into `main.ts` and entered in IWER.
+- The repo has no scaffold yet (tasks 2 and 3), so tasks 36 onwards are blocked and both of these were tested in a throwaway Vite setup outside the repo.
+
+**Verified on 9 Nov (headless Chrome, super-three 0.185)**
+- `tests/iwer/visual/glyphs.html`: 1,500 instances per material gives 4 draw calls and 12,000 triangles. The cap holds at 1,505 pushes. All 36 glyph and material pairs checked by eye.
+- `tests/iwer/visual/landing.html`: `unlock` and `enter` both run with user activation. A failed entry shows a message and Enter works again. A successful one removes the page. No sideways overflow at 360 px.
+
+**Not verified**
+- Enter by pinch in IWER (F18), which needs the scaffold.
+- Glyph frame rate, stereo look and legibility at distance on a headset. F14 stays false until task 37 proves the notes against real data.
+
 ## 7 Nov 2026 (night): build-ready plan approved, coordination set up, no app code
 
 **State**
