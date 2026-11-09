@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>World shell and notes check</title>
+<script type="module">
+// Passes when window.__world.ok is true. Uses fakes, so it needs no audio or XR.
+import { Scene } from 'three';
+import { initShell, reachSpot } from '../../../src/world/shell.ts';
+import { beatSwell, createNotesLayer, placeNote } from '../../../src/world/notes/lifecycle.ts';
+
+const handlers = {};
+const bus = { on: (k, f) => (handlers[k] ??= []).push(f), emit: (k, e) => handlers[k]?.forEach((f) => f(e)) };
+const targets = new Map();
+const registry = { set: (t) => targets.set(t.id, t), remove: (id) => targets.delete(id), all: () => [...targets.values()] };
+let t = 0;
+const ctx = { bus, registry, transport: { time: () => t } };
+
+let drawn = [];
+const glyphs = { begin: () => { drawn = []; }, push: (...a) => drawn.push(a), end() {} };
+
+const ids = ['vln', 'vla_vc', 'cb', 'fl', 'reeds', 'hn', 'brass', 'perc', 'harp'];
+const manifest = (n) => ({ stems: ids.slice(0, n).map((id, i) => ({ id, file: '', homeSeat: [i - 4, 1.2, -2], pitchRange: [40, 90] })) });
+const notes = (count) => Array.from({ length: count }, (_, id) => ({
+  id, t: id * 0.001, dur: 0.5, pitch: 40 + (id % 50), vel: 90, stem: ids[id % 9], glyph: 'quarter', beat: 0,
+}));
+const data = { notes: notes(3000), beats: { tempo: [], beats: [0, 1, 2, 3], downbeats: [0, 2] } };
+window.fetch = async (url) => ({ json: async () => data[url.endsWith('notes.json') ? 'notes' : 'beats'] });
+
+const layer = createNotesLayer(ctx, glyphs);
+const scene = new Scene();
+initShell(ctx, scene);
+
+const ready = async (n) => {
+  bus.emit('piece:ready', { id: 'fixture', manifest: manifest(n) });
+  await new Promise((r) => setTimeout(r));
+};
+const frame = (at) => { t = at; layer.update(); return JSON.stringify(drawn); };
+
+await ready(9);
+const nine = registry.all();
+const shell = nine.length === 9 && nine.every((x) => x.kind === 'creature' && x.radius === 0.25) && scene.children.length === 1;
+await ready(8);
+const swap = registry.all().length === 8 && !targets.has('creature:harp');
+await ready(9);
+
+const atThree = frame(3);
+const oldest = data.notes[1500]; // 3000 are live, so the oldest kept is the 1501st
+const seat = manifest(9).stems[1500 % 9];
+const expected = {};
+placeNote(3 - oldest.t, oldest, seat.homeSeat, seat.pitchRange, expected);
+const cap = drawn.length === 1500 && drawn[0][2] === expected.x;
+const paused = frame(3) === atThree;
+const earlier = frame(2.5);
+const rewinds = earlier !== atThree && frame(3) === atThree;
+const gone = (frame(10), drawn.length === 0);
+const before = (frame(-1), drawn.length === 0);
+const swell = Math.abs(beatSwell(2, [0, 1, 2], new Set([0, 2])) - 1.15) < 1e-6
+  && Math.abs(beatSwell(1, [0, 1, 2], new Set([0, 2])) - 1.08) < 1e-6;
+const spot = reachSpot([0, 1.2, 0], 0).every((v, i) => Math.abs(v - [0, 1.05, -0.45][i]) < 1e-9);
+
+const checks = { shell, swap, cap, paused, rewinds, gone, before, swell, spot };
+window.__world = { checks, ok: Object.values(checks).every(Boolean) };
+</script>
