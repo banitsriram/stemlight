@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landing check</title>
+<div id="root"></div>
+<script type="module">
+// ?fail makes the first enter() reject. window.__calls records user activation at each callback.
+import { mountLanding } from '../../../web/landing.ts';
+
+const fail = new URLSearchParams(location.search).has('fail');
+window.__calls = [];
+let first = true;
+const seen = (name) => window.__calls.push({ name, active: navigator.userActivation.isActive });
+mountLanding(document.getElementById('root'), {
+  unlock: async () => seen('unlock'),
+  enter: async () => {
+    seen('enter');
+    if (fail && first) { first = false; throw new Error('no XR'); }
+  },
+});
+</script>

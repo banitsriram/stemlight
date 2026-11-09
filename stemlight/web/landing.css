@@ -1,0 +1,71 @@
+html, body {
+  margin: 0;
+  background: #07060F;
+}
+
+.landing {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 48px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  text-align: center;
+  color: #E9E6F5;
+  font-family: ui-serif, Georgia, 'Times New Roman', serif;
+  background:
+    radial-gradient(60% 50% at 25% 15%, #2A1B4A 0%, transparent 70%),
+    radial-gradient(70% 55% at 80% 90%, #0E5F6B 0%, transparent 70%),
+    #07060F;
+}
+
+.landing h1 {
+  margin: 0;
+  font-size: clamp(3rem, 10vw, 6.5rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #6FF3FF;
+}
+
+.landing-pitch {
+  margin: 0;
+  max-width: 34em;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  line-height: 1.4;
+}
+
+/* Sized for a hand-tracked pinch in the headset browser. */
+.landing-enter {
+  min-width: min(100%, 360px);
+  min-height: 112px;
+  padding: 0 64px;
+  border: 2px solid #6FF3FF;
+  border-radius: 999px;
+  background: #0E5F6B;
+  color: #fff;
+  font: inherit;
+  font-size: 2.25rem;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.landing-enter:hover { background: #157A89; }
+.landing-enter:focus-visible { outline: 3px solid #FFB547; outline-offset: 4px; }
+.landing-enter:disabled { opacity: 0.6; cursor: progress; }
+
+.landing-hint {
+  margin: 0;
+  max-width: 36em;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: #BDB8D4;
+}
+
+.landing-status {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 1.125rem;
+  color: #FFB547;
+}
