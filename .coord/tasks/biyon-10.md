@@ -1,5 +1,5 @@
 # biyon-10: [A] Hand reader: curl, pinch, palm, tip, confidence → `hand:pose`; 0.3 s gap hold
-status: open
+status: done
 blocked_by: biyon-4
 owner: A (biyon)
 size: M (0.5 day) | critical path

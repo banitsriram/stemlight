@@ -1,5 +1,5 @@
 # biyon-11: [A] TargetRegistry, hit-testing, look-to-summon
-status: open
+status: done
 blocked_by: biyon-3, biyon-10
 owner: A (biyon)
 size: M (0.5 day) | critical path

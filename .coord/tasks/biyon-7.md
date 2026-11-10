@@ -1,5 +1,5 @@
 # biyon-7: [A] Pipeline 3: reverb, loudnorm, opus, JSON writers, validate.py
-status: open
+status: done
 blocked_by: biyon-6, biyon-3
 owner: A (biyon)
 size: M (0.5 day) | critical path

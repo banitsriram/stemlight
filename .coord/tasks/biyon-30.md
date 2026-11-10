@@ -1,5 +1,5 @@
 # biyon-30: [A] Dev instrumentation: fps, render stats, live notes, 70×66° FoV mask
-status: open
+status: done
 blocked_by: biyon-2
 owner: A (biyon)
 size: S (<= 0.25 day)

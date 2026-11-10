@@ -1,5 +1,5 @@
 # biyon-6: [A] Pipeline 2: sfizz_render in WSL (fallbacks logged), 48 kHz mono render
-status: open
+status: done
 blocked_by: biyon-5
 owner: A (biyon)
 size: M (0.5 day) | critical path

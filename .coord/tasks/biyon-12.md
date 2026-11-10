@@ -1,5 +1,5 @@
 # biyon-12: [A] Fist hold / 1.5 s lock / return
-status: open
+status: done
 blocked_by: biyon-9, biyon-11
 owner: A (biyon)
 size: M (0.5 day) | critical path

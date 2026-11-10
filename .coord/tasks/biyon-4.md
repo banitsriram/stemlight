@@ -1,5 +1,5 @@
 # biyon-4: [A] DevHandPose dev component + IWER input harness (two hands stepped alternately)
-status: open
+status: done
 blocked_by: biyon-2
 owner: A (biyon)
 size: M (0.5 day) | critical path

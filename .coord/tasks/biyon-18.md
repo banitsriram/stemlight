@@ -1,5 +1,5 @@
 # biyon-18: [A] Dvořák #1793 groups, ≈2:30 excerpt, render, validate
-status: open
+status: done
 blocked_by: biyon-7
 owner: A (biyon)
 size: M (0.5 day)

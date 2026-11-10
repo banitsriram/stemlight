@@ -1,5 +1,5 @@
 # biyon-13: [A] Pinch + double-pinch solo
-status: open
+status: done
 blocked_by: biyon-11
 owner: A (biyon)
 size: M (0.5 day) | critical path
