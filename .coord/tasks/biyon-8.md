@@ -1,5 +1,5 @@
 # biyon-8: [A] Audio engine: decode, one start time, Transport, `unlock()`
-status: open
+status: done
 blocked_by: biyon-3
 owner: A (biyon)
 size: M (0.5 day) | critical path

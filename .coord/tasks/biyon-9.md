@@ -1,5 +1,5 @@
 # biyon-9: [A] Stem chain: gain ramps, 3-band EQ, HRTF at homeSeat, compressor; sfxOut
-status: open
+status: done
 blocked_by: biyon-8
 owner: A (biyon)
 size: M (0.5 day) | critical path
