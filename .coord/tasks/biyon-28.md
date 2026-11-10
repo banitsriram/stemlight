@@ -1,5 +1,5 @@
 # biyon-28: [A] Saving (IndexedDB SaveState + SaveApi)
-status: open
+status: done
 blocked_by: biyon-12, biyon-15, biyon-23, biyon-25
 owner: A (biyon)
 size: M (0.5 day)

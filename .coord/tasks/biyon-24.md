@@ -1,5 +1,5 @@
 # biyon-24: [A] Pads strike, velocity, lockout, 1/8 snap, recording
-status: open
+status: done
 blocked_by: biyon-23
 owner: A (biyon)
 size: M (0.5 day) | critical path

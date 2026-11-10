@@ -1,5 +1,5 @@
 # biyon-23: [A] Trim + undo (beat snap, ≥1 beat, `cut:preview`)
-status: open
+status: done
 blocked_by: biyon-16
 owner: A (biyon)
 size: M (0.5 day) | critical path

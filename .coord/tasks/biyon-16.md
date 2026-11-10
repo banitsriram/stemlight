@@ -1,5 +1,5 @@
 # biyon-16: [A] Ribbon gesture: hold pause, drag scrub, quick toggle
-status: open
+status: done
 blocked_by: biyon-8, biyon-13
 owner: A (biyon)
 size: M (0.5 day) | critical path

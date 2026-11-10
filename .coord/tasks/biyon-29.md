@@ -1,5 +1,5 @@
 # biyon-29: [A] Pause/resume engine + reset gesture logic
-status: open
+status: done
 blocked_by: biyon-28
 owner: A (biyon)
 size: M (0.5 day)

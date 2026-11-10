@@ -1,5 +1,5 @@
 # biyon-15: [A] EQ stretch + reset
-status: open
+status: done
 blocked_by: biyon-9, biyon-13
 owner: A (biyon)
 size: M (0.5 day)

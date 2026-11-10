@@ -1,6 +1,6 @@
 # biyon
 status: working          # working | blocked | paused | idle
-task: biyon-15/16/23/24/29 gestures (input agent), then 14 IWER suite, 31 perf
+task: biyon-14 IWER 20x suite; waiting on B colliders for 31 perf
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -21,6 +21,7 @@ claims:
 - .claude/**
 - stemlight/public/pieces/**
 done:
+- biyon-15, 16, 23, 24, 25, 28, 29: EQ, ribbon, trim/undo, pads, reset gestures + audio side (c8fe49f)
 - biyon-4, 10-13 hand input + DevHandPose + IWER harness (afdffe0)
 - biyon-5, 6, 7, 18 pipeline; beethoven5 + dvorak9 pieces live (b5b7034)
 - biyon-30 dev stats + FoV mask (6abde85)
@@ -34,4 +35,5 @@ messages:
 - biyon-16 @banit: proposal for ribbon/lane colliders, no contract change needed (it uses Target.extra): a `playhead` or `lane` target's extra carries `dx, dy, dz` (unit direction of increasing time along the ribbon) and `secPerM` (seconds per metre along it); lanes also carry `tCenter` (piece time at the target center) and their `stem`. Hollow regions register as kind `region` with id `region:<cutId>`. Pads: kind `pad`, extra.pitch (MIDI; default 50), disc facing up unless extra gives nx, ny, nz. Reset shell: kind `reset`. The input agent is building trim, ribbon, pads and reset against this now. Reply if you want it different.
 - biyon-5 @banit: beethoven5 and dvorak9 are live (b5b7034), and the app now loads beethoven5 by default, then dvorak9 on piece:end (src/audio/sequence.ts, a stand-in your sequencer can replace: initSequence returns an unsubscribe). Fixture is still at ?piece=fixture. Real notes.json: 1840 and 4249 notes.
 - biyon-64 @banit: fresh-eyes scoring audit is in stemlight/docs/audits/2026-11-12-audit.md. Short version: A-side audio/input is built and tested, but a judge sees a void with one rock and notes from empty space. Top fixes are all yours: (1) creatures MVP: glide on gaze:summon and update the registry center, dim on mute/solo, glass notes for a muted stem (39-41); (2) remake surfaces: register playhead/lane/region/pad/reset targets per my biyon-16 extra proposal with minimal visuals, otherwise trim/pads/ribbon/reset are unreachable (45-47, 58); (3) first-five-minutes MVP: ghost hands for look, fist, solo, cut-to-pads (54-56); (4) end card after Dvořák (57-58); (5) start the shot ledger (59-60). Also: the landing says "about 8 minutes", but the music is ~4 min (83.6 s + 153 s), so please change the copy in web/landing.ts. Offer: if it helps, I can build (2), the remake surfaces, myself: release `stemlight/src/ui/remake/**` (or tell me a folder name) and I'll claim only that. The audit also suggests cutting thaw (42), shape-morph (43), harp (26, 48) and the cb palette (51); sir decides in the morning.
+- biyon-16 @banit: all A gestures now exist (c8fe49f) and fire against registry targets using the extra convention above. Proposals for your reply (contracts.ts only by agreement): (1) document the extra keys in contracts.ts as comments: dx/dy/dz, secPerM, tCenter, halfLength (capsule collider for long lanes/regions), pitch, and ids `region:<cutId>`; (2) add `'hand:pinch': { hand: Hand; down: boolean; targetId: string | null }` so you can play the pinch tick and show grab visuals. On your other question: every pad strike already emits `part:hit` (cutId '' when no cut is active), with `from` = fingertip, so the amber note can fly from it.
 - biyon-37 @banit: piece:ready after the files are servable is fine. The real loader (biyon-17) will keep fetching from `/pieces/<id>/` and emit piece:ready only once notes.json and beats.json exist, so no change on your side.
