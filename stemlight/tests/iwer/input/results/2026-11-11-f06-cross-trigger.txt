@@ -1,0 +1,12 @@
+F06 fist, pinch and double-pinch, 20 each near and 40 cm from the summoned creature
+run 2026-11-10T22:07:49.868Z in IWER (Meta Quest 3 emulation, headless), piece beethoven5 (real stems), AudioContext running
+
+PASS  fist near x20: 0 cross-triggers, intended event 20/20
+PASS  fist far x20: 0 cross-triggers
+PASS  pinch near x20: 0 cross-triggers
+PASS  pinch far x20: 0 cross-triggers
+PASS  double near x20: 0 cross-triggers, intended event 20/20
+PASS  double far x20: 0 cross-triggers
+total cross-triggers: 0 over 120 gestures
+
+6/6 passed

@@ -1,0 +1,45 @@
+F07 tracking gaps mid-fist: 20 x 0.29 s holds, 20 x 0.5 s quietly releases without locking
+run 2026-11-10T22:08:24.305Z in IWER (Meta Quest 3 emulation, headless), piece beethoven5 (real stems), AudioContext running
+
+PASS  0.29 s gap mid-fist 1: state held, gain 0.000
+PASS  0.29 s gap mid-fist 2: state held, gain 0.000
+PASS  0.29 s gap mid-fist 3: state held, gain 0.000
+PASS  0.29 s gap mid-fist 4: state held, gain 0.000
+PASS  0.29 s gap mid-fist 5: state held, gain 0.000
+PASS  0.29 s gap mid-fist 6: state held, gain 0.000
+PASS  0.29 s gap mid-fist 7: state held, gain 0.000
+PASS  0.29 s gap mid-fist 8: state held, gain 0.000
+PASS  0.29 s gap mid-fist 9: state held, gain 0.000
+PASS  0.29 s gap mid-fist 10: state held, gain 0.000
+PASS  0.29 s gap mid-fist 11: state held, gain 0.000
+PASS  0.29 s gap mid-fist 12: state held, gain 0.000
+PASS  0.29 s gap mid-fist 13: state held, gain 0.000
+PASS  0.29 s gap mid-fist 14: state held, gain 0.000
+PASS  0.29 s gap mid-fist 15: state held, gain 0.000
+PASS  0.29 s gap mid-fist 16: state held, gain 0.000
+PASS  0.29 s gap mid-fist 17: state held, gain 0.000
+PASS  0.29 s gap mid-fist 18: state held, gain 0.000
+PASS  0.29 s gap mid-fist 19: state held, gain 0.000
+PASS  0.29 s gap mid-fist 20: state held, gain 0.000
+PASS  0.5 s gap mid-fist 1: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 2: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 3: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 4: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 5: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 6: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 7: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 8: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 9: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 10: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 11: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 12: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 13: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 14: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 15: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 16: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 17: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 18: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 19: events held,on, gain 1.000
+PASS  0.5 s gap mid-fist 20: events held,on, gain 1.000
+
+40/40 passed

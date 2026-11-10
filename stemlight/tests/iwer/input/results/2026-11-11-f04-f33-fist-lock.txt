@@ -1,0 +1,45 @@
+F04 + F33 fist hold / lock / return, with the vln gain node read each time
+run 2026-11-10T22:06:15.075Z in IWER (Meta Quest 3 emulation, headless), piece beethoven5 (real stems), AudioContext running
+
+PASS  fist/open 1: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 2: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 3: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 4: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 5: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 6: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 7: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 8: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 9: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 10: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 11: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 12: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 13: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 14: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 15: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 16: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 17: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 18: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 19: held gain 0.000, open gain 1.000, events held,on
+PASS  fist/open 20: held gain 0.000, open gain 1.000, events held,on
+PASS  lock 1: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 2: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 3: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 4: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 5: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 6: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 7: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 8: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 9: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 10: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 11: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 12: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 13: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 14: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 15: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 16: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 17: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 18: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 19: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+PASS  lock 20: locked gain 0.000, opened (still locked) gain 0.000, returned gain 1.000, events held,locked,on
+
+40/40 passed

@@ -95,12 +95,14 @@ export function reachSpot() {
  * `iwsdk browser run`, so the dev session must be started with --allow-browser-automation. The script
  * file it needs is written next to this harness in the app copy being driven, and deleted afterwards.
  */
-export function evalInPage(fn, arg = null) {
+export function evalInPage(fn, arg = null, { timeout = 60000 } = {}) {
   const rel = 'tests/iwer/input/.eval-tmp.mjs';
   const file = join(APP, rel);
   writeFileSync(file, `export default async ({ page, frame }) => (frame ?? page).evaluate(${fn.toString()}, ${JSON.stringify(arg)});\n`);
   try {
-    const out = execFileSync(process.execPath, [CLI, 'browser', 'run', rel], { cwd: APP, encoding: 'utf8', timeout: 60000 });
+    const out = execFileSync(process.execPath, [CLI, 'browser', 'run', rel, '--timeout', String(timeout)], {
+      cwd: APP, encoding: 'utf8', timeout: timeout + 30000, maxBuffer: 64 * 1024 * 1024,
+    });
     const parsed = JSON.parse(out);
     if (!parsed.ok) throw new Error(JSON.stringify(parsed.error));
     return parsed.data.result;

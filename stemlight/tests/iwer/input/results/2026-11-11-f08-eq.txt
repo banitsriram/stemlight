@@ -1,0 +1,25 @@
+F08 (A side) 10 EQ stretches with the real filter gains, each followed by a reset
+run 2026-11-10T22:08:34.000Z in IWER (Meta Quest 3 emulation, headless), piece beethoven5 (real stems), AudioContext running
+
+PASS  stretch 1 (horizontal): 9 stem:eq, committed {"low":8,"mid":0,"high":0}, filter gains {"low":8,"mid":0,"high":0} dB
+PASS  reset 1: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 2 (vertical): 9 stem:eq, committed {"low":0,"mid":0,"high":7.2}, filter gains {"low":0,"mid":0,"high":7.2} dB
+PASS  reset 2: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 3 (horizontal): 9 stem:eq, committed {"low":8,"mid":0,"high":0}, filter gains {"low":8,"mid":0,"high":0} dB
+PASS  reset 3: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 4 (vertical): 9 stem:eq, committed {"low":0,"mid":0,"high":7.2}, filter gains {"low":0,"mid":0,"high":7.2} dB
+PASS  reset 4: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 5 (horizontal): 9 stem:eq, committed {"low":8,"mid":0,"high":0}, filter gains {"low":8,"mid":0,"high":0} dB
+PASS  reset 5: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 6 (vertical): 9 stem:eq, committed {"low":0,"mid":0,"high":7.2}, filter gains {"low":0,"mid":0,"high":7.2} dB
+PASS  reset 6: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 7 (horizontal): 9 stem:eq, committed {"low":8,"mid":0,"high":0}, filter gains {"low":8,"mid":0,"high":0} dB
+PASS  reset 7: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 8 (vertical): 9 stem:eq, committed {"low":0,"mid":0,"high":7.2}, filter gains {"low":0,"mid":0,"high":7.2} dB
+PASS  reset 8: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 9 (horizontal): 9 stem:eq, committed {"low":8,"mid":0,"high":0}, filter gains {"low":8,"mid":0,"high":0} dB
+PASS  reset 9: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+PASS  stretch 10 (vertical): 9 stem:eq, committed {"low":0,"mid":0,"high":7.2}, filter gains {"low":0,"mid":0,"high":7.2} dB
+PASS  reset 10: last stem:eq {"stem":"reeds","low":0,"mid":0,"high":0}, filter gains {"low":0,"mid":0,"high":0} dB
+
+20/20 passed

@@ -1,0 +1,65 @@
+F05 double-pinch solo (20 set + 20 cleared) with all stem gains, then 20 double-pinches with an injected 0.21-0.29 s tracking gap
+run 2026-11-10T22:06:52.083Z in IWER (Meta Quest 3 emulation, headless), piece beethoven5 (real stems), AudioContext running
+
+PASS  double-pinch 1 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 2 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 3 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 4 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 5 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 6 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 7 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 8 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 9 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 10 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 11 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 12 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 13 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 14 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 15 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 16 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 17 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 18 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 19 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 20 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 21 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 22 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 23 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 24 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 25 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 26 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 27 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 28 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 29 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 30 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 31 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 32 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 33 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 34 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 35 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 36 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 37 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 38 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  double-pinch 39 (set): stem:solo ["fl"], gains {"vln":0,"vla_vc":0,"cb":0,"fl":1,"reeds":0,"hn":0,"brass":0,"perc":0}
+PASS  double-pinch 40 (clear): stem:solo [null], gains {"vln":1,"vla_vc":1,"cb":1,"fl":1,"reeds":1,"hn":1,"brass":1,"perc":1}
+PASS  gap run 1: 0.278 s tracking gap between the pinches -> 0 solos
+PASS  gap run 2: 0.292 s tracking gap between the pinches -> 0 solos
+PASS  gap run 3: 0.208 s tracking gap between the pinches -> 0 solos
+PASS  gap run 4: 0.222 s tracking gap between the pinches -> 0 solos
+PASS  gap run 5: 0.236 s tracking gap between the pinches -> 0 solos
+PASS  gap run 6: 0.250 s tracking gap between the pinches -> 0 solos
+PASS  gap run 7: 0.264 s tracking gap between the pinches -> 0 solos
+PASS  gap run 8: 0.278 s tracking gap between the pinches -> 0 solos
+PASS  gap run 9: 0.292 s tracking gap between the pinches -> 0 solos
+PASS  gap run 10: 0.208 s tracking gap between the pinches -> 0 solos
+PASS  gap run 11: 0.222 s tracking gap between the pinches -> 0 solos
+PASS  gap run 12: 0.236 s tracking gap between the pinches -> 0 solos
+PASS  gap run 13: 0.250 s tracking gap between the pinches -> 0 solos
+PASS  gap run 14: 0.264 s tracking gap between the pinches -> 0 solos
+PASS  gap run 15: 0.278 s tracking gap between the pinches -> 0 solos
+PASS  gap run 16: 0.292 s tracking gap between the pinches -> 0 solos
+PASS  gap run 17: 0.208 s tracking gap between the pinches -> 0 solos
+PASS  gap run 18: 0.222 s tracking gap between the pinches -> 0 solos
+PASS  gap run 19: 0.236 s tracking gap between the pinches -> 0 solos
+PASS  gap run 20: 0.250 s tracking gap between the pinches -> 0 solos
+
+60/60 passed

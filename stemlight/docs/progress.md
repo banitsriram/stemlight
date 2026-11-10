@@ -2,7 +2,7 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
-## 11–12 Nov 2026 (night): biyon, real audio, both pieces, hand input, saving
+## 11 Nov 2026 (00:00–04:00 IST): biyon, real audio, both pieces, all A gestures, saving
 
 Sir asked for autonomous work overnight (no money, no deploy, no submission). Built by sir's account with two subagents (pipeline, hand input), all verified and committed here.
 
@@ -29,11 +29,13 @@ Sir asked for autonomous work overnight (no money, no deploy, no submission). Bu
   - DevHandPose is dev-only. The IWER harness is in `tests/iwer/input/`.
 - **Dev tools (30):** `src/dev/stats.ts` gives the `?stats` overlay and the `?fov` 70×66° mask.
 - **Other:** piece order `beethoven5` → `dvorak9` (stand-in until 57). Devpost draft in `docs/DEVPOST.md` (67).
-- **Cuts at the Wed 11 checkpoint, sir to confirm:**
-  - Trepak cut (19–21); 22 is permanent, so the pads go on Dvořák's timpani.
-  - Cut 1, glowing hands (50), and cut 2, keyboard (27, 49).
+- **Scope:**
+  - Trepak cut (19–21) because its Tue 10 gate never ran; 22 is permanent (pads on Dvořák's timpani).
+  - Cuts 1–2 (glowing hands 50, keyboard 27/49) and the audit's extra cuts (thaw 42, shape-morph 43, harp 26/48, palette 51) are **proposals for the Wed 11 18:00 checkpoint**, for sir and banit to decide. A is now roughly on schedule; the risk is B's visuals.
+- **Gestures, second batch (15, 16, 23, 24, 29; c8fe49f):** EQ stretch and reset, ribbon pause/scrub/tap, trim and pull-away undo, pad strikes into `parts.strike`, quiet reset hold. They fire against registry targets using the `extra` convention in `.coord/biyon.md` (biyon-16). B's playhead, lane, region, pad and reset colliders don't exist yet, so these are unreachable in the app until B registers them.
+- **Cold start:** the landing page mounts before the first piece loads. The music waits for the piece after Enter. The fixture fallback is dev-only.
 
-**Verified on 11–12 Nov**
+**Verified on 11 Nov (early hours)**
 - `npm run typecheck`, `npm run build` and `npm test` (50 tests) pass.
 - `dist/` grep finds no DevHandPose, devInput, IWER_DEVICE or FoV-mask code.
 - `tests/browser/audio-sync.mjs` (headless Chromium, real Web Audio):
@@ -54,7 +56,16 @@ Sir asked for autonomous work overnight (no money, no deploy, no submission). Bu
   - `fist-mute` 11/11: DevHandPose fist reads curl 0.998, partial curl 0.6 reads 0.605 → **F38 passes**.
   - Summon → held → locked; a fist on the locked creature returns it; 0.25 s gap holds; 0.5 s gap releases quietly.
   - `summon` 17/17. `pinch-solo` 7/7.
-  - The 20× counts for F05, F06, F07, F32 and F33 are met in unit tests only; IWER ran 5–9×.
+  - `targets` 15/15 on synthetic targets (EQ, ribbon, trim/undo, pad, reset).
+- **IWER at full size** (`tests/iwer/input/acceptance.mjs`, logs in `tests/iwer/input/results/2026-11-11-*.txt`), with real engine gain and filter nodes read each time:
+  - F32 summon 180/180 (9 creatures × 20).
+  - F04/F33 audio: 20 fist/open cycles (gain 0 held, 1 after) and 20 lock cycles (0 after opening, 1 after a fist returns it).
+  - F05: 20 solos set and 20 cleared, with gains matching; 20 gap-injected → 0 solos. → **F05 passes.**
+  - F06: 120 gestures near and far, 0 cross-triggers. → **F06 passes.**
+  - F07: 20 × 0.29 s gaps hold; 20 × 0.5 s gaps release quietly, never locking. → **F07 passes.**
+  - F08 A side: 10 stretches, filter gains match the events within ±12 dB, 10 resets to 0.
+  - F04, F08, F32 and F33 still need B's visual half.
+- `npm test` 68/68. `tests/browser/cold-start.mjs`: Enter is visible before the piece finishes decoding.
 
 **Not verified**
 - **Nobody has listened to the renders.** F01 and F02 stay false until sir and banit listen. Flagged:
@@ -67,7 +78,7 @@ Sir asked for autonomous work overnight (no money, no deploy, no submission). Bu
 - Start membership and Developer Access (F41, due Wed 11): only sir and banit can do this.
 
 **Next**
-1. Input agent is on 15 (EQ stretch), 16 (ribbon), 23 (trim gesture), 24 (pad strikes) and 29 (reset hold).
+1. A: 17 heap check, 26 harp only if it survives the checkpoint, 31 perf once B's visuals land, 32 deploy after sir's approval, 67 text pass at freeze.
 2. Banit: `extra` convention for playhead/lane targets (message in `.coord/biyon.md`); creature registry center should follow the summoned creature.
 3. Sir: listen to both pieces (`?piece=beethoven5`, `?piece=dvorak9`), confirm the cuts, F41, and approve the first deploy (32).
 
