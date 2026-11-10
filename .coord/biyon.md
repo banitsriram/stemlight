@@ -15,6 +15,7 @@ claims:
 - stemlight/src/main.ts
 - stemlight/docs/ASSETS.md
 - stemlight/.gitignore
+- stemlight/tsconfig.json
 - stemlight/public/pieces/**
 done:
 - biyon-0 Stemlight plan docs and 70 tasks (4bc2c71)
