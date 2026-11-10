@@ -119,6 +119,8 @@ export function createParts(engine: Engine, bus: Bus): Parts {
 
   bus.on('cut:add', ({ cut }) => {
     const snapped = { ...cut, ...snapCut(engine.beats().beats, cut.t0, cut.t1) };
+    const known = cuts.get(cut.id);
+    if (known && known.stem === snapped.stem && known.t0 === snapped.t0 && known.t1 === snapped.t1) return; // restored, re-announced
     cuts.set(cut.id, snapped);
     note('cut', { ...snapped });
     const inst = instrumentFor(cut.stem);

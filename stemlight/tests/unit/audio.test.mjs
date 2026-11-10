@@ -133,9 +133,9 @@ test('beats fire once each while playing, with downbeats flagged', async () => {
   bus.on('beat', (b) => got.push(b));
   engine.transport.play();
   for (let i = 0; i < 40; i++) { ctx.currentTime += 0.1; engine.update(); }
-  // 4 s of music (minus the 0.05 s lead): beats at 0.5 .. 3.5
-  assert.deepEqual(got.map((b) => b.t), [0.5, 1, 1.5, 2, 2.5, 3, 3.5]);
-  assert.deepEqual(got.filter((b) => b.downbeat).map((b) => b.t), [2]);
+  // 4 s of music (minus the 0.05 s lead): the beat at the start position, then 0.5 .. 3.5
+  assert.deepEqual(got.map((b) => b.t), [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5]);
+  assert.deepEqual(got.filter((b) => b.downbeat).map((b) => b.t), [0, 2]);
 });
 
 test('mix rules: a muted solo stays silent; beatsCrossed ignores backwards time', () => {

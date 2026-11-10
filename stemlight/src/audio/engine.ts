@@ -118,7 +118,7 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
         s.next = null;
       }
     }
-    return offset + (ctx.currentTime - startedAt);
+    return offset + Math.max(0, ctx.currentTime - startedAt); // holds still during the start lead
   };
   const time = () => Math.max(0, Math.min(length, raw()));
 
@@ -202,7 +202,7 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
       ended = false;
       startSources(offset);
       running = true;
-      lastT = offset;
+      lastT = offset - 1e-6; // a beat exactly at the start position fires
       announce();
     },
     pause() {
@@ -217,7 +217,7 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
       ended = false;
       if (running) startSources(to);
       else offset = to;
-      lastT = to;
+      lastT = to - 1e-6;
       bus.emit('transport:seek', { t: to });
     },
   };
