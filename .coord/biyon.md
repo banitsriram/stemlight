@@ -15,6 +15,7 @@ claims:
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/src/main.ts
 - stemlight/docs/ASSETS.md
+- stemlight/docs/DEVPOST.md
 - stemlight/.gitignore
 - stemlight/tsconfig.json
 - stemlight/.claude/**
