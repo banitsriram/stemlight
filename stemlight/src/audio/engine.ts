@@ -14,6 +14,7 @@ export interface StemChain {
   buffer: AudioBuffer;
   homeSeat: Vec3;
   source: AudioBufferSourceNode | null;
+  next: AudioBufferSourceNode | null; // already scheduled to take over at a loop wrap
   gain: GainNode; // mute / solo
   trim: GainNode; // cut regions (biyon-23)
   low: BiquadFilterNode; mid: BiquadFilterNode; high: BiquadFilterNode;
@@ -34,7 +35,27 @@ export interface Engine {
   stems(): readonly StemChain[];
   mix(): Readonly<Mix>;
   log: AudioLogEntry[];
+  /** Silent (or guide-level) regions per stem, asked for again at every start and loop wrap. */
+  setRegions(fn: RegionFn): void;
+  /** Loop the transport over [t0, t1] with sample-exact wraps, or stop looping. */
+  setLoop(loop: { t0: number; t1: number } | null): void;
+  /** Called just before each wrap is scheduled; returning false ends the loop instead. */
+  setBeforeWrap(fn: ((pass: number) => boolean) | null): void;
+  /** Loop passes completed since the last setLoop. */
+  pass(): number;
+  /** Context time at which piece time t plays in the running segment (may be in the past). */
+  ctxTimeAt(t: number): number;
+  /** The scheduled loop wrap that has not been reached yet. */
+  wrapPending(): { at: number; to: number } | null;
+  /** Where user parts for a stem enter its chain: after mute and trim, before EQ and panner. */
+  partInput(stem: StemId): AudioNode;
+  /** Beats of the loaded piece. */
+  beats(): Beats;
 }
+
+export type RegionFn = (stem: StemId, pass: number) => { t0: number; t1: number; gain: number }[];
+const WRAP_LOOKAHEAD = 0.25; // seconds before loop end that the wrap gets scheduled
+const EDGE = 0.005; // half-width of the gain ramp at a region edge, to avoid clicks
 
 export interface EngineOptions {
   createContext?: () => AudioContext;
@@ -75,33 +96,98 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
 
   // Transport state. While playing, time = offset + (currentTime − startedAt).
   let running = false, offset = 0, startedAt = 0, lastT = 0, ended = false;
-  const raw = () => (running ? offset + (ctx.currentTime - startedAt) : offset);
+  let regionsFor: RegionFn = () => [];
+  let loop: { t0: number; t1: number } | null = null;
+  let beforeWrap: ((pass: number) => boolean) | null = null;
+  let passes = 0;
+  let wrap: { at: number; to: number } | null = null; // scheduled, not yet reached
+  let wrapped = false; // a wrap was reached since the last update()
+
+  const raw = () => {
+    if (!running) return offset;
+    if (wrap && ctx.currentTime >= wrap.at) {
+      // The new sources were scheduled to start exactly here; make them current.
+      offset = wrap.to;
+      startedAt = wrap.at;
+      wrap = null;
+      passes++;
+      wrapped = true;
+      for (const s of stems) {
+        s.source?.disconnect();
+        s.source = s.next;
+        s.next = null;
+      }
+    }
+    return offset + (ctx.currentTime - startedAt);
+  };
   const time = () => Math.max(0, Math.min(length, raw()));
 
+  const kill = (src: AudioBufferSourceNode | null) => {
+    if (!src) return;
+    try { src.stop(); } catch { /* never started */ }
+    src.disconnect();
+  };
   const stopSources = () => {
     for (const s of stems) {
-      if (!s.source) continue;
-      s.source.onended = null;
-      try { s.source.stop(); } catch { /* already stopped */ }
-      s.source.disconnect();
-      s.source = null;
+      kill(s.source); kill(s.next);
+      s.source = s.next = null;
     }
+    wrap = null;
+  };
+
+  /** Trim gain from `when` for a segment playing piece time [from, until), with short ramps at region edges. */
+  const scheduleTrims = (when: number, from: number, until: number, pass: number) => {
+    for (const s of stems) {
+      const regions = regionsFor(s.id, pass);
+      const g = (t: number) => regions.find((r) => t >= r.t0 && t < r.t1)?.gain ?? 1;
+      const p = s.trim.gain;
+      p.cancelScheduledValues(when);
+      p.setValueAtTime(g(from), when);
+      const edges = [...new Set(regions.flatMap((r) => [r.t0, r.t1]))].filter((b) => b > from && b < until).sort((a, b) => a - b);
+      for (const b of edges) {
+        const at = when + (b - from);
+        p.setValueAtTime(g(b - 2 * EDGE), Math.max(when, at - EDGE));
+        p.linearRampToValueAtTime(g(b), at + EDGE);
+      }
+    }
+  };
+
+  const newSource = (s: StemChain, when: number, from: number) => {
+    const src = ctx.createBufferSource();
+    src.buffer = s.buffer;
+    src.connect(s.gain);
+    if (from < s.buffer.duration) src.start(when, from);
+    return src;
   };
 
   /** Starts every stem at one context time, all from the same offset, so they stay sample-aligned. */
   const startSources = (from: number) => {
     stopSources();
     const when = ctx.currentTime + START_LEAD;
-    for (const s of stems) {
-      const src = ctx.createBufferSource();
-      src.buffer = s.buffer;
-      src.connect(s.gain);
-      if (from < s.buffer.duration) src.start(when, from);
-      s.source = src;
-    }
+    for (const s of stems) s.source = newSource(s, when, from);
     startedAt = when;
     offset = from;
+    scheduleTrims(when, from, loop && from < loop.t1 ? loop.t1 : length, passes);
     note('start', { when, from });
+  };
+
+  /** Schedules the next loop pass to start on the exact sample the current one ends. */
+  const scheduleWrap = () => {
+    if (!loop) return;
+    if (beforeWrap && !beforeWrap(passes)) {
+      note('loop-end', { pass: passes });
+      loop = null;
+      scheduleTrims(startedAt + (time() - offset) + 0.02, time() + 0.02, length, passes);
+      return;
+    }
+    const at = startedAt + (loop.t1 - offset);
+    for (const s of stems) {
+      s.next = newSource(s, at, loop.t0);
+      s.source?.stop(at);
+    }
+    scheduleTrims(at, loop.t0, loop.t1, passes + 1);
+    wrap = { at, to: loop.t0 };
+    note('wrap', { at, to: loop.t0, pass: passes + 1 });
   };
 
   const announce = () => bus.emit('transport:state', { playing: running, t: time() });
@@ -185,7 +271,7 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
     panner.rolloffFactor = 0.6;
     setPos(panner, homeSeat);
     gain.connect(trim).connect(low).connect(mid).connect(high).connect(panner).connect(master);
-    return { id, buffer, homeSeat, source: null, gain, trim, low, mid, high, panner };
+    return { id, buffer, homeSeat, source: null, next: null, gain, trim, low, mid, high, panner };
   };
 
   const release = () => {
@@ -206,6 +292,7 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
     beats = b;
     length = Math.min(manifest.durationSec, ...stems.map((s) => s.buffer.duration));
     offset = 0; lastT = 0; ended = false;
+    loop = null; passes = 0;
     mix = emptyMix();
     stems.forEach((s) => { applyGain(s, 0); applyEq(s); });
     const decodedMB = stems.reduce((n, s) => n + s.buffer.length * s.buffer.numberOfChannels * 4, 0) / 1e6;
@@ -216,8 +303,14 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
   function update() {
     if (running) {
       const t = time();
+      if (wrapped) {
+        wrapped = false;
+        lastT = offset - 1e-6; // so the beat on the loop start fires
+        bus.emit('transport:seek', { t: offset });
+      }
       for (const b of beatsCrossed(beats.beats, beats.downbeats, lastT, t)) bus.emit('beat', b);
       lastT = t;
+      if (loop && !wrap && t < loop.t1 && t > loop.t1 - WRAP_LOOKAHEAD) scheduleWrap();
       if (!ended && raw() >= length) {
         ended = true;
         offset = length;
@@ -269,7 +362,33 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
     },
   };
 
-  return { audio, transport, load, update, setListener, stems: () => stems, mix: () => mix, log };
+  return {
+    audio, transport, load, update, setListener, stems: () => stems, mix: () => mix, log,
+    setRegions(fn) {
+      regionsFor = fn;
+      // Re-plan the rest of the running segment so a new cut is heard straight away.
+      if (running && !wrap) {
+        const t = time(), when = ctx.currentTime + 0.01;
+        scheduleTrims(when, t + 0.01, loop && t < loop.t1 ? loop.t1 : length, passes);
+      } else if (!running) {
+        for (const s of stems) s.trim.gain.value = 1;
+      }
+    },
+    setLoop(l) {
+      loop = l && l.t1 > l.t0 ? { ...l } : null;
+      passes = 0;
+      note('loop', { loop });
+    },
+    setBeforeWrap(fn) { beforeWrap = fn; },
+    pass: () => passes,
+    ctxTimeAt: (t) => { raw(); return startedAt + (t - offset); },
+    wrapPending: () => (raw(), wrap),
+    partInput(stem) {
+      const s = stems.find((x) => x.id === stem);
+      return s ? s.low : master;
+    },
+    beats: () => beats,
+  };
 }
 
 function setPos(p: PannerNode, [x, y, z]: Vec3) {
