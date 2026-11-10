@@ -9,7 +9,7 @@ claims:
 - stemlight/src/mock/**
 - stemlight/src/bus.ts
 - stemlight/tests/iwer/input/**
-- stemlight/tests/unit/audio*.test.mjs
+- stemlight/tests/unit/audio*
 - stemlight/tests/browser/**
 - stemlight/tests/unit/input*.test.mjs
 - stemlight/tests/unit/pipeline*.test.mjs
