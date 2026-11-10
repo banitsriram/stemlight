@@ -17,6 +17,8 @@ claims:
 - stemlight/docs/ASSETS.md
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
+- stemlight/docs/progress.md
+- stemlight/docs/features.json
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
