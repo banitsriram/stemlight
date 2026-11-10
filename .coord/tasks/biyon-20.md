@@ -1,5 +1,6 @@
 # biyon-20: [A] Trepak 2: brass, perc, harp; render, validate
-status: open
+status: done
+note: cut 11 Nov (gate never ran; A behind at the Wed 11 checkpoint, PLAN s10/s14)
 blocked_by: biyon-19, biyon-7
 owner: A (biyon)
 size: M (0.5 day) | critical path

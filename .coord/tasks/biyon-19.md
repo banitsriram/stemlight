@@ -1,5 +1,6 @@
 # biyon-19: [A] Trepak arrangement 1: strings + winds (Mon 9)
-status: open
+status: done
+note: cut 11 Nov (gate never ran; A behind at the Wed 11 checkpoint, PLAN s10/s14)
 blocked_by: biyon-5
 owner: A (biyon)
 size: M (0.5 day) | critical path

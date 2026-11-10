@@ -1,5 +1,6 @@
 # biyon-21: [A] **Trepak listening gate Tue 10 18:00** with banit, plus Beethoven/Dvořák listen
-status: open
+status: done
+note: cut 11 Nov (gate never ran; A behind at the Wed 11 checkpoint, PLAN s10/s14)
 blocked_by: biyon-20, biyon-18
 owner: A (biyon)
 size: S (<= 0.25 day) | critical path
