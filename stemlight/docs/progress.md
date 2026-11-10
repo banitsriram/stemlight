@@ -2,6 +2,75 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11–12 Nov 2026 (night): biyon, real audio, both pieces, hand input, saving
+
+Sir asked for autonomous work overnight (no money, no deploy, no submission). Built by sir's account with two subagents (pipeline, hand input), all verified and committed here.
+
+**State**
+- **Repo moved:** sir's clone is now `~/projects/stemlight-repo` on `banitsriram/stemlight`.
+- **Audio engine (8, 9, most of 17):** `src/audio/engine.ts`.
+  - One AudioContext, and every stem starts on one context time. `Transport` runs on the context clock.
+  - Per stem: gain → trim → 3-band EQ → HRTF panner → master compressor. The panner follows the creature target's `center` in the registry.
+  - `beat` and `piece:end` come from the engine. Decoded MB is logged per piece.
+- **Cuts and user parts, audio side (23–25):** `src/audio/parts.ts`, with one-shots synthesised in code in `synth.ts`.
+  - Loop wraps are sample-exact. Cuts snap to the beat and are at least 1 beat long.
+  - A cut on a stem listed in `manifest.replace` starts a take: one-bar count-in (ticks plus `countin` 4,3,2,1), then the region loops.
+  - Guide: the original part plays at −18 dB on pass 0 only.
+  - Hits snap to 1/8 and replay on later passes. The take ends after a pass with no new hits.
+- **Saving and pause (28, 29, audio side):**
+  - IndexedDB `SaveState`, re-announced on `piece:ready`. Unreadable storage gives a clean start.
+  - Lifecycle pauses on page hide, XR session hidden or session end. `app:reset` clears only this piece.
+- **Pieces (5, 6, 7, 18, 62):** `pipeline/`, run in WSL.
+  - Built with sfizz_render 1.2.3 and VSCO 2 CE (CC0), plus a synthetic seeded IR.
+  - `beethoven5` covers bars 1–122 (83.6 s). `dvorak9` covers bars 1–95 (153.0 s).
+  - Both have 8 mono Opus stems, 6.7 MB and 12.3 MB. Every fallback is listed in the commit and `ASSETS.md`.
+- **Hand input (4, 10–13, most of 14):** `src/input/`.
+  - Pure per-frame state machine with the PLAN s3 thresholds.
+  - DevHandPose is dev-only. The IWER harness is in `tests/iwer/input/`.
+- **Dev tools (30):** `src/dev/stats.ts` gives the `?stats` overlay and the `?fov` 70×66° mask.
+- **Other:** piece order `beethoven5` → `dvorak9` (stand-in until 57). Devpost draft in `docs/DEVPOST.md` (67).
+- **Cuts at the Wed 11 checkpoint, sir to confirm:**
+  - Trepak cut (19–21); 22 is permanent, so the pads go on Dvořák's timpani.
+  - Cut 1, glowing hands (50), and cut 2, keyboard (27, 49).
+
+**Verified on 11–12 Nov**
+- `npm run typecheck`, `npm run build` and `npm test` (50 tests) pass.
+- `dist/` grep finds no DevHandPose, devInput, IWER_DEVICE or FoV-mask code.
+- `tests/browser/audio-sync.mjs` (headless Chromium, real Web Audio):
+  - fixture and beethoven5: decoded stem lengths agree (0.00 ms spread).
+  - Transport time matches the context clock (0.00 ms).
+  - 11 start batches (play + 10 seeks) share one start time and offset each.
+  - Mute, solo and EQ reach the nodes. No page errors. → **F03 passes.**
+  - The 3-minute run is covered in the unit test (fake clock), not in real time.
+- `tests/browser/take-save.mjs` (real clock and IndexedDB):
+  - Count-in fires 4,3,2,1. Strikes at 8.04, 8.55 and 9.21 s snap to offsets 0, 0.5 and 1.25.
+  - The region loops, then the take ends and playback continues.
+  - A reload restores the cut and the part without starting a new take. Cleared storage gives a clean start.
+- `pipeline/validate.py`:
+  - Note counts match the source: 1840 Beethoven, 4249 Dvořák.
+  - All stems are equal length. Levels are sane (peaks ≤ −1.4 dBFS, none silent). The CC BY-SA credit is present.
+  - A re-run gives byte-identical output.
+- IWER headless (input agent's own server):
+  - `fist-mute` 11/11: DevHandPose fist reads curl 0.998, partial curl 0.6 reads 0.605 → **F38 passes**.
+  - Summon → held → locked; a fist on the locked creature returns it; 0.25 s gap holds; 0.5 s gap releases quietly.
+  - `summon` 17/17. `pinch-solo` 7/7.
+  - The 20× counts for F05, F06, F07, F32 and F33 are met in unit tests only; IWER ran 5–9×.
+
+**Not verified**
+- **Nobody has listened to the renders.** F01 and F02 stay false until sir and banit listen. Flagged:
+  - Beethoven's dynamics map is hand-entered and may be a bar off.
+  - 63 of Dvořák's high violin notes were moved down an octave in the audio only.
+  - The Dvořák excerpt stops mid-phrase at bar 95.
+- Notes against audio by eye in the app. Onsets measure within ±90 ms on slow string attacks.
+- The audio gain change caused by a real IWER fist (events and gain were each checked separately).
+- Anything on Quest: decoded memory (128 / 235 MB estimates), frame rate, hand feel.
+- Start membership and Developer Access (F41, due Wed 11): only sir and banit can do this.
+
+**Next**
+1. Input agent is on 15 (EQ stretch), 16 (ribbon), 23 (trim gesture), 24 (pad strikes) and 29 (reset hold).
+2. Banit: `extra` convention for playhead/lane targets (message in `.coord/biyon.md`); creature registry center should follow the summoned creature.
+3. Sir: listen to both pieces (`?piece=beethoven5`, `?piece=dvorak9`), confirm the cuts, F41, and approve the first deploy (32).
+
 ## 10 Nov 2026: banit, app scaffold (tasks 2 and 3, taken over from biyon at banit's request)
 
 **State**
