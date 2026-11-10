@@ -3,15 +3,16 @@
 // every start batch (play + 10 seeks) shares one context time and one offset, transport time tracks
 // the AudioContext clock while playing, and mute/solo/EQ events reach the nodes.
 // Usage (from stemlight/): node tests/browser/audio-sync.mjs [piece]
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const piece = process.argv[2] ?? 'fixture';
 const PORT = 8092;
-const vite = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
+const vite = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--port', String(PORT), '--strictPort'], { stdio: ['ignore', 'pipe', 'pipe'] });
 await new Promise((resolve, reject) => {
-  const t = setTimeout(() => reject(new Error('vite did not start')), 60000);
+  const t = setTimeout(() => reject(new Error('vite did not start')), 150000);
   vite.stdout.on('data', (d) => { if (String(d).includes('ready in')) { clearTimeout(t); resolve(); } });
+  vite.on('exit', (code) => reject(new Error(`vite exited (${code}); is port ${PORT} busy?`)));
 });
 
 let failed = false;
@@ -74,6 +75,6 @@ try {
 } finally {
   await browser.close();
   vite.kill();
-  if (process.platform === 'win32') spawn('taskkill', ['/pid', String(vite.pid), '/T', '/F'], { shell: true });
+  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(vite.pid), '/T', '/F'], { shell: true });
 }
 process.exit(failed ? 1 : 0);
