@@ -16,6 +16,7 @@ claims:
 - stemlight/src/main.ts
 - stemlight/docs/ASSETS.md
 - stemlight/docs/DEVPOST.md
+- stemlight/docs/audits/**
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
