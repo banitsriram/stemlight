@@ -10,6 +10,7 @@ claims:
 - stemlight/src/bus.ts
 - stemlight/tests/iwer/input/**
 - stemlight/tests/unit/audio*.test.mjs
+- stemlight/tests/browser/**
 - stemlight/tests/unit/input*.test.mjs
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/src/main.ts
