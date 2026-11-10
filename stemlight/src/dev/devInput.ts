@@ -114,6 +114,11 @@ function initEventLog(ctx: AppContext, gestures: GestureEngine) {
     if (sig !== lastMute) keep('stem:mute', e);
     lastMute = sig;
   });
+  for (const k of ['stem:eq', 'cut:preview', 'cut:add', 'cut:remove', 'app:reset', 'transport:state'] as const) {
+    ctx.bus.on(k, (e) => keep(k, e as never));
+  }
+  // The progress stream runs at 30 Hz; log where it starts, cancels and completes.
+  ctx.bus.on('reset:progress', (e) => { if (e.progress === 0 || e.progress === 1) keep('reset:progress', e); });
   const hands: Partial<Record<Hand, Events['hand:pose']>> = {};
   const poseSig: Partial<Record<Hand, string>> = {};
   ctx.bus.on('hand:pose', (e) => {
@@ -127,9 +132,19 @@ function initEventLog(ctx: AppContext, gestures: GestureEngine) {
     console.log(`[input] hand:pose ${JSON.stringify({ ...e, curl: +e.curl.toFixed(3), palm: r(e.palm), tip: r(e.tip), band })}`);
   });
   Object.assign(window, { __stemlightInput: { log, hands, debug: () => gestures.debug() } });
+  return () => {
+    // Pad strikes go straight to the audio parts, not the bus: log them from the engine's counter.
+    const { strikes, lastStrike } = gestures.debug();
+    if (strikes !== seenStrikes) console.log(`[input] pad:strike ${JSON.stringify({ count: strikes, ...lastStrike })}`);
+    seenStrikes = strikes;
+  };
 }
+let seenStrikes = 0;
 
 export function initDevInput(world: World, ctx: AppContext, gestures: GestureEngine): void {
   initDevHandPose(world);
-  initEventLog(ctx, gestures);
+  const pollStrikes = initEventLog(ctx, gestures);
+  world.registerSystem(class DevInputLogSystem extends createSystem() {
+    update() { pollStrikes(); }
+  });
 }

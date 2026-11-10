@@ -2,13 +2,16 @@
 import { createSystem, type World } from '@iwsdk/core';
 import { Quaternion, Vector3 } from 'three';
 import type { AppContext, Hand, Vec3 } from '../contracts';
-import { SPEC, createGestureEngine, type GestureEngine } from './engine.ts';
+import { SPEC, createGestureEngine, type GestureEngine, type GestureOptions } from './engine.ts';
 import { JOINT_NAMES, readHand } from './handmath.ts';
 import type { HeadFrame, InputFrame, JointMap } from './types';
 
-/** Starts hand-gesture input: every recognised gesture goes out on ctx.bus. */
-export function initInput(ctx: AppContext, world: World): GestureEngine {
-  const engine = createGestureEngine(ctx.bus);
+/**
+ * Starts hand-gesture input: every recognised gesture goes out on ctx.bus; the ribbon drives ctx.transport.
+ * `parts` takes pad strikes; `beats` lets trims preview already snapped.
+ */
+export function initInput(ctx: AppContext, world: World, opts: Omit<GestureOptions, 'transport'> = {}): GestureEngine {
+  const engine = createGestureEngine(ctx.bus, { ...opts, transport: ctx.transport });
   const v = new Vector3(), ahead = new Vector3(), rot = new Quaternion();
   let wasInXR = false;
   // Gesture time runs on the ECS delta, so a paused-and-stepped world (ecs pause / step) steps it exactly.

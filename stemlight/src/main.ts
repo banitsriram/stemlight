@@ -50,35 +50,12 @@ world.registerSystem(class AudioSystem extends createSystem() {
 });
 
 initShell(ctx, world.scene);
-const gestures = initInput(ctx, world);
+const gestures = initInput(ctx, world, { parts, beats: () => engine.beats().beats });
 // DevHandPose and the gesture log are dev-only and never reach dist/ (F38).
 if (import.meta.env.DEV) (await import('./dev/devInput')).initDevInput(world, ctx, gestures);
-const glyphs = await loadNoteGlyphs();
-world.scene.add(glyphs.object);
-const notes = createNotesLayer(ctx, glyphs);
-world.registerSystem(class NotesSystem extends createSystem() {
-  update() {
-    notes.update();
-  }
-});
-
-// ?piece=<id> picks a piece (dev); otherwise the first piece, falling back to the fixture if it's missing.
-const piece = (new URLSearchParams(location.search).get('piece') ?? PIECE_ORDER[0]) as PieceId;
-const manifest = await loadPiece(engine, bus, piece).catch((e) => {
-  console.warn(`[audio] ${piece} unavailable, using the fixture`, e);
-  return loadPiece(engine, bus, 'fixture' as PieceId);
-});
-initSequence(engine, bus); // ponytail: until B's sequencer (biyon-57) owns the piece order
-if (import.meta.env.DEV) {
-  installKeyMap(ctx, manifest);
-  // ?stats shows the overlay, ?fov (or key m) the 70×66° mask; __stemlight.stats() for scripted logs.
-  const stats = (await import('./dev/stats')).initDevStats(world.renderer, world.camera, glyphs.object);
-  world.registerSystem(class DevStatsSystem extends createSystem() {
-    update() { stats.update(); }
-  });
-  Object.assign(window, { __stemlight: { ctx, engine, parts, lifecycle, stats: stats.sample, statsReset: stats.resetMax } });
-}
-
+// The landing page shows at once; the first piece downloads and decodes behind it (cold start).
+let markReady: () => void = () => {};
+const pieceReady = new Promise<void>((resolve) => { markReady = resolve; });
 // launchXR reports failure only to the console, so the outcome is read back from the world.
 const enterXR = () => new Promise<void>((resolve, reject) => {
   world.launchXR();
@@ -89,11 +66,40 @@ const enterXR = () => new Promise<void>((resolve, reject) => {
     else reject(new Error('XR session did not start'));
   }, 50);
 });
-
 mountLanding(document.getElementById('landing') as HTMLElement, {
   unlock: () => ctx.audio.unlock(),
-  enter: () => enterXR().then(() => {
+  // XR must be requested inside the Enter gesture, so it starts first and the music waits for the piece.
+  enter: () => enterXR().then(async () => {
     if (world.session) lifecycle.watchSession(world.session);
+    await pieceReady;
     ctx.transport.play();
   }),
 });
+
+const glyphs = await loadNoteGlyphs();
+world.scene.add(glyphs.object);
+const notes = createNotesLayer(ctx, glyphs);
+world.registerSystem(class NotesSystem extends createSystem() {
+  update() {
+    notes.update();
+  }
+});
+
+// ?piece=<id> picks a piece; otherwise the first piece (dev only: the fixture if it's missing).
+const piece = (new URLSearchParams(location.search).get('piece') ?? PIECE_ORDER[0]) as PieceId;
+const manifest = await loadPiece(engine, bus, piece).catch((e) => {
+  if (!import.meta.env.DEV) throw e; // never ship the synthetic fixture to a judge
+  console.warn(`[audio] ${piece} unavailable, using the fixture`, e);
+  return loadPiece(engine, bus, 'fixture' as PieceId);
+});
+markReady();
+initSequence(engine, bus); // ponytail: until B's sequencer (biyon-57) owns the piece order
+if (import.meta.env.DEV) {
+  installKeyMap(ctx, manifest);
+  // ?stats shows the overlay, ?fov (or key m) the 70×66° mask; __stemlight.stats() for scripted logs.
+  const stats = (await import('./dev/stats')).initDevStats(world.renderer, world.camera, glyphs.object);
+  world.registerSystem(class DevStatsSystem extends createSystem() {
+    update() { stats.update(); }
+  });
+  Object.assign(window, { __stemlight: { ctx, engine, parts, lifecycle, stats: stats.sample, statsReset: stats.resetMax } });
+}

@@ -2,6 +2,8 @@
 // Needs a running dev session (`npm run dev`, or `npx iwsdk dev up --ai-mode agent --headless`).
 // Hands are driven through the dev-only DevHandPose component (src/dev/devInput.ts), one entity per hand.
 import { execFileSync } from 'node:child_process';
+import { rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // STEMLIGHT_IWER_APP points at another copy of the app (its own dev session), so edits elsewhere can't reload it mid-run.
@@ -87,3 +89,26 @@ export function reachSpot() {
   const len = Math.hypot(fx, fz) || 1;
   return [p.x + (fx / len) * 0.45, p.y - 0.15, p.z + (fz / len) * 0.45];
 }
+
+/**
+ * Runs `fn` (a function, or its source) in the page with `arg` and returns its JSON result. Uses
+ * `iwsdk browser run`, so the dev session must be started with --allow-browser-automation. The script
+ * file it needs is written next to this harness in the app copy being driven, and deleted afterwards.
+ */
+export function evalInPage(fn, arg = null) {
+  const rel = 'tests/iwer/input/.eval-tmp.mjs';
+  const file = join(APP, rel);
+  writeFileSync(file, `export default async ({ page, frame }) => (frame ?? page).evaluate(${fn.toString()}, ${JSON.stringify(arg)});\n`);
+  try {
+    const out = execFileSync(process.execPath, [CLI, 'browser', 'run', rel], { cwd: APP, encoding: 'utf8', timeout: 60000 });
+    const parsed = JSON.parse(out);
+    if (!parsed.ok) throw new Error(JSON.stringify(parsed.error));
+    return parsed.data.result;
+  } finally {
+    rmSync(file, { force: true });
+  }
+}
+
+/** Registers synthetic targets in the app's TargetRegistry (window.__stemlight, dev builds only). */
+export const addTargets = (targets) => evalInPage((ts) => { for (const t of ts) window.__stemlight.ctx.registry.set(t); return ts.length; }, targets);
+export const removeTargets = (ids) => evalInPage((list) => { for (const id of list) window.__stemlight.ctx.registry.remove(id); return list.length; }, ids);
