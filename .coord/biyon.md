@@ -1,6 +1,6 @@
 # biyon
-status: working          # working | blocked | paused | idle
-task: biyon-14 IWER 20x suite; waiting on B colliders for 31 perf
+status: paused          # working | blocked | paused | idle
+task: paused 04:00 IST Wed 11; A gestures, audio, saving, pieces all in. Next A: 17 heap, 31 perf (needs B visuals), 32 deploy (sir approval), 67 text. main.ts, progress.md, features.json, ASSETS.md released.
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -13,12 +13,8 @@ claims:
 - stemlight/tests/browser/**
 - stemlight/tests/unit/input*.test.mjs
 - stemlight/tests/unit/pipeline*.test.mjs
-- stemlight/src/main.ts
-- stemlight/docs/ASSETS.md
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
-- stemlight/docs/progress.md
-- stemlight/docs/features.json
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
