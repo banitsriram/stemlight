@@ -1,0 +1,42 @@
+# Dvorak, Symphony No. 9 in E minor, Op. 95 "From the New World", mvt 4 (Allegro con fuoco).
+# Mutopia #1793, CC BY-SA 3.0 (Simrock 1894 edition, maintained by Keith OHara).
+# Our stems and notes.json derived from it are released under CC BY-SA 3.0. No harp in this piece.
+id: dvorak9
+title: "Symphony No. 9 in E minor, Op. 95 \"From the New World\": IV. Allegro con fuoco"
+composer: Antonín Dvořák
+midi: Mvt4_conFuoco.mid                # in pipeline/work/src/ (fetch.py, from Sym9-mids.zip)
+seed: 1793
+excerpt:
+  first_bar: 1
+  last_bar: 95                         # end of the 4-bar tutti unit bars 92-95; 95 bars at quarter = 152 is 2:30.0
+  tail_sec: 3.0
+fermatas: {}
+scale: {tonic: 64, steps: [0, 2, 3, 5, 7, 8, 10]}   # E natural minor
+replace: [{stem: perc, instrument: pads}]           # pads take over the timpani lane (task 22)
+credits:
+  - text: "Antonín Dvořák, Symphony No. 9, Op. 95, IV. Allegro con fuoco. Score from the Mutopia Project (piece 1793), Simrock 1894 edition, maintained by Keith OHara, licensed CC BY-SA 3.0. Our stems and note data derived from it are released under CC BY-SA 3.0. Rendered with VSCO 2 Community Edition samples (CC0)."
+    licence: CC BY-SA 3.0
+    url: https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1793
+  - text: "Licence text: Creative Commons Attribution-ShareAlike 3.0 Unported"
+    licence: CC BY-SA 3.0
+    url: https://creativecommons.org/licenses/by-sa/3.0/
+families:
+  strings: {gamma: 0.85, gain: 1.00, jitter: 4}
+  winds:   {gamma: 0.95, gain: 0.95, jitter: 4}
+  brass:   {gamma: 1.10, gain: 0.92, jitter: 3}
+  perc:    {gamma: 1.00, gain: 0.95, jitter: 3}
+short_beats: 0.5
+stems:
+  vln:    {family: strings, lufs: -23, parts: [{tracks: ["violin1:", "violin2:"], long: ViolinEnsSusVib.sfz, short: ViolinEnsSpic.sfz}]}
+  vla_vc: {family: strings, lufs: -24, parts: [{tracks: ["viola:"], long: ViolaEnsSusVib.sfz, short: ViolaEnsSpic.sfz},
+                                               {tracks: ["cello:"], long: CelloEnsSusVib.sfz, short: CelloEnsSpic.sfz}]}
+  cb:     {family: strings, lufs: -26, parts: [{tracks: ["bass:"], long: ContrabassSusVB.sfz, short: ContrabassSpic.sfz}]}
+  fl:     {family: winds,   lufs: -27, parts: [{tracks: ["flute:"], long: FluteSusVib.sfz, short: FluteStac.sfz}]}
+  reeds:  {family: winds,   lufs: -25, parts: [{tracks: ["oboe:"], long: OboeSusVib.sfz, short: OboeStac.sfz},
+                                               {tracks: ["clarinet:"], long: ClarinetSus.sfz, short: ClarinetStac.sfz},
+                                               {tracks: ["bassoon:"], long: BassoonSus.sfz, short: BassoonStac.sfz}]}
+  hn:     {family: brass,   lufs: -25, parts: [{tracks: ["french hornA:", "french hornB:"], long: FHornSus.sfz, short: FHornStac.sfz}]}
+  brass:  {family: brass,   lufs: -25, parts: [{tracks: ["trumpet:"], long: TrumpetSus.sfz, short: TrumpetStac.sfz},
+                                               {tracks: ["trombone:"], long: TromboneSus.sfz, short: TromboneStac.sfz}]}
+  perc:   {family: perc,    lufs: -27, parts: [{tracks: ["timpani:"], long: TimpaniRolls.sfz, short: Timpani.sfz, short_beats: 1.0},
+                                               {tracks: ["cymbal:"], long: Cymbal-Stemlight.sfz, short: Cymbal-Stemlight.sfz}]}

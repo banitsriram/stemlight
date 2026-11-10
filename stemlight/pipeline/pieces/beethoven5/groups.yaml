@@ -1,0 +1,59 @@
+# Beethoven, Symphony No. 5 in C minor, Op. 67, mvt 1 (Allegro con brio). Mutopia #941, Public Domain.
+# Maps the Mutopia MIDI tracks (named by LilyPond staff) to Stemlight's 8 stems. No harp in this piece.
+id: beethoven5
+title: "Symphony No. 5 in C minor, Op. 67: I. Allegro con brio"
+composer: Ludwig van Beethoven
+midi: Symphony5_1.mid                  # in pipeline/work/src/ (fetch.py)
+seed: 941                              # humanise RNG seed: same input, same output
+excerpt:                               # whole bars, 1-based, inclusive
+  first_bar: 1
+  last_bar: 122                        # the exposition's final chord; bars 123-124 are rests before the repeat
+  tail_sec: 3.0                        # silence after the last bar for release + reverb decay
+# The Mutopia MIDI has one tempo (quarter = 192) and plays fermatas at written length.
+# These bars are stretched by the factor (tempo map, beats.json and notes all follow it).
+fermatas: {2: 2.5, 5: 3.0, 21: 2.5, 24: 3.0}
+# The Mutopia MIDI has every note at velocity 90 (no dynamics), so velocities come from this map of the score's
+# dynamics, read from the Mutopia LilyPond parts (strings, with the winds' entries cross-checked):
+# [bar, vel] steps at that bar, [bar, vel, ramp] is a crescendo/diminuendo from the previous point. ff 112, f 96, p 52.
+dynamics:
+  - [1, 112]            # ff motto, bars 1-5
+  - [6, 52]             # p, the theme passed between the strings
+  - [17, 52]
+  - [19, 96, ramp]      # cresc. into the f chords, bars 19-21
+  - [22, 112]           # ff second motto, bars 22-24
+  - [25, 52]            # p
+  - [34, 52]
+  - [37, 92, ramp]      # cresc., then sf accents bars 37-42
+  - [43, 98]            # f
+  - [51, 112]           # ff, through the horn call (bars 59-62)
+  - [62, 112]
+  - [63, 52, ramp]      # dim. to p: second theme
+  - [84, 52]
+  - [94, 108, ramp]     # long cresc.
+  - [94, 112]           # ff to the end of the exposition
+scale: {tonic: 60, steps: [0, 2, 3, 5, 7, 8, 10]}   # C natural minor
+replace: [{stem: perc, instrument: pads}]
+credits:
+  - text: "Ludwig van Beethoven, Symphony No. 5, Op. 67, I. Allegro con brio. Score from the Mutopia Project (piece 941), after the Breitkopf & Härtel edition; public domain. Rendered with VSCO 2 Community Edition samples (CC0)."
+    licence: Public Domain
+    url: https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=941
+# Velocity curve per family: vel' = 127 * (vel/127)^gamma * gain, then +-jitter (seeded).
+families:
+  strings: {gamma: 0.85, gain: 1.00, jitter: 4}
+  winds:   {gamma: 0.95, gain: 0.95, jitter: 4}
+  brass:   {gamma: 1.10, gain: 0.92, jitter: 3}
+  perc:    {gamma: 1.00, gain: 0.95, jitter: 3}
+short_beats: 0.5                       # a note of <= this many quarter beats uses the part's `short` patch
+# Per-stem loudness target (integrated LUFS, measured with ffmpeg loudnorm) keeps the orchestral balance.
+stems:
+  vln:    {family: strings, lufs: -23, parts: [{tracks: ["eight:", "nine:"], long: ViolinEnsSusVib.sfz, short: ViolinEnsSpic.sfz}]}   # Violino I, II
+  vla_vc: {family: strings, lufs: -24, parts: [{tracks: ["ten:"], long: ViolaEnsSusVib.sfz, short: ViolaEnsSpic.sfz},              # Viola
+                                               {tracks: ["eleven:"], long: CelloEnsSusVib.sfz, short: CelloEnsSpic.sfz}]}         # Violoncello
+  cb:     {family: strings, lufs: -26, parts: [{tracks: ["twelve:"], long: ContrabassSusVB.sfz, short: ContrabassSpic.sfz}]}      # Basso
+  fl:     {family: winds,   lufs: -27, parts: [{tracks: ["one:"], long: FluteSusVib.sfz, short: FluteStac.sfz}]}                  # Flauti
+  reeds:  {family: winds,   lufs: -25, parts: [{tracks: ["two:"], long: OboeSusVib.sfz, short: OboeStac.sfz},                     # Oboi
+                                               {tracks: ["three:"], long: ClarinetSus.sfz, short: ClarinetStac.sfz},              # Clarinetti in B
+                                               {tracks: ["four:"], long: BassoonSus.sfz, short: BassoonStac.sfz}]}                # Fagotti
+  hn:     {family: brass,   lufs: -26, parts: [{tracks: ["five:"], long: FHornSus.sfz, short: FHornStac.sfz}]}                    # Corni in Es
+  brass:  {family: brass,   lufs: -27, parts: [{tracks: ["six:"], long: TrumpetSus.sfz, short: TrumpetStac.sfz}]}                 # Trombe in C
+  perc:   {family: perc,    lufs: -28, parts: [{tracks: ["seven:"], long: TimpaniRolls.sfz, short: Timpani.sfz, short_beats: 1.0}]}  # Timpani (long notes = rolls)
