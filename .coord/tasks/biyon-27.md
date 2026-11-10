@@ -1,6 +1,6 @@
 # biyon-27: [A] Keyboard logic
-status: done
-note: cut 11 Nov at the Wed 11 checkpoint (cut 2, keyboard)
+status: open
+note: proposed cut (cut 2) for the Wed 11 18:00 checkpoint; not decided
 blocked_by: biyon-25
 owner: A (biyon)
 size: M (0.5 day)
