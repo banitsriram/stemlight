@@ -16,6 +16,8 @@ claims:
 - stemlight/src/main.ts
 - stemlight/docs/ASSETS.md
 - stemlight/docs/DEVPOST.md
+- stemlight/docs/progress.md
+- stemlight/docs/features.json
 - stemlight/.gitignore
 - stemlight/tsconfig.json
 - stemlight/.claude/**
