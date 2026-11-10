@@ -69,7 +69,7 @@ const STEMS: StemId[] = ['vln', 'vla_vc', 'cb', 'fl', 'reeds', 'hn', 'brass', 'p
 const MUTES = ['held', 'locked', 'on'] as const;
 
 /** Dev keyboard: one key per bus event. `]` picks the next stem for the stem events. */
-export function installKeyMap({ bus, transport }: AppContext, manifest: PieceManifest): void {
+export function installKeyMap({ bus, transport, audio }: AppContext, manifest: PieceManifest): void {
   let i = 0, mute = 0;
   const stem = () => STEMS[i];
   const cut = { id: 'mock-cut', stem: 'perc' as StemId, t0: 4, t1: 8 };
@@ -102,7 +102,8 @@ export function installKeyMap({ bus, transport }: AppContext, manifest: PieceMan
 
   addEventListener('keydown', (e) => {
     if (e.key === ']') i = (i + 1) % STEMS.length;
-    if (e.key === ' ') return transport.playing() ? transport.pause() : transport.play();
+    // Space unlocks audio on first press (a key press counts as a user gesture), so pieces can be heard without XR.
+    if (e.key === ' ') { e.preventDefault(); void audio.unlock().then(() => (transport.playing() ? transport.pause() : transport.play())); return; }
     for (const [name, [key, payload]] of Object.entries(keys)) {
       if (key === e.key) bus.emit(name as keyof Events, payload() as never);
     }
