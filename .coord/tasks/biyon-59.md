@@ -1,5 +1,5 @@
 # biyon-59: [B] Video 1: scripted captures, shot ledger, second-visit footage
-status: open
+status: done
 blocked_by: biyon-57
 owner: B (banit)
 size: M (0.5 day)

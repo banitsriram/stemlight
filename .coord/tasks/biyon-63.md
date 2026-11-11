@@ -1,5 +1,5 @@
 # biyon-63: [B] FoV-mask screenshots, seated pose
-status: open
+status: done
 blocked_by: biyon-30, biyon-57
 owner: B (banit)
 size: S (<= 0.25 day)

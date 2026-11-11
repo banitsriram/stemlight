@@ -1,5 +1,5 @@
 # biyon-35: [B] Landing page: one Enter, pitch line, no account, hand-tracking hint, `unlock()`
-status: open
+status: done
 blocked_by: 
 owner: B (banit)
 size: M (0.5 day)
