@@ -1,6 +1,6 @@
 # banit
-status: paused          # working | blocked | paused | idle
-task: paused 12:30 IST Wed 11; 39, 41, 44, 52, 54, 56 done, 55/57 code done (need timed IWER runs). Next B: 40 loud/quiet shots, 58 pause UI, 38 trails, 53 checklist.
+status: working          # working | blocked | paused | idle
+task: biyon-58 pause/resume UI + return state, then 40, 38, 53
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -11,6 +11,7 @@ claims:
 - stemlight/tests/iwer/visual/**
 - stemlight/tests/unit/sfx*
 - stemlight/tests/unit/story*
+- stemlight/src/main.ts
 done:
 - biyon-56 Tutorial, 12 words (15fd59d)
 - biyon-54 Ghost hands (15fd59d)
