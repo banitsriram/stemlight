@@ -2,6 +2,12 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (09:45 IST): biyon, F41 started
+
+- Sir (Representative) has a Meta developer account: two-factor verification done, Developer NDA accepted, team **"Stemlight"** created in the VR Developer Dashboard.
+- **Start application submitted** (country India, tool WebXR, Stemlight summary). Meta's page said "Application Successfully Submitted"; approval is pending by email.
+- **Still needed for F41:** banit's own Meta account with Developer Access (2FA verification at developers.meta.com; banit can join the "Stemlight" team or make his own). If Start approval hasn't come by about Thu 12, file a support case.
+
 ## 11 Nov 2026 (00:00–04:00 IST): biyon, real audio, both pieces, all A gestures, saving
 
 Sir asked for autonomous work overnight (no money, no deploy, no submission). Built by sir's account with two subagents (pipeline, hand input), all verified and committed here.
