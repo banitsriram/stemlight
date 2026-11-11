@@ -3,7 +3,8 @@
 <title>World shell and notes check</title>
 <script type="module">
 // Passes when window.__world.ok is true. Uses fakes, so it needs no audio or XR.
-import { Scene } from 'three';
+import { Mesh, Scene } from 'three';
+import { silhouette, GLIDE_SEC } from '../../../src/world/creatures.ts';
 import { initShell, reachSpot } from '../../../src/world/shell.ts';
 import { beatSwell, createNotesLayer, placeNote } from '../../../src/world/notes/lifecycle.ts';
 
@@ -13,6 +14,8 @@ const targets = new Map();
 const registry = { set: (t) => targets.set(t.id, t), remove: (id) => targets.delete(id), all: () => [...targets.values()] };
 let t = 0;
 const ctx = { bus, registry, transport: { time: () => t } };
+let clock = 0;
+performance.now = () => clock * 1000;
 
 let drawn = [];
 const glyphs = { begin: () => { drawn = []; }, push: (...a) => drawn.push(a), end() {} };
@@ -23,11 +26,11 @@ const notes = (count) => Array.from({ length: count }, (_, id) => ({
   id, t: id * 0.001, dur: 0.5, pitch: 40 + (id % 50), vel: 90, stem: ids[id % 9], glyph: 'quarter', beat: 0,
 }));
 const data = { notes: notes(3000), beats: { tempo: [], beats: [0, 1, 2, 3], downbeats: [0, 2] } };
-window.fetch = async (url) => ({ json: async () => data[url.endsWith('notes.json') ? 'notes' : 'beats'] });
+window.fetch = async (url) => ({ json: async () => url.endsWith('envelopes.json') ? { rate: 30, stems: {} } : data[url.endsWith('notes.json') ? 'notes' : 'beats'] });
 
-const layer = createNotesLayer(ctx, glyphs);
 const scene = new Scene();
-initShell(ctx, scene);
+const shell = initShell(ctx, scene, () => ({ eye: [0, 1.2, 0], yaw: 0 }));
+const layer = createNotesLayer(ctx, glyphs, shell.creatures.position);
 
 const ready = async (n) => {
   bus.emit('piece:ready', { id: 'fixture', manifest: manifest(n) });
@@ -37,7 +40,8 @@ const frame = (at) => { t = at; layer.update(); return JSON.stringify(drawn); };
 
 await ready(9);
 const nine = registry.all();
-const shell = nine.length === 9 && nine.every((x) => x.kind === 'creature' && x.radius === 0.25) && scene.children.length === 1;
+// rock + nebula, ocean, plankton + lock ring + 9 creatures
+const seated = nine.length === 9 && nine.every((x) => x.kind === 'creature' && x.radius === 0.25) && scene.children.length === 14;
 await ready(8);
 const swap = registry.all().length === 8 && !targets.has('creature:harp');
 await ready(9);
@@ -45,6 +49,7 @@ await ready(9);
 const atThree = frame(3);
 const oldest = data.notes[1500]; // 3000 are live, so the oldest kept is the 1501st
 const seat = manifest(9).stems[1500 % 9];
+shell.update(0);
 const expected = {};
 placeNote(3 - oldest.t, oldest, seat.homeSeat, seat.pitchRange, expected);
 const cap = drawn.length === 1500 && drawn[0][2] === expected.x;
@@ -57,6 +62,44 @@ const swell = Math.abs(beatSwell(2, [0, 1, 2], new Set([0, 2])) - 1.15) < 1e-6
   && Math.abs(beatSwell(1, [0, 1, 2], new Set([0, 2])) - 1.08) < 1e-6;
 const spot = reachSpot([0, 1.2, 0], 0).every((v, i) => Math.abs(v - [0, 1.05, -0.45][i]) < 1e-9);
 
-const checks = { shell, swap, cap, paused, rewinds, gone, before, swell, spot };
-window.__world = { checks, ok: Object.values(checks).every(Boolean) };
+// Summon glides to the reach spot in GLIDE_SEC and the registry centre follows; the previous one drifts home.
+bus.emit('gaze:summon', { stem: 'vln' });
+clock += GLIDE_SEC / 2; shell.update(0.016);
+const midway = targets.get('creature:vln').center[2] > -2 && targets.get('creature:vln').center[2] < -0.45;
+clock += GLIDE_SEC; shell.update(0.016);
+const near = (a, b) => a.every((v, i) => Math.abs(v - b[i]) < 1e-6);
+const glide = midway && near(targets.get('creature:vln').center, [0, 1.05, -0.45]);
+bus.emit('gaze:summon', { stem: 'cb' });
+clock += GLIDE_SEC * 1.1; shell.update(0.016);
+const home = near(targets.get('creature:vln').center, manifest(9).stems[0].homeSeat) && near(targets.get('creature:cb').center, [0, 1.05, -0.45]);
+
+// Mute dims to 20 % and freezes that stem's notes to glass; solo dims the others to 25 %.
+const bodyOf = (stem) => scene.children.find((o) => o.isGroup && o.children[0].material.uniforms && near([o.position.x, o.position.z], [targets.get('creature:' + stem).center[0], targets.get('creature:' + stem).center[2]]));
+const settle = () => { for (let i = 0; i < 120; i++) shell.update(0.05); };
+t = 3;
+bus.emit('stem:mute', { stem: 'cb', state: 'held', lockProgress: 0.5 });
+settle();
+const dim = Math.abs(bodyOf('cb').children[0].material.uniforms.uBright.value - 0.2 * 0.55) < 0.01;
+const ring = scene.children.find((o) => o.geometry?.type === 'RingGeometry');
+const lockRing = ring.visible && ring.geometry.drawRange.count === 192;
+frame(3.2); const glassA = drawn.filter((d) => d[0] === 'glass');
+frame(3.6); const glassB = drawn.filter((d) => d[0] === 'glass');
+const glass = glassA.length > 0 && JSON.stringify(glassA.slice(0, 20)) === JSON.stringify(glassB.slice(0, 20)) && drawn.some((d) => d[0] === 'normal');
+bus.emit('stem:mute', { stem: 'cb', state: 'on', lockProgress: 0 });
+frame(3.6); const thawed = !drawn.some((d) => d[0] === 'glass');
+bus.emit('stem:solo', { stem: 'fl' }); settle();
+const soloDim = Math.abs(bodyOf('vln').children[0].material.uniforms.uBright.value - 0.25 * 0.55) < 0.01
+  && Math.abs(bodyOf('fl').children[0].material.uniforms.uBright.value - 0.55) < 0.01;
+bus.emit('stem:solo', { stem: null });
+
+// Budget: each creature ≤ 8k triangles in 2 draw calls.
+const tris = Object.fromEntries(ids.map((id) => {
+  const g = silhouette(id).body;
+  return [id, (g.index ? g.index.count : g.getAttribute('position').count) / 3];
+}));
+const budget = Object.values(tris).every((n) => n <= 8000)
+  && scene.children.filter((o) => o.isGroup).every((o) => o.children.length <= 2);
+
+const checks = { shell: seated, glide, home, dim, lockRing, glass, thawed, soloDim, budget, swap, cap, paused, rewinds, gone, before, swell, spot };
+window.__world = { tris, checks, ok: Object.values(checks).every(Boolean) };
 </script>

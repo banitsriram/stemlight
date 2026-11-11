@@ -1,5 +1,7 @@
 import { Color, Float32BufferAttribute, IcosahedronGeometry, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import type { AppContext, Vec3 } from '../contracts';
+import { createCreatures, type HeadFn } from './creatures';
+import { createSky } from './sky';
 
 export const CREATURE_RADIUS = 0.25;
 
@@ -26,16 +28,16 @@ function rockSeat(): Mesh {
   return rock;
 }
 
-/** Adds the seat and keeps one creature target per stem of the loaded piece in the registry. */
-export function initShell(ctx: AppContext, scene: Object3D): void {
+/** Adds the seat, sky and creatures; the creatures keep one target per stem of the loaded piece in the registry. */
+export function initShell(ctx: AppContext, scene: Object3D, head: HeadFn) {
   scene.add(rockSeat());
-  let ids: string[] = [];
-  ctx.bus.on('piece:ready', ({ manifest }) => {
-    ids.forEach((id) => ctx.registry.remove(id));
-    ids = manifest.stems.map(({ id: stem, homeSeat }) => {
-      const id = `creature:${stem}`;
-      ctx.registry.set({ id, kind: 'creature', stem, center: homeSeat, radius: CREATURE_RADIUS });
-      return id;
-    });
-  });
+  const sky = createSky(scene);
+  const creatures = createCreatures(ctx, scene, head, reachSpot, CREATURE_RADIUS);
+  return {
+    creatures,
+    update(dt: number) {
+      sky.update();
+      creatures.update(dt);
+    },
+  };
 }

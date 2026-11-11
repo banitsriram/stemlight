@@ -64,15 +64,30 @@ interface Piece {
   stems: Map<StemId, PieceManifest['stems'][number]>;
 }
 
-/** Call update() every frame. Each frame is drawn from transport time alone. */
-export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs): { update(): void } {
+/**
+ * Call update() every frame. Each frame is drawn from transport time alone.
+ * seatOf gives a creature's live centre, so notes are born at its mouth wherever it has glided to.
+ */
+export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (stem: StemId) => Vec3 | undefined): { update(): void } {
   let piece: Piece | null = null;
   let latest = 0;
   const p: Placed = { x: 0, y: 0, z: 0, size: 0, alpha: 0 };
+  // Transport time each muted stem went silent: its notes stop there as glass, and new ones are born still.
+  // ponytail: frozen notes still leave after LIFE seconds from onset; keep them longer if a long hold looks empty.
+  const frozen = new Map<StemId, number>();
+  let solo: StemId | null = null;
+  ctx.bus.on('stem:mute', ({ stem, state }) => {
+    if (state === 'on') frozen.delete(stem);
+    else if (!frozen.has(stem)) frozen.set(stem, ctx.transport.time());
+  });
+  ctx.bus.on('stem:solo', ({ stem }) => { solo = stem; });
+  ctx.bus.on('app:reset', () => { frozen.clear(); solo = null; });
 
   ctx.bus.on('piece:ready', async ({ id, manifest }) => {
     const request = ++latest;
     piece = null;
+    frozen.clear();
+    solo = null;
     const [notes, beats]: [NoteEvent[], Beats] = await Promise.all(
       ['notes', 'beats'].map((f) => fetch(`/pieces/${id}/${f}.json`).then((r) => r.json())) as [Promise<NoteEvent[]>, Promise<Beats>],
     );
@@ -91,9 +106,12 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs): { update(
         for (let i = start; i < end; i++) {
           const note = piece.notes[i];
           const stem = piece.stems.get(note.stem)!;
-          placeNote(now - note.t, note, stem.homeSeat, stem.pitchRange, p);
+          const stop = frozen.get(note.stem);
+          const age = stop === undefined ? now - note.t : Math.max(0, Math.min(now, stop) - note.t);
+          placeNote(age, note, seatOf?.(note.stem) ?? stem.homeSeat, stem.pitchRange, p);
           const c = ACCENT[note.stem];
-          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell, c.r, c.g, c.b, p.alpha);
+          const dim = solo !== null && solo !== note.stem ? 0.25 : 1;
+          glyphs.push(stop === undefined ? 'normal' : 'glass', note.glyph, p.x, p.y, p.z, p.size * (stop === undefined ? swell : 1), c.r, c.g, c.b, p.alpha * dim);
         }
       }
       glyphs.end();

@@ -16,7 +16,7 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps):
       <h1 class="landing-in">Stemlight</h1>
       <p class="landing-pitch landing-in">${PITCH}</p>
       <button class="landing-enter landing-in" type="button">Enter</button>
-      <p class="landing-hint landing-in">No account. Seated, hands only, about 8 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
+      <p class="landing-hint landing-in">No account. Seated, hands only, about 5 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
       <p class="landing-status" role="status"></p>
     </main>`;
 

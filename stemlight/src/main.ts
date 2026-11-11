@@ -49,7 +49,15 @@ world.registerSystem(class AudioSystem extends createSystem() {
   }
 });
 
-initShell(ctx, world.scene);
+const camEye = new Vector3(), camFwd = new Vector3();
+const shell = initShell(ctx, world.scene, () => {
+  world.camera.getWorldPosition(camEye);
+  world.camera.getWorldDirection(camFwd);
+  return { eye: [camEye.x, camEye.y, camEye.z], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
+});
+world.registerSystem(class WorldSystem extends createSystem() {
+  update(delta: number) { shell.update(delta); }
+});
 const gestures = initInput(ctx, world, { parts, beats: () => engine.beats().beats });
 // DevHandPose and the gesture log are dev-only and never reach dist/ (F38).
 if (import.meta.env.DEV) (await import('./dev/devInput')).initDevInput(world, ctx, gestures);
@@ -78,7 +86,7 @@ mountLanding(document.getElementById('landing') as HTMLElement, {
 
 const glyphs = await loadNoteGlyphs();
 world.scene.add(glyphs.object);
-const notes = createNotesLayer(ctx, glyphs);
+const notes = createNotesLayer(ctx, glyphs, shell.creatures.position);
 world.registerSystem(class NotesSystem extends createSystem() {
   update() {
     notes.update();
