@@ -1,6 +1,7 @@
 # biyon-1: [A] Representative checks Start membership + Developer Access (clones, coord init and the Windows fix to coord.py were done 7 Nov, 3db8441)
 status: open
 blocked_by: 
+note: 11 Nov 09:45: sir has Developer Access (2FA, team Stemlight) and submitted the Start application; awaiting approval; banit's Developer Access still needed
 owner: A (biyon)
 size: S (<= 0.25 day) | critical path
 features: F41
