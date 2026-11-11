@@ -1,5 +1,5 @@
 # biyon-41: [B] Summon glide + mute visuals (dim, glass, lock ring) + solo dim
-status: open
+status: done
 blocked_by: biyon-40, biyon-37
 owner: B (banit)
 size: M (0.5 day) | critical path

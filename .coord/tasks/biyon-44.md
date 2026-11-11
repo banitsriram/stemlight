@@ -1,5 +1,5 @@
 # biyon-44: [B] Nebula sky, ocean, plankton
-status: open
+status: done
 blocked_by: biyon-36
 owner: B (banit)
 size: M (0.5 day)

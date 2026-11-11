@@ -9,7 +9,7 @@ claims:
 - stemlight/web/**
 - stemlight/video/**
 - stemlight/tests/iwer/visual/**
-- stemlight/src/main.ts
+- stemlight/docs/progress.md
 done:
 - biyon-37 Notes life cycle (bd913ad)
 - biyon-36 World shell (bd913ad)
