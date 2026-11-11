@@ -49,6 +49,7 @@ export function voices(ac: BaseAudioContext) {
     sweep: (o: AudioNode, t: number) => noise(o, t, 0.25, 0.4, 400, 3000, 6),
     tapeStop: (o: AudioNode, t: number) => tone(o, 220, t, 0.12, 0.45, 'sawtooth', 40),
     tick: (o: AudioNode, t: number) => tone(o, 1800, t, 0.06, 0.03, 'square'),
+    pinch: (o: AudioNode, t: number) => tone(o, 2600, t, 0.07, 0.04),
     click: (o: AudioNode, t: number) => { tone(o, 1200, t, 0.12, 0.05, 'triangle'); tone(o, 600, t + 0.04, 0.08, 0.08, 'triangle'); },
     snip: (o: AudioNode, t: number) => { noise(o, t, 0.4, 0.08, 5000, 2500, 3); tone(o, 3136, t + 0.03, 0.06, 0.2); },
     unsnip: (o: AudioNode, t: number) => { noise(o, t, 0.4, 0.08, 2500, 5000, 3); tone(o, 2349, t + 0.03, 0.06, 0.2); },
@@ -93,6 +94,11 @@ export function initSfx(ctx: AppContext, posOf: (stem: StemId) => Vec3 | undefin
     // Loop wraps also seek; scrub ticks are only for seeks while paused.
     const now = performance.now();
     if (!ctx.transport.playing() && now - lastTick > 60) { play('tick'); lastTick = now; }
+  });
+  ctx.bus.on('hand:pinch', ({ down, targetId }) => {
+    if (!down) return;
+    const stem = targetId?.startsWith('creature:') ? (targetId.slice(9) as StemId) : null;
+    play('pinch', stem ? at(stem) : FRONT);
   });
   ctx.bus.on('cut:add', ({ cut }) => play('snip', at(cut.stem)));
   ctx.bus.on('cut:remove', () => play('unsnip'));

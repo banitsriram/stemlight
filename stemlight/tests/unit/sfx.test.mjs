@@ -72,3 +72,11 @@ test('EQ: a sweep while shaping, a click when the reset snaps it flat', () => {
   bus.emit('stem:eq', { stem: 'vln', low: 0, mid: 0, high: 0 }); // already flat: nothing
   assert.equal(outs.length, 2);
 });
+
+test('pinch ticks on close only, from the grabbed creature', () => {
+  const { bus, outs } = setup();
+  bus.emit('hand:pinch', { hand: 'right', down: true, targetId: 'creature:vln' });
+  bus.emit('hand:pinch', { hand: 'right', down: false, targetId: 'creature:vln' });
+  bus.emit('hand:pinch', { hand: 'left', down: true, targetId: null });
+  assert.deepEqual(outs, [[0, 1, -0.45], [0, 1.1, -0.6]]);
+});
