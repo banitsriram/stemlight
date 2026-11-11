@@ -2,6 +2,29 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (16:00 IST): banit, video captures, shot ledger, rough cut, stills, voiceover draft (tasks 59; 60, 68 partly)
+
+- **Captures (59):** `node video/capture.mjs [shot]` runs the real dev build in the IWER emulator on the Mac's GPU (about 55 fps at 1080p, headless).
+  - Head turns go through IWER's remote control, and hands use `look_at`, `set_hand_pose` and `set_select_value`. So every summon, mute, lock and solo on screen comes from the app's own gesture engine, not from bus events.
+  - It records the WebGL canvas (no emulator panels) plus everything sent to the speakers, then writes a 1080p60 H.264/AAC mp4 with an "Emulator footage · not a headset" label.
+  - Clips go to `video/captures/`, which is gitignored.
+- **Shot ledger:** `video/shots.json` lists every shot with its commit (0a9ee76, clean tree), length, and the gesture events that fired during it. There are 7 shots:
+  - opening
+  - fist to glass (summon → held → on → held → locked)
+  - solo on and off
+  - Beethoven field pan
+  - Dvořák densest passage
+  - end card (Dvořák ends on its own)
+  - second visit ("Your mix is back", locked violins)
+- **Gaze:** the pans keep the gaze above the creatures (summon needs 12° for 0.5 s), and the head starts tilted up before Enter, so no creature flies in unasked.
+- **Rough cut (60, first pass):** `node video/assemble.mjs` builds a 67.5 s cut with 0.5 s crossfades and browser-rendered title and closing cards. The closing card carries the CC BY-SA 3.0 credit. The output is `video/captures/rough-cut.mp4`, and a contact sheet was checked at every cut.
+- **Stills:** 7 stills in `video/stills/`, taken from the clips with the same treatment and the emulator label.
+- **Voiceover (68, draft):** `video/VOICEOVER.md` is about 150 words timed to the rough cut, with no brand names and the pitch line word for word. Banit still needs to record the lines.
+- **Not done:**
+  - No cut-and-pads shots yet; they wait for the remake surfaces (45 to 47).
+  - The narration mix, `.srt` and thumbnail are task 61.
+  - The hook style and final length are banit's call.
+
 ## 11 Nov 2026 (15:00 IST): banit, pinch tick, F18 landing, F27 field of view (tasks 53, 35, 63)
 
 - **Pinch tick (53, 1532371):** `hand:pinch` (biyon added it to contracts.ts) plays a short soft tick when a pinch closes. It sounds from the grabbed creature, otherwise just ahead of the seat. Unit test added; the F24 sound checklist now has no gaps.

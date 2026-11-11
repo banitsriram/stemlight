@@ -1,0 +1,118 @@
+[
+ {
+  "id": "01-opening",
+  "file": "video/captures/01-opening.mp4",
+  "what": "First visit as a judge sees it: Enter, the first creature comes to you, Look / Make a fist with ghost hands",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 12.51,
+  "at": "2026-11-11T09:04:31.000Z",
+  "events": []
+ },
+ {
+  "id": "02-fist-glass",
+  "file": "video/captures/02-fist-glass.mp4",
+  "what": "Hook: look at the violins, they glide in; a fist freezes them to glass (chime), open brings them back (bloom), a long fist locks (clink)",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 16.23,
+  "at": "2026-11-11T09:13:15.986Z",
+  "events": [
+   [
+    3.2,
+    "gaze:summon vln"
+   ],
+   [
+    6.03,
+    "stem:mute vln held"
+   ],
+   [
+    7.08,
+    "stem:mute vln on"
+   ],
+   [
+    9.36,
+    "stem:mute vln held"
+   ],
+   [
+    10.87,
+    "stem:mute vln locked"
+   ]
+  ]
+ },
+ {
+  "id": "03-solo",
+  "file": "video/captures/03-solo.mp4",
+  "what": "Look at the cellos, pinch twice: everything else dims and only they play; pinch twice again to bring the orchestra back",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 15.45,
+  "at": "2026-11-11T09:13:48.326Z",
+  "events": [
+   [
+    3.31,
+    "gaze:summon vla_vc"
+   ],
+   [
+    6.4,
+    "stem:solo vla_vc"
+   ],
+   [
+    12.13,
+    "stem:solo"
+   ]
+  ]
+ },
+ {
+  "id": "04-field-pan",
+  "file": "video/captures/04-field-pan.mp4",
+  "what": "Beethoven tutti: a slow head pan across the whole field of creatures and notes",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 11.62,
+  "at": "2026-11-11T09:09:21.881Z",
+  "events": []
+ },
+ {
+  "id": "05-dvorak-brass",
+  "file": "video/captures/05-dvorak-brass.mp4",
+  "what": "Dvořák, the densest passage: look up to the brass with a full field of notes",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 11.79,
+  "at": "2026-11-11T09:09:59.947Z",
+  "events": []
+ },
+ {
+  "id": "06-end-card",
+  "file": "video/captures/06-end-card.mp4",
+  "what": "Dvořák ends naturally; the end card with every credit (CC BY-SA 3.0)",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 14.31,
+  "at": "2026-11-11T09:10:31.723Z",
+  "events": [
+   [
+    4.39,
+    "piece:end dvorak9"
+   ]
+  ]
+ },
+ {
+  "id": "07-second-visit",
+  "file": "video/captures/07-second-visit.mp4",
+  "what": "Second visit: the violins locked last time come back dimmed, with \"Your mix is back\"",
+  "commit": "0a9ee76",
+  "dirty": false,
+  "emulator": true,
+  "seconds": 8.18,
+  "at": "2026-11-11T09:12:07.137Z",
+  "events": []
+ }
+]
