@@ -1,5 +1,5 @@
 # biyon-57: [B] Story sequencer + free play + end card
-status: open
+status: done
 blocked_by: biyon-56, biyon-17
 owner: B (banit)
 size: M (0.5 day) | critical path
