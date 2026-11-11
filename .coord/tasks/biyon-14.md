@@ -1,5 +1,6 @@
 # biyon-14: [A] Cross-trigger + gap suite
-status: open
+status: done
+note: done 11 Nov: 20x IWER suites in tests/iwer/input/results (0ea990a)
 blocked_by: biyon-12, biyon-13
 owner: A (biyon)
 size: M (0.5 day)

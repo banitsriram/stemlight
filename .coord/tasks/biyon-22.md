@@ -1,5 +1,6 @@
 # biyon-22: [A] Trepak fallback if 21 fails: pads → Dvořák perc lane
-status: open
+status: done
+note: done 11 Nov: dvorak9 manifest replace = perc -> pads; timpani lane has 119 notes (b5b7034)
 blocked_by: biyon-21
 owner: A (biyon)
 size: S (<= 0.25 day)
