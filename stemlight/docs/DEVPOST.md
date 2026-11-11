@@ -57,7 +57,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 - **Saved on the device.** Your mix, cuts and recorded drum parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off and ending the session all resume cleanly.
 - **Within budget.** At the busiest moment (Dvořák's densest four seconds with pads and ribbon showing): 68 draw calls, 34.5k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
 - **Testing without a headset.** Every interaction was scripted in the IWSDK emulator (IWER) with a dev-only hand-pose switch that never ships, plus unit tests and headless-browser checks of the audio clock, saving and memory.
-- **Built with Claude Code.** We designed Stemlight and directed every decision. Claude Code, an AI coding assistant, wrote most of the code under our direction, and we reviewed and tested it. **[CHECK: confirm this disclosure wording against the live rules on naming third-party tools]**
+- **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it. **[CHECK, sir: live rules read 12 Nov. They don't ask for AI tools to be disclosed, and ban brand names, logos and slogans in the Project ("commercial or corporate advertising"). So this line discloses the help without naming the product. Keep it, name the tool, or drop the line.]**
 
 ### Accessibility and comfort
 - Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m (checked in the emulator with a field-of-view mask).

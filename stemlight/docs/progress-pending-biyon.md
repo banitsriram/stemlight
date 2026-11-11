@@ -53,3 +53,43 @@
 
 **Not verified**
 - F19 with a head turned away first. IWER can't move the head before the session exists, and each CLI call takes ~1 s, longer than the 0.5 s summon dwell. A real first-timer facing forward also gets the summon at once.
+
+## 12 Nov 2026 (01:30–04:30 IST): biyon, remake surfaces render, amber fix, 10 features pass (branch `biyon/f19-perf-devpost`, PR #1)
+
+**State**
+- **The remake surfaces never rendered until now.** Their drawing code wrote into arrays the GPU never read: `Float32BufferAttribute` copies its array, while `BufferAttribute` shares it. Affected: ribbon band, lane, playhead bead, hollow-region outlines, pads, count-in rings and reset arc. Only the note glyphs (banit's class) showed. Fixed in `src/ui/remake/view.ts`, with a regression test (`tests/unit/remake-view.test.mjs`).
+- **Ribbon and playhead raised above the summoned creature**, which hid them at the old height. Unit test 14 keeps them outside the creature sphere, inside 70×66° and within 0.61 m.
+- **Pad hit now reads amber, not white.** The flash used to add amber on top of the cyan pad and halo, which summed past 1 in every channel. The pad's cyan is now swapped for amber, with a regression test.
+- **Pad and shell look.** Pads are cyan with a bright rim and an eye-facing halo, each with its own count-in ring. The reset shell is cyan.
+- **DEVPOST.md.** The AI-tool line was checked against the live rules (read 12 Nov): no disclosure is required, and brand names are banned in the Project. It now says "an AI coding assistant" without the product name, with a [CHECK] for sir.
+
+**Verified on 12 Nov**
+- **`tests/iwer/input/remake-shots.mjs` (IWER, Dvořák): 6 screenshots** in `tests/iwer/input/results/2026-11-12-shot-*.png`:
+  1. ribbon, playhead bead and the summoned stem's lane with its notes;
+  2. playhead held;
+  3. cut preview span between two pinching hands;
+  4. hollow region with outlines, both pads and count-in rings;
+  5. pad flash, an amber note leaving the fingertip, and ghost outlines;
+  6. reset ring half full.
+- **`tests/iwer/input/remake-real.mjs`: 18/18**, run after the ribbon move (log `2026-11-12-remake-real.txt`).
+- **`tests/browser/take-save.mjs` (real Chromium audio clock, real IndexedDB): 11/11.**
+  - Guide gain 0.1259 (−18 dB) on pass 0 and 0 on pass 1 → **F35 passes**.
+  - It now prints when each strike actually fired. One earlier run failed when the page's polling loop stalled for 300 ms and a strike fired late; the next 3 runs passed.
+- **`tests/browser/loops-mix.mjs` (new, real Chromium): 7/7.**
+  - Off-grid strikes (±60 ms) land on the 1/8 grid.
+  - 3 wraps, each exactly 2.000000 s apart.
+  - Every earlier hit is re-scheduled on passes 1–3 at wrap + offset, 6/6 with 0 µs error.
+  - A lock and an EQ change survive a reload, read back from the gain and filter nodes.
+  - Log: `tests/browser/results/`.
+  - → **F11 and F22 pass** (with the existing unit tests).
+- **F36:** new unit test on the real Dvořák `notes.json`. The outlines equal exactly the notes in a perc region (15) and a violin region (60), and none of them is also drawn solid. With screenshot 4 → **F36 passes**.
+- **Also passing on existing evidence:**
+  - **F04, F32, F33:** the A halves were in the 11 Nov acceptance run (20 fist cycles, 180/180 summons, 20 locks), and banit's world screenshots supply the B halves.
+  - **F09:** remake-real pause, scrub (+1.714 s within 50 ms) and resume, plus screenshots 1–2.
+  - **F34:** 4 count-in events in the unit test and the browser run, plus screenshot 4.
+  - **F40:** unit test of 10 resets, this piece only; the real reset-shell hold; screenshot 6.
+- **banit's `tests/iwer/visual/fov.mjs`:** F18 and F27 pass in all 8 states with 0 console errors. The first attempt timed out on the landing fade while the machine was busy; the rerun passed. The refreshed fov screenshots were left unstaged (banit's folder).
+- `npm test` passes 101/101, typecheck is clean, and the build is clean.
+
+**Not verified**
+- Quest Browser, hand feel and frame rate (no headset). The amber at headset brightness is judged only from emulator screenshots.

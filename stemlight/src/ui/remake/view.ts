@@ -20,6 +20,7 @@ const C = {
   violet: new Color('#2A1B4A'), teal: new Color('#0E5F6B'), cyan: new Color('#6FF3FF'), amber: new Color('#FFB547'),
 };
 const AMBER_CB = new Color('#D55E00');
+const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
 const STEM = Object.fromEntries(Object.entries(ACCENT).map(([k, v]) => [k, new Color(v)])) as Record<StemId, Color>;
 
 class Buf {
@@ -197,7 +198,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
         glyphs.push('amber', f.glyph, p[0], p[1], p[2], 0.04 - 0.014 * e, amber.r, amber.g, amber.b, 1);
       }
     }
-    for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 1.2);
+    for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 0.7);
 
     // Pads: glowing discs facing up with a bright rim; a hit flashes amber. Cyan, not the ocean's teal, so they
     // read against the water from a seated eye (IWER shots, 12 Nov).
@@ -213,16 +214,18 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     for (const pad of view.pads) {
       const flash = pad.flash;
       const base = view.stem === 'perc' || !view.stem ? STEM.perc : C.cyan;
+      // A hit swaps the pad's cyan for amber rather than adding amber on top: cyan + amber at these
+      // strengths sums past 1 in every channel and the flash read as white (IWER shot 5, 12 Nov).
+      const padC = tmpC.copy(C.cyan).lerp(amber, flash);
       for (let i = 0; i < 24; i++) {
         const a0 = (i / 24) * Math.PI * 2, a1 = ((i + 1) / 24) * Math.PI * 2;
-        tris.v(pad.center, flash > 0 ? amber : C.cyan, 0.45 + 1.5 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), C.cyan, 0.18 + 0.4 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), C.cyan, 0.18 + 0.4 * flash);
+        tris.v(pad.center, padC, 0.45 + 0.45 * flash);
+        tris.v(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), padC, 0.18 + 0.2 * flash);
+        tris.v(addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), padC, 0.18 + 0.2 * flash);
       }
-      rim(pad.center, r, base, 2 + flash);
-      rim(addS(pad.center, up, -0.006), r * 0.98, C.cyan, 1); // a second rim just below: the pad reads as a solid disc
-      glowDisc(pad.center, eye, r * 1.5, C.cyan, 0.5 + flash); // a soft eye-facing halo, so a flat pad seen at a shallow angle still reads
-      if (flash > 0) glowDisc(addS(pad.center, up, 0.01), eye, 0.05 + 0.04 * flash, amber, flash);
+      rim(pad.center, r, flash > 0 ? padC : base, flash > 0 ? 1.2 : 2);
+      rim(addS(pad.center, up, -0.006), r * 0.98, padC, 1); // a second rim just below: the pad reads as a solid disc
+      glowDisc(pad.center, eye, r * 1.5, padC, 0.5 + 0.2 * flash); // a soft eye-facing halo, so a flat pad seen at a shallow angle still reads
     }
     if (view.countIn && view.pads.length) {
       // Count-in: a ring around each pad fills clockwise over the bar, pulsing on each tick.

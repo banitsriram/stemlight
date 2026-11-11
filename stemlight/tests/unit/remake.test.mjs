@@ -311,3 +311,37 @@ test('ribbon, lane ends and playhead sit outside the summoned creature, inside 7
     assert.ok(gap > 0.02, `${id} clear of the creature's body (gap ${gap.toFixed(3)} m)`);
   }
 });
+
+test('ghost outlines match exactly the cut region\'s notes in the real Dvořák notes.json (F36)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (f) => JSON.parse(readFileSync(new URL(`../../public/pieces/dvorak9/${f}`, import.meta.url), 'utf8'));
+  const manifest = read('manifest.json'), beats = read('beats.json'), raw = read('notes.json');
+  const notes = Array.isArray(raw) ? raw : raw.notes;
+  const bus = createBus();
+  let clock = 0;
+  const transport = createMockTransport(bus, manifest.durationSec, () => clock);
+  const registry = createMockRegistry();
+  const state = createRemakeState({ bus, transport, registry }, {
+    parts: fakeParts(bus), head: () => FRAME, beats: () => beats, loadNotes: async () => notes,
+  });
+  bus.emit('piece:ready', { id: 'dvorak9', manifest });
+  await new Promise((r) => setImmediate(r));
+  const near1 = (t) => beats.beats.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
+  // The densest 4 s of each stem: perc around 64 s (15 notes), violins around 70.5 s (60 notes).
+  for (const [stem, from] of [['perc', 64], ['vln', 70.5]]) {
+    const t0 = near1(from), t1 = near1(from + 4);
+    const id = `real-${stem}`;
+    bus.emit('gaze:summon', { stem });
+    transport.seek((t0 + t1) / 2); // the whole region inside the ±8 s ribbon window
+    bus.emit('cut:add', { cut: { id, stem, t0, t1 } });
+    clock += 1 / 72;
+    const v = state.update(1 / 72);
+    const region = v.regions.find((r) => r.id === id) ?? v.regions[0];
+    const want = notes.filter((n) => n.stem === stem && n.t >= t0 && n.t < t1).map((n) => n.id).sort((a, b) => a - b);
+    const got = region.ghosts.map((m) => m.note.id).sort((a, b) => a - b);
+    assert.ok(want.length >= 10, `${stem}: a real, busy region (${want.length} notes)`);
+    assert.deepEqual(got, want, `${stem} ${t0.toFixed(2)}-${t1.toFixed(2)} s: outlines = exactly the notes.json notes in the region`);
+    assert.ok(!v.notes.some((m) => want.includes(m.note.id)), `${stem}: none of them is also drawn solid`);
+    bus.emit('cut:remove', { id });
+  }
+});
