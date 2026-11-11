@@ -17,7 +17,6 @@ claims:
 - stemlight/docs/audits/**
 - stemlight/src/contracts.ts
 - stemlight/src/ui/remake/**
-- stemlight/tests/iwer/visual/remake*
 - stemlight/index.html
 - stemlight/.claude/**
 - .claude/**
