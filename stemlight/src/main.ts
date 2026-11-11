@@ -15,6 +15,7 @@ import { createMockRegistry, installKeyMap } from './mock';
 import { loadNoteGlyphs } from './world/notes/NoteGlyphs';
 import { createNotesLayer } from './world/notes/lifecycle';
 import { initShell } from './world/shell';
+import { initSfx } from './ui/sfx';
 import { initInput } from './input/system';
 
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
@@ -55,6 +56,7 @@ const shell = initShell(ctx, world.scene, () => {
   world.camera.getWorldDirection(camFwd);
   return { eye: [camEye.x, camEye.y, camEye.z], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
 });
+initSfx(ctx, shell.creatures.position);
 world.registerSystem(class WorldSystem extends createSystem() {
   update(delta: number) { shell.update(delta); }
 });
