@@ -1,6 +1,6 @@
 # banit
 status: working          # working | blocked | paused | idle
-task: biyon-52 Sound effects 1
+task: biyon-54..57 ghost hands, opening, tutorial, sequencer + end card
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -10,6 +10,7 @@ claims:
 - stemlight/video/**
 - stemlight/tests/iwer/visual/**
 - stemlight/tests/unit/sfx*
+- stemlight/tests/unit/story*
 - stemlight/src/main.ts
 - stemlight/docs/ASSETS.md
 done:

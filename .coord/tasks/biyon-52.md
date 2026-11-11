@@ -1,5 +1,5 @@
 # biyon-52: [B] Sound effects 1 (whoosh, chime, clink, bloom, two-note chime, sweep, tape-stop, ticks) via `sfxOut`
-status: open
+status: done
 blocked_by: biyon-3
 owner: B (banit)
 size: M (0.5 day)
