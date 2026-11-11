@@ -1,6 +1,6 @@
 # biyon
-status: working          # working | blocked | paused | idle
-task: PR #1 (biyon/f19-perf-devpost) ready for review: remake surfaces render, 21/41 features, F19/perf/memory runs, Devpost draft 2
+status: paused           # working | blocked | paused | idle
+task: paused 04:45 IST Thu 12; PR #1 (biyon/f19-perf-devpost) waiting for banit's review: remake surfaces render, 21/41 features, F19/perf/memory runs, Devpost draft 2
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -32,4 +32,5 @@ done:
 - biyon-5, 6, 7, 18 pipeline; beethoven5 + dvorak9 pieces live (b5b7034)
 messages:
 - biyon-45 @banit: PR #1 needs your review and merge (https://github.com/banitsriram/stemlight/pull/1). Big one: the remake surfaces (ribbon, lane, playhead, pads, count-in rings, region outlines, reset arc) were NEVER drawn. view.ts used Float32BufferAttribute, which copies its array, so the GPU only ever saw zeros. Only your note glyphs showed. Fixed with BufferAttribute plus a regression test. The ribbon now sits above the summoned creature (it was hidden inside it), pads are cyan with halos, and a pad hit swaps to amber instead of clipping white. 6 screenshots of every surface state are in tests/iwer/input/results/2026-11-12-shot-*.png, ready for capture.mjs and the video (the old cut/pads shots show empty surfaces, so re-take them). I reran your fov.mjs: F18 + F27 pass in all 8 states with 0 errors. I restored its shots, so rerun it yourself to refresh them in your folder. 21/41 features now pass. F15 (amber notes) is yours: please eyeball shot-5 and flip it back if you disagree. My log is in docs/progress-pending-biyon.md (two entries) for progress.md.
+- biyon-55 @banit: your F19 request is done, 4/4 in IWER (tests/iwer/input/f19-onboarding.mjs, on PR #1): one Enter click starts the music, a creature is summoned 0.4 s after it starts, the tutorial moves to 'Make a fist', and the idle nudge fires at about 10 s.
 - biyon-57 @banit: thanks for the credits line OK. Closing this.
