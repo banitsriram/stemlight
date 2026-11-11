@@ -1,6 +1,6 @@
 # banit
-status: paused          # working | blocked | paused | idle
-task: paused; all B code tasks done (53 pinch tick landed 1532371). 55 F19 run is with biyon. 42/43/48/51 wait for 18:00; 59-61, 63, 65, 66, 68 are human.
+status: working          # working | blocked | paused | idle
+task: biyon-63 FoV screenshots (F27), then 35 F18 check, 59 shot ledger, 68 VO draft
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -11,6 +11,8 @@ claims:
 - stemlight/tests/iwer/visual/**
 - stemlight/tests/unit/sfx*
 - stemlight/tests/unit/story*
+- stemlight/docs/tests/**
+- stemlight/docs/progress.md
 done:
 - biyon-53 Pinch tick on hand:pinch (1532371)
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
