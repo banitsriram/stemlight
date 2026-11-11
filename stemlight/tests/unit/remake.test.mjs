@@ -293,3 +293,21 @@ test('F27 layout: pads and reset shell sit inside 70×66° of the forward view, 
     if (pad) assert.ok(Math.hypot(c[0] - creature[0], c[1] - creature[1], c[2] - creature[2]) > 0.25, `${id} outside the creature's fist sphere`);
   }
 });
+
+test('ribbon, lane ends and playhead sit outside the summoned creature, inside 70×66° and reach', () => {
+  const f = { eye: [0, 0, 0], yaw: 0 };
+  const creature = [0, -0.15, -0.45], R = 0.25;
+  const lane = laneTarget(f, 'perc', 0), ph = playheadTarget(f);
+  const d = [lane.extra.dx, lane.extra.dy, lane.extra.dz], h = lane.extra.halfLength;
+  const pts = [
+    ['lane centre', lane.center], ['lane left end', lane.center.map((c, i) => c - d[i] * h)], ['lane right end', lane.center.map((c, i) => c + d[i] * h)],
+    ['playhead', ph.center],
+  ];
+  for (const [id, c] of pts) {
+    const yaw = Math.atan2(c[0], -c[2]) * 57.2958, pitch = Math.atan2(c[1], Math.hypot(c[0], c[2])) * 57.2958, dist = Math.hypot(...c);
+    assert.ok(Math.abs(yaw) <= 35 && Math.abs(pitch) <= 33, `${id} inside 70×66° (yaw ${yaw.toFixed(1)}, pitch ${pitch.toFixed(1)})`);
+    assert.ok(dist <= 0.61, `${id} within reach (${dist.toFixed(2)} m)`);
+    const gap = Math.hypot(c[0] - creature[0], c[1] - creature[1], c[2] - creature[2]) - R;
+    assert.ok(gap > 0.02, `${id} clear of the creature's body (gap ${gap.toFixed(3)} m)`);
+  }
+});
