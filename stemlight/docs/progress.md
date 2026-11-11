@@ -2,6 +2,38 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (12:30 IST): banit, sound effects, tutorial, ghost hands, sequencer, end card (tasks 52, 54, 56; 55, 57 code done)
+
+Commits cdf82d1 (sound effects) and 15fd59d (story).
+
+- `src/ui/sfx/`: synthesised effects through `sfxOut`, each played from the creature it acts on:
+  - whoosh on summon; glassy chime, clink and bloom for hold, lock and return;
+  - rising and falling solo chimes; EQ sweep (one per stretch);
+  - tape-stop on pause; scrub ticks only while paused, so loop wraps stay quiet;
+  - snip and un-snip on cuts; a chime on reset.
+  - Silent until audio is unlocked. `ASSETS.md` row added.
+- `src/story/tutorial.ts`:
+  - Steps: Look → Make a fist → Open → Hold → Pinch twice → Pinch both, pull → Tap. **12 words.**
+  - Each step completes only on its own event. A 10 s idle pulses the ghost hands. After 3 nudges the step moves on, so nobody is stuck if cut or pads can't be reached.
+  - Saves `tutorialDone`, and a returning user skips straight to free play.
+  - **Ribbon and EQ steps are dropped** (audit MVP). F20 as written lists them, so sir decides whether F20 is re-scoped.
+- `src/story/ghost.ts`: both ghost hands are one instanced draw call, looping each step's gesture at the reach spot under its caption. "Look" floats over the first creature.
+- `src/story/sequencer.ts` replaces `initSequence` in `main.ts` (`src/audio/sequence.ts` is now unused by the app; its `PIECE_ORDER` is still imported). The order is Beethoven, Dvořák, then an **end card**:
+  - "Thank you for listening" and "Your mix is saved for next time. Any song, coming soon."
+  - Every manifest credit with its link (the full CC BY-SA 3.0 notice and licence URL), plus the Bravura OFL credit.
+  - After 14 s, free play loops from the top.
+
+**Verified**
+- `npm test` 78/78 (5 sound-effect tests, 5 story tests incl. word count, nudge/skip, returning-user skip, sequence + end card + loop). `tsc` clean.
+- Headless Chromium, real loader, transport seeked near each end:
+  - Beethoven `piece:end` → Dvořák ready 0.6 s later.
+  - Dvořák `piece:end` → end card → Beethoven ready 14.3 s later and playing. 0 console errors.
+- Screenshots walking the tutorial: `tests/iwer/visual/results/1-field-look.jpg` … `8-end-card.jpg` (`node tests/iwer/visual/run.mjs world --shot`).
+
+**Not verified**
+- F19 (first payoff ≤15 s on a fresh run) and F21 (full timed 4-minute run) need a timed IWER run, so 55 and 57 stay open.
+- No headset, so caption size and ghost-hand readability at arm's length are unjudged.
+
 ## 11 Nov 2026 (11:00 IST): banit, creatures, glide, mute/solo visuals, sky (tasks 39, 41, 44; 40 partly)
 
 Commit 4231fe4. Biyon is taking the remake surfaces (45, 46 outline-only, 47, reset shell) in `src/ui/remake/`.
