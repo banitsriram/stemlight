@@ -18,6 +18,8 @@ claims:
 - stemlight/src/ui/remake/**
 - stemlight/tests/unit/remake*
 - stemlight/src/main.ts
+- stemlight/docs/tests/fov/**
+- stemlight/docs/progress.md
 - stemlight/index.html
 - stemlight/.claude/**
 - .claude/**
