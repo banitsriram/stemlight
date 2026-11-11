@@ -1,6 +1,6 @@
 # banit
 status: working          # working | blocked | paused | idle
-task: biyon-39 Creatures 1 (with 40, 41 and 44 in the same pass)
+task: biyon-52 Sound effects 1
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -9,7 +9,7 @@ claims:
 - stemlight/web/**
 - stemlight/video/**
 - stemlight/tests/iwer/visual/**
-- stemlight/docs/progress.md
+- stemlight/tests/unit/sfx*
 done:
 - biyon-37 Notes life cycle (bd913ad)
 - biyon-36 World shell (bd913ad)
