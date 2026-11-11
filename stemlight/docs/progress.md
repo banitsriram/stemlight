@@ -2,6 +2,19 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (15:00 IST): banit, pinch tick, F18 landing, F27 field of view (tasks 53, 35, 63)
+
+- **Pinch tick (53, 1532371):** `hand:pinch` (biyon added it to contracts.ts) plays a short soft tick when a pinch closes. It sounds from the grabbed creature, otherwise just ahead of the seat. Unit test added; the F24 sound checklist now has no gaps.
+- **Ghost hands for "Pinch both, pull":** the demo spread went from 52 cm to 36 cm because the old one reached 42° to each side, outside the field of view. The real gesture works at any width.
+
+**F18 and F27 check:** `node tests/iwer/visual/fov.mjs` uses a fresh Chromium profile on the IWER dev server, with the dev 70×66° mask on (`?fov`). It printed all PASS with 0 console errors. Screenshots and the angle table are in `docs/tests/fov/`.
+- **F18:** the landing page has exactly one button, "Enter", plus the pitch line, "No account" and the hand-tracking hint. One click starts the XR session and audio, and the landing page goes away. In the headset a pinch on the 2D page is a click, so the emulator gets that same click. **F18 passes.**
+- **F27:** the opening was stepped through Look, fist, open, hold, pinch twice, pinch both and pull, tap, then the end card. At each step everything shown (the tutorial caption, ghost hands, end card) and every interaction target near you (the summoned creature) was measured against the head's forward view. All of it sits within ±35° by ±33°, and the summoned creature is 0.47 m away, inside 2 ft. Worst cases: ghost hands for "Pinch both, pull" reach ±31.8°, and the end card spans 8.9° below to 16.7° above eye level from a seated 1.2 m eye. **F27 passes** for the B surfaces.
+- **Limits:**
+  - IWER keeps its camera at 1.6 m when a page script moves the head. Things placed relative to the head (captions, ghost hands, the reach spot) keep the same angles at any eye height. World-fixed things (the end card, anything past 1.3 m) are measured from a 1.2 m seated eye in the script.
+  - The remake surfaces (45–47) aren't in yet. The script measures every non-creature registry target, so rerun it once they land.
+  - This is emulator only; real comfort is unverified.
+
 ## 11 Nov 2026 (14:00 IST): banit, pause/resume, return state, trails, F14 check, F16 shots, credits, sound checklist (tasks 38, 40, 58; 53 partly)
 
 Commits 7ee5092, 89bd829, and the credits/click commit after them.
@@ -30,7 +43,7 @@ Commits 7ee5092, 89bd829, and the credits/click commit after them.
 | Count-in | 4 soft ticks (A, `synth.ts`) | — |
 | Pad strike | the hit (A, `synth.ts`) | fingertip |
 | Quiet reset | reset chime | front |
-| Pinch | **missing**: waits for `hand:pinch` in contracts.ts (agreed with biyon) | — |
+| Pinch | soft tick on close (`hand:pinch`, 1532371) | grabbed creature, else front |
 
 All synthesised at runtime, so there are no sound files; the one `ASSETS.md` row now lists the click too.
 

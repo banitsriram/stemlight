@@ -1,0 +1,398 @@
+{
+ "fov": [
+  70,
+  66
+ ],
+ "reach": 0.61,
+ "eye": 1.2,
+ "results": [
+  {
+   "state": "1-look",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -2,
+      6.2
+     ],
+     "pitch": [
+      -25.1,
+      -18.4
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:brass",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "2-summoned-fist",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -2,
+      6.2
+     ],
+     "pitch": [
+      -25.1,
+      -18.4
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "3-held-open",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -5.3,
+      5.7
+     ],
+     "pitch": [
+      -23.8,
+      -17.2
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "4-return-hold",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -2,
+      6.2
+     ],
+     "pitch": [
+      -25.1,
+      -18.4
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "5-locked-pinch-twice",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -5.1,
+      5.7
+     ],
+     "pitch": [
+      -18.4,
+      -11.2
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "6-solo-cut",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -31.8,
+      31.8
+     ],
+     "pitch": [
+      -16.3,
+      -12.5
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "7-pads-tap",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -4.9,
+      6
+     ],
+     "pitch": [
+      -18.4,
+      -5.5
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "8-end-card",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "ghost-hands",
+     "yaw": [
+      -4.9,
+      6
+     ],
+     "pitch": [
+      -18.4,
+      -5.5
+     ]
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -19.9,
+      19.9
+     ],
+     "pitch": [
+      -8.9,
+      16.7
+     ],
+     "d": 2.21
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    }
+   ],
+   "outside": []
+  }
+ ]
+}

@@ -23,7 +23,7 @@ export function poseFor(step: TutorialStep, u: number): Rig {
     case 'lock': return { right: { at: R, curl: ease(u * 6), pinch: 0 } };
     case 'solo': return { right: { at: [0.02, 0.06, 0.05], curl: 0.1, pinch: Math.max(bump(u, 0.1, 0.3), bump(u, 0.35, 0.55)) } };
     case 'cut': {
-      const spread = 0.08 + 0.18 * ease((u - 0.3) * 2);
+      const spread = 0.08 + 0.1 * ease((u - 0.3) * 2);
       const pinch = u > 0.15 && u < 0.9 ? 1 : 0;
       return { left: { at: [-spread, 0.05, 0.1], curl: 0.1, pinch }, right: { at: [spread, 0.05, 0.1], curl: 0.1, pinch } };
     }
