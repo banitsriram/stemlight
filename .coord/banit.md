@@ -13,6 +13,7 @@ claims:
 - stemlight/tests/unit/story*
 - stemlight/docs/tests/**
 - stemlight/docs/progress.md
+- stemlight/docs/features.json
 done:
 - biyon-53 Pinch tick on hand:pinch (1532371)
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
