@@ -1,6 +1,7 @@
 # biyon-45: [B] Ribbon visual + playhead/lane colliders + rewind
-status: open
+status: done
 blocked_by: biyon-37
+note: done 11 Nov by biyon in src/ui/remake (6f9e585), at banit's request
 owner: B (banit)
 size: M (0.5 day) | critical path
 features: F09

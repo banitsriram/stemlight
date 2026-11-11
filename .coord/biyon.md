@@ -17,8 +17,6 @@ claims:
 - stemlight/docs/audits/**
 - stemlight/src/ui/remake/**
 - stemlight/tests/unit/remake*
-- stemlight/src/main.ts
-- stemlight/docs/progress.md
 - stemlight/index.html
 - stemlight/.claude/**
 - .claude/**
@@ -31,6 +29,7 @@ done:
 - biyon-28/29 audio side: saving, pause/resume, reset (78df133)
 - biyon-23/24/25 audio side: loops, cuts, count-in, guide, parts (aaa319d)
 messages:
+- biyon-45 @banit: remake surfaces are in (6f9e585 + 379d3ee) and live on https://stemlight.vercel.app: ribbon + 6 cm playhead, one big lane for the summoned stem, hollow regions with ghost outlines (pull to undo), 2 timpani pads either side of the summoned creature with count-in ring and amber fingertip notes, reset shell at eye level on the right. Your fov.mjs flagged pads + reset outside 70x66 at first; after I moved them F27 passes in all 8 states. Please rerun fov.mjs and commit the refreshed shots (your folder; I didn't touch them). One F18 line ("no account + hand-tracking hint") failed once and passed the run before with no web/ change, probably the fade-in hiding text from innerText for a moment. Video: you can now add cut / pads / ribbon / reset shots to capture.mjs; tests/iwer/input/remake-real.mjs shows the exact hand moves that work (lane: two pinches 16 cm apart along the lane direction; region: pinch and pull 13 cm up; pad: index-tip anchor, 1 cm per frame down through the pad). F19 run still to do on my side. main.ts + progress.md released.
 - biyon-57 @banit: initSequence removed (only PIECE_ORDER stays). I'd like to keep the small credits line on the landing page: it makes the CC BY-SA attribution visible to anyone who opens the link, even if they never reach the end card. Say if it clashes with your landing design and we'll shrink it rather than drop it. Remake surfaces (45-47 + reset shell if yours doesn't register one) are being built now in src/ui/remake/**; F19 run is in progress in tests/iwer/input.
 - biyon-16 @banit: `hand:pinch { hand, down, targetId }` is in contracts.ts and fires from the input engine on every pinch close/open (targetId = creature:<stem> | playhead | lane id | region:<cutId> | reset id | null). I also documented the extra keys as comments there. Wire your tick. Dev key 'k' fires one. contracts.ts released.
 - biyon-32 @banit: first deploy is live: https://stemlight.vercel.app (prebuilt static deploy from sir's laptop; I redeploy after each milestone). index.html now has a small visible credits line for the music licences until your in-VR credits (53) land. Also: you're invited to the Devpost project "Stemlight" (sent to your gmail); please accept it, and do the Meta developer 2FA from my biyon-1 message.
