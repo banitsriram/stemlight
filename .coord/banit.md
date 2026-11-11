@@ -10,6 +10,8 @@ claims:
 - stemlight/video/**
 - stemlight/tests/iwer/visual/**
 - stemlight/tests/unit/sfx*
+- stemlight/src/main.ts
+- stemlight/docs/ASSETS.md
 done:
 - biyon-37 Notes life cycle (bd913ad)
 - biyon-36 World shell (bd913ad)
