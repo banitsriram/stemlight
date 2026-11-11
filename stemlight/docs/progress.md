@@ -2,6 +2,62 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (14:00 IST): banit, pause/resume, return state, trails, F14 check, F16 shots, credits, sound checklist (tasks 38, 40, 58; 53 partly)
+
+Commits 7ee5092, 89bd829, and the credits/click commit after them.
+
+- **Pause/resume (58):** leaving VR (taking the headset off, the system menu, or ending the session) brings back the landing page as **Paused / Resume**. Resume re-enters where the music stopped.
+- **Returning users:** the current tutorial step is kept on the device (localStorage), so a reload continues the tutorial instead of repeating it, and a finished tutorial never shows again. A saved mix shows "Your mix is back" for 5 s once the music plays. Locked creatures come back dimmed with glass notes.
+- **Trails and pops (38):** notes of 1 s or longer leave three outline copies behind while they sound; notes under 0.25 s pop at birth.
+- **Envelope pulse (40):** creatures scale 0.9–1.25 and glow 0.35–1.25 with their stem's envelope.
+- **Credits (53):** the end card now credits the generated reverb impulse response too. A unit test checks it against both real manifests for every shipped ASSETS item: both scores and their Mutopia pieces, CC BY-SA 3.0 with the licence link, VSCO 2 CE (CC0), Bravura (OFL) and the IR.
+- EQ reset now clicks. Also fixed: the first sweep or scrub tick in the 450 ms after page load was swallowed.
+
+**Action / sound checklist (F24)**
+
+| Action | Sound | Where it comes from |
+|---|---|---|
+| Summon | whoosh | the creature |
+| Fist (silence held) | glassy chime | the creature |
+| Lock (1.5 s) | clink | the creature |
+| Return | warm bloom | the creature |
+| Double-pinch solo / clear | rising / falling two-note chime | the creature / front |
+| EQ stretch | filter sweep, once per stretch | the creature |
+| EQ reset | click | the creature |
+| Ribbon pause | tape-stop | front |
+| Scrub | ticks, only while paused | front |
+| Trim / undo trim | glass snip / reverse snip | cut stem's creature / front |
+| Count-in | 4 soft ticks (A, `synth.ts`) | — |
+| Pad strike | the hit (A, `synth.ts`) | fingertip |
+| Quiet reset | reset chime | front |
+| Pinch | **missing**: waits for `hand:pinch` in contracts.ts (agreed with biyon) | — |
+
+All synthesised at runtime, so there are no sound files; the one `ASSETS.md` row now lists the click too.
+
+**Verified**
+- `npm test` 82/82.
+- `notes-real.html`: **20/20** random glyphs from the real beethoven5 data match `notes.json` (glyph, stem colour, exact `placeNote` position, height from pitch).
+- F16 loud/quiet pair: `tests/iwer/visual/results/0-loud-37s.jpg` and `0-quiet-22s.jpg`.
+- IWER (dev server) check on a fresh profile, 0 errors:
+  - Enter starts XR, music and tutorial.
+  - `session.end()` → Paused / Resume with transport paused at 2.9 s; Resume → playing from 3.x s.
+  - Reload with a locked violin → violins dim and "Your mix is back" visible.
+- In IWER the default head pose looks straight at a creature, so it auto-summons within a second of entering.
+
+**F21 full timed run** (fresh Chromium profile, IWER dev server, Enter clicked, no skipping, 270 s wall time): 0 console errors.
+
+| Time after Enter | Event |
+|---|---|
+| 4.1 s | music starts; tutorial "Look" |
+| 87.8 s | `piece:end` beethoven5 |
+| 89.1 s | dvorak9 ready and playing |
+| 242.3 s | `piece:end` dvorak9 → end card |
+| 257.6 s | free play: beethoven5 ready and playing again |
+
+- Every tutorial step showed in order (the idle skip moved each on after 40 s, since no hands were scripted).
+- **Bug found and fixed in this run:** IWER's head summoned the coral a moment *before* the tutorial started, so "Look" could never complete until the idle skip. The tutorial now counts steps done before the music starts (unit test added).
+- Still to do for F19: the timed "first payoff ≤15 s" needs a scripted head turn on a fresh run; in this run the first summon came at 4.1 s, but from IWER's default head pose, not a deliberate look.
+
 ## 11 Nov 2026 (12:30 IST): banit, sound effects, tutorial, ghost hands, sequencer, end card (tasks 52, 54, 56; 55, 57 code done)
 
 Commits cdf82d1 (sound effects) and 15fd59d (story).

@@ -109,3 +109,10 @@ test('the end card credits every shipped ASSETS row: scores, samples, CC BY-SA, 
     assert.ok(card.includes(must), `missing: ${must}`);
   }
 });
+
+test('a creature summoned before the music starts still completes the Look step', () => {
+  const bus = createBus(), t = createTutorial(bus, fakeSave(), mem());
+  bus.emit('gaze:summon', { stem: 'brass' });
+  t.start(0);
+  assert.equal(t.step(), 'silence');
+});

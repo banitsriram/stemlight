@@ -45,14 +45,18 @@ export function createTutorial(bus: Pick<Bus, 'on' | 'emit'>, save: SaveApi, mem
     if (i >= STEPS.length) save.patch({ tutorialDone: true });
     bus.emit('tutorial:step', { step: i >= STEPS.length ? 'free' : STEPS[i].step });
   };
-  for (const k of WATCH) bus.on(k, (e) => { if (i >= 0 && i < STEPS.length && STEPS[i].done(k, e)) go(i + 1); });
+  let early = 0; // steps already done before the music started (a gaze can summon before Enter lands)
+  for (const k of WATCH) bus.on(k, (e) => {
+    if (i < 0) { if (STEPS[early]?.done(k, e)) early++; return; }
+    if (i < STEPS.length && STEPS[i].done(k, e)) go(i + 1);
+  });
 
   return {
     step: () => (i < 0 ? 'summon' : i >= STEPS.length ? 'free' : STEPS[i].step),
     words: () => (i >= 0 && i < STEPS.length ? STEPS[i].words : ''),
     start(now) {
       clock = now;
-      if (i < 0) go(Math.min(memory.get(), STEPS.length - 1));
+      if (i < 0) go(Math.min(Math.max(memory.get(), early), STEPS.length - 1));
     },
     tick(now) {
       clock = now;
