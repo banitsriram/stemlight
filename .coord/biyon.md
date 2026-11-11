@@ -14,6 +14,7 @@ claims:
 - stemlight/tests/unit/input*.test.mjs
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/docs/DEVPOST.md
+- stemlight/docs/features.json
 - stemlight/docs/audits/**
 - stemlight/docs/progress-pending-biyon.md
 - stemlight/src/ui/remake/**
