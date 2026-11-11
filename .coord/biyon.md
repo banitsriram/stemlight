@@ -16,6 +16,8 @@ claims:
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
 - stemlight/src/ui/remake/**
+- stemlight/tests/unit/remake*
+- stemlight/src/main.ts
 - stemlight/index.html
 - stemlight/.claude/**
 - .claude/**
