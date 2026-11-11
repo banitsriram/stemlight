@@ -6,7 +6,7 @@ import { createBus } from './bus';
 import { createEngine } from './audio/engine';
 import { loadPiece } from './audio/loader';
 import { createParts } from './audio/parts';
-import { initSequence, PIECE_ORDER } from './audio/sequence';
+import { PIECE_ORDER } from './audio/sequence';
 import { initLifecycle } from './audio/lifecycle';
 import { createSave } from './audio/save/store';
 import { initPersist } from './audio/save/persist';
@@ -14,8 +14,10 @@ import type { AppContext, PieceId } from './contracts';
 import { createMockRegistry, installKeyMap } from './mock';
 import { loadNoteGlyphs } from './world/notes/NoteGlyphs';
 import { createNotesLayer } from './world/notes/lifecycle';
-import { initShell } from './world/shell';
+import { initShell, reachSpot } from './world/shell';
 import { initSfx } from './ui/sfx';
+import { initStory } from './story';
+import { endCardSprite, initSequencer } from './story/sequencer';
 import { initInput } from './input/system';
 
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
@@ -51,14 +53,18 @@ world.registerSystem(class AudioSystem extends createSystem() {
 });
 
 const camEye = new Vector3(), camFwd = new Vector3();
-const shell = initShell(ctx, world.scene, () => {
+const head = () => {
   world.camera.getWorldPosition(camEye);
   world.camera.getWorldDirection(camFwd);
-  return { eye: [camEye.x, camEye.y, camEye.z], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
-});
+  return { eye: [camEye.x, camEye.y, camEye.z] as [number, number, number], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
+};
+const shell = initShell(ctx, world.scene, head);
+const story = initStory(ctx, world.scene, head, reachSpot, shell.creatures.position);
+const endCard = endCardSprite();
+world.scene.add(endCard.sprite);
 initSfx(ctx, shell.creatures.position);
 world.registerSystem(class WorldSystem extends createSystem() {
-  update(delta: number) { shell.update(delta); }
+  update(delta: number) { shell.update(delta); story.update(); }
 });
 const gestures = initInput(ctx, world, { parts, beats: () => engine.beats().beats });
 // DevHandPose and the gesture log are dev-only and never reach dist/ (F38).
@@ -103,7 +109,7 @@ const manifest = await loadPiece(engine, bus, piece).catch((e) => {
   return loadPiece(engine, bus, 'fixture' as PieceId);
 });
 markReady();
-initSequence(engine, bus); // ponytail: until B's sequencer (biyon-57) owns the piece order
+initSequencer(ctx, PIECE_ORDER, (id) => loadPiece(engine, bus, id), endCard.show);
 if (import.meta.env.DEV) {
   installKeyMap(ctx, manifest);
   // ?stats shows the overlay, ?fov (or key m) the 70×66° mask; __stemlight.stats() for scripted logs.

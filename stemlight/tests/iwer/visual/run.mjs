@@ -34,14 +34,19 @@ try {
     await page.evaluate(() => { document.getElementById('landing')?.remove(); const s = window.__stemlight; s.ctx.audio.unlock(); s.ctx.transport.seek(20); s.ctx.transport.play(); });
     const out = 'tests/iwer/visual/results';
     const emit = (k, e) => page.evaluate(([k, e]) => window.__stemlight.ctx.bus.emit(k, e), [k, e]);
-    const snap = async (name, wait = 1200) => { await page.waitForTimeout(wait); await page.screenshot({ path: `${out}/${name}.png` }); };
-    await snap('1-field');
-    await emit('gaze:summon', { stem: 'vln' }); await snap('2-summon-vln');
-    await emit('stem:mute', { stem: 'vln', state: 'held', lockProgress: 0.6 }); await snap('3-held-vln-glass');
-    await emit('stem:mute', { stem: 'vln', state: 'locked', lockProgress: 1 }); await snap('4-locked-vln');
+    const snap = async (name, wait = 1200) => { await page.waitForTimeout(wait); await page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 70 }); };
+    // Each event also completes the tutorial step on screen, so the shots walk the opening in order.
+    await snap('1-field-look');
+    await emit('gaze:summon', { stem: 'vln' }); await snap('2-summon-vln-ghost-fist');
+    await emit('stem:mute', { stem: 'vln', state: 'held', lockProgress: 0.6 }); await snap('3-held-vln-glass-ghost-open');
+    await emit('stem:mute', { stem: 'vln', state: 'on', lockProgress: 0 }); await snap('4-return-ghost-hold');
+    await emit('stem:mute', { stem: 'vln', state: 'locked', lockProgress: 1 }); await snap('5-locked-vln-ghost-pinch-twice');
     await emit('stem:mute', { stem: 'vln', state: 'on', lockProgress: 0 });
-    await emit('stem:solo', { stem: 'vla_vc' }); await snap('5-solo-vla_vc');
-    console.log('screenshot saved; console errors:', errors.length ? errors : 'none');
+    await emit('stem:solo', { stem: 'vla_vc' }); await snap('6-solo-vla_vc-ghost-cut');
+    await emit('stem:solo', { stem: null });
+    await emit('cut:add', { cut: { id: 'shot', stem: 'perc', t0: 30, t1: 32 } }); await snap('7-ghost-tap', 900);
+    await emit('piece:end', { id: 'dvorak9' }); await snap('8-end-card', 600);
+    console.log('screenshots saved; console errors:', errors.length ? errors : 'none');
   }
 } finally {
   await browser.close();
