@@ -89,7 +89,14 @@
   - **F34:** 4 count-in events in the unit test and the browser run, plus screenshot 4.
   - **F40:** unit test of 10 resets, this piece only; the real reset-shell hold; screenshot 6.
 - **banit's `tests/iwer/visual/fov.mjs`:** F18 and F27 pass in all 8 states with 0 console errors. The first attempt timed out on the landing fade while the machine was busy; the rerun passed. The refreshed fov screenshots were left unstaged (banit's folder).
-- `npm test` passes 101/101, typecheck is clean, and the build is clean.
+- **`tests/iwer/input/trim-20.mjs` (new, IWER, real gestures on Dvořák's violins, no take or guide involved).** Log: `results/2026-11-12-trim-20.txt`.
+  - 20/20 two-hand cuts: cut:preview, then cut:add, then a hollow region target.
+  - The trim gain is 0 inside the region on playback (20/20) and 1 outside (20/20). Each reading is judged by the piece time it was actually taken at, because harness calls take about 1 s while the music runs.
+  - 10/10 pull-away undos: cut:remove, the region is gone, and the gain is back to 1.
+  - 10 cuts kept at the end.
+  - → **F10 passes** (with the unit test of 20 trims and 10 undos, and screenshot 4).
+- **F15:** after the amber fix, screenshot 5 shows the struck pad glowing amber-gold, with an amber note rising from the fingertip next to the cyan pad. → **F15 passes**. banit owns it, so please confirm the look.
+- `npm test` passes 101/101, typecheck is clean, and the build is clean. **21/41 features pass.**
 
 **Not verified**
 - Quest Browser, hand feel and frame rate (no headset). The amber at headset brightness is judged only from emulator screenshots.
