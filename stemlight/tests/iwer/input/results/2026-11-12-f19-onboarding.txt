@@ -1,0 +1,7 @@
+PASS  music playing after one Enter click (audio unlocked)  ({"t":4.21})
+PASS  first payoff: a creature is summoned within 15 s of the music starting  (brass at 0.4 s (negative = while Enter was landing; the tutorial counts it))
+screenshot after entry: results/2026-11-12-f19-1-summoned.png
+PASS  tutorial moved past the summon step to the next cue  ({"step":"silence","words":"Make a fist"})
+PASS  doing nothing for 10 s -> a nudge on the waiting step  (nudge 12.0 s after the step began, step silence)
+screenshot nudge: results/2026-11-12-f19-2-nudge.png
+4/4 passed  (emulator; no claim about hand feel or device timing)

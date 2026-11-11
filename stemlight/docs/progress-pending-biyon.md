@@ -35,3 +35,21 @@
 - F19 onboarding run: the input agent stalled twice on a stream timeout before writing it.
 
 **Local trap:** on this laptop PowerShell takes about 1.8 s to start, and `@iwsdk/vite-plugin-dev` gives it 1.5 s, so `iwsdk dev up` fails with "runtime ownership". The timeout in the local `node_modules` copy was raised to 10 s (not committed). If `npm install` reinstalls the plugin, patch it again. Start the session from PowerShell with `npx iwsdk dev up --ai-mode agent --headless --open --allow-browser-automation`, then `npx iwsdk dev open --headless` until `browserCommandReady` is true.
+
+## 12 Nov 2026 (00:15–01:30 IST): biyon, F19 run, performance pass, memory check, Devpost draft 2 (branch `biyon/f19-perf-devpost`, PR)
+
+**State**
+- `tests/iwer/input/f19-onboarding.mjs` is banit's request biyon-55.
+- `tests/iwer/input/perf-heaviest.mjs` is task 31.
+- `tests/browser/memory-switch.mjs` is task 17.
+- `docs/DEVPOST.md` draft 2 now matches the live build: real URL, real numbers, cut features removed, and [CHECK]s left only for open decisions.
+- `story` was added to the dev-only `window.__stemlight` handle so tests can read the tutorial.
+
+**Verified on 12 Nov**
+- **F19, IWER headless, fresh first visit: 4/4.** One Enter click starts the music and unlocks the audio. A creature (brass, dead ahead in IWER's default seated pose) is summoned 0.4 s after the music starts, which is within 15 s. The tutorial moves to "Make a fist". After doing nothing, a nudge fires; it was measured at 12.0 s after the step began, which is the 10 s rule plus up to ~1.6 s of polling delay. Screenshots are `results/2026-11-12-f19-*.png`.
+- **Performance pass, IWER: 4/4.** The test ran at Dvořák's densest 4 s (64.5 s, 357 notes), with the brass summoned and a perc cut so the pads, lane, region and ribbon all show. Peak 68 draw calls, 34.5k triangles and 380 live notes, against caps of 100 / 150k / 1,500. These are emulator numbers; Quest frame rate is unverified. → **F26 passes** (device frame rate stated as unverified, as its test allows).
+- **Memory, headless Chromium with forced GC: 4/4.** Decoded size is logged per piece: beethoven5 128.4 MB, dvorak9 235 MB. After switching to Dvořák, 0 of 8 Beethoven AudioBuffers are still alive after GC. → **F39 passes** (Quest memory unverified).
+- `npm test` passes 97/97 and typecheck is clean.
+
+**Not verified**
+- F19 with a head turned away first. IWER can't move the head before the session exists, and each CLI call takes ~1 s, longer than the 0.5 s summon dwell. A real first-timer facing forward also gets the summon at once.

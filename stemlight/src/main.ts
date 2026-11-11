@@ -126,5 +126,5 @@ if (import.meta.env.DEV) {
   world.registerSystem(class DevStatsSystem extends createSystem() {
     update() { stats.update(); }
   });
-  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, stats: stats.sample, statsReset: stats.resetMax } });
+  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, stats: stats.sample, statsReset: stats.resetMax } });
 }
