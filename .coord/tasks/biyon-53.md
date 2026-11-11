@@ -1,5 +1,5 @@
 # biyon-53: [B] Sound effects 2 + action/sound checklist + credits (incl. CC BY-SA text)
-status: open
+status: done
 blocked_by: biyon-52, biyon-62
 owner: B (banit)
 size: M (0.5 day)
