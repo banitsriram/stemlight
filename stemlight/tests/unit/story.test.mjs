@@ -4,7 +4,8 @@ import { test } from 'node:test';
 import { createBus } from '../../src/bus.ts';
 import { createTutorial, NUDGE_SEC, SKIP_AFTER_NUDGES, STEPS } from '../../src/story/tutorial.ts';
 import { hasSavedChanges } from '../../src/story/index.ts';
-import { initSequencer, END_CARD_SEC } from '../../src/story/sequencer.ts';
+import { initSequencer, END_CARD_SEC, endCardLines } from '../../src/story/sequencer.ts';
+import { readFileSync } from 'node:fs';
 
 const fakeSave = (s = {}) => {
   let state = { version: 1, tutorialDone: false, perPiece: {}, palette: 'default', ...s };
@@ -98,4 +99,13 @@ test('sequence: next piece, then the end card with every credit, then free play 
   assert.deepEqual(loads, ['b', 'a']);
   assert.equal(cards.at(-1), null); // the card hides when the next piece is ready
   assert.equal(plays, 2);
+});
+
+test('the end card credits every shipped ASSETS row: scores, samples, CC BY-SA, font, impulse response', () => {
+  const credits = ['beethoven5', 'dvorak9'].flatMap((id) => JSON.parse(readFileSync(`public/pieces/${id}/manifest.json`, 'utf8')).credits);
+  const card = endCardLines(credits).join('\n');
+  for (const must of ['Beethoven', 'piece 941', 'Dvořák', 'piece 1793', 'CC BY-SA 3.0', 'creativecommons.org/licenses/by-sa/3.0',
+    'VSCO 2 Community Edition', 'CC0', 'Bravura', 'SIL Open Font License', 'impulse response']) {
+    assert.ok(card.includes(must), `missing: ${must}`);
+  }
 });

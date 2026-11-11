@@ -49,6 +49,7 @@ export function voices(ac: BaseAudioContext) {
     sweep: (o: AudioNode, t: number) => noise(o, t, 0.25, 0.4, 400, 3000, 6),
     tapeStop: (o: AudioNode, t: number) => tone(o, 220, t, 0.12, 0.45, 'sawtooth', 40),
     tick: (o: AudioNode, t: number) => tone(o, 1800, t, 0.06, 0.03, 'square'),
+    click: (o: AudioNode, t: number) => { tone(o, 1200, t, 0.12, 0.05, 'triangle'); tone(o, 600, t + 0.04, 0.08, 0.08, 'triangle'); },
     snip: (o: AudioNode, t: number) => { noise(o, t, 0.4, 0.08, 5000, 2500, 3); tone(o, 3136, t + 0.03, 0.06, 0.2); },
     unsnip: (o: AudioNode, t: number) => { noise(o, t, 0.4, 0.08, 2500, 5000, 3); tone(o, 2349, t + 0.03, 0.06, 0.2); },
     reset: (o: AudioNode, t: number) => [523.3, 392, 261.6].forEach((f, i) => tone(o, f, t + i * 0.1, 0.08, 0.6)),
@@ -65,9 +66,9 @@ export function initSfx(ctx: AppContext, posOf: (stem: StemId) => Vec3 | undefin
   };
   const at = (stem: StemId) => posOf(stem) ?? FRONT;
   const mute: Partial<Record<StemId, MuteState>> = {};
-  let lastEq = 0, lastTick = 0;
+  let lastEq = -Infinity, lastTick = -Infinity;
 
-  ctx.bus.on('piece:ready', () => { for (const k in mute) delete mute[k as StemId]; });
+  ctx.bus.on('piece:ready', () => { for (const k in mute) delete mute[k as StemId]; eqShaped.clear(); });
   ctx.bus.on('gaze:summon', ({ stem }) => play('whoosh', at(stem)));
   ctx.bus.on('stem:mute', ({ stem, state }) => {
     const was = mute[stem] ?? 'on';
@@ -78,7 +79,11 @@ export function initSfx(ctx: AppContext, posOf: (stem: StemId) => Vec3 | undefin
     else play('bloom', at(stem));
   });
   ctx.bus.on('stem:solo', ({ stem }) => play(stem ? 'soloOn' : 'soloOff', stem ? at(stem) : FRONT));
-  ctx.bus.on('stem:eq', ({ stem }) => {
+  const eqShaped = new Set<StemId>();
+  ctx.bus.on('stem:eq', ({ stem, low, mid, high }) => {
+    const flat = low === 0 && mid === 0 && high === 0;
+    if (flat && eqShaped.has(stem)) { play('click', at(stem)); eqShaped.delete(stem); return; } // EQ reset snaps back
+    if (!flat) eqShaped.add(stem);
     const now = performance.now();
     if (now - lastEq > 450) play('sweep', at(stem)); // one sweep per stretch, not per frame
     lastEq = now;

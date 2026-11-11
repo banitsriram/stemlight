@@ -4,7 +4,7 @@ import type { AppContext, PieceId, PieceManifest } from '../contracts';
 import { textSprite } from './card.ts';
 
 export const END_CARD_SEC = 14;
-const FONT_CREDIT = 'Note symbols: Bravura font, SIL Open Font License 1.1. Sounds and visuals made in code.';
+const OWN_CREDIT = 'Note symbols: Bravura font, SIL Open Font License 1.1. Reverb impulse response, sound effects and visuals made in code.';
 
 export function endCardLines(credits: PieceManifest['credits']): string[] {
   return [
@@ -12,7 +12,7 @@ export function endCardLines(credits: PieceManifest['credits']): string[] {
     'Your mix is saved for next time. Any song, coming soon.',
     '',
     ...credits.map((c) => `${c.text} ${c.url}`),
-    FONT_CREDIT,
+    OWN_CREDIT,
   ];
 }
 

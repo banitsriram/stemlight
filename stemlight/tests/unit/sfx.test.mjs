@@ -61,3 +61,14 @@ test('nothing plays before audio is unlocked', () => {
   bus.emit('gaze:summon', { stem: 'vln' });
   assert.equal(outs.length, 0);
 });
+
+test('EQ: a sweep while shaping, a click when the reset snaps it flat', () => {
+  const { bus, ac, outs } = setup();
+  bus.emit('stem:eq', { stem: 'vln', low: 4, mid: 0, high: -2 });
+  assert.equal(ac.starts.length, 1); // the sweep is filtered noise
+  bus.emit('stem:eq', { stem: 'vln', low: 0, mid: 0, high: 0 });
+  assert.equal(outs.length, 2);
+  assert.equal(ac.voices.length, 2); // the click: two short tones, no noise
+  bus.emit('stem:eq', { stem: 'vln', low: 0, mid: 0, high: 0 }); // already flat: nothing
+  assert.equal(outs.length, 2);
+});
