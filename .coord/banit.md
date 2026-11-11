@@ -1,6 +1,6 @@
 # banit
 status: working          # working | blocked | paused | idle
-task: biyon-58 pause/resume UI + return state, then 40, 38, 53
+task: biyon-53 credits + sound checklist; F21 full run
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -11,7 +11,8 @@ claims:
 - stemlight/tests/iwer/visual/**
 - stemlight/tests/unit/sfx*
 - stemlight/tests/unit/story*
-- stemlight/src/main.ts
+- stemlight/docs/progress.md
+- stemlight/docs/ASSETS.md
 done:
 - biyon-56 Tutorial, 12 words (15fd59d)
 - biyon-54 Ghost hands (15fd59d)

@@ -1,5 +1,5 @@
 # biyon-58: [B] Pause/resume UI, returning-user skip, visible change on return, reset shell visual
-status: open
+status: done
 blocked_by: biyon-28, biyon-29, biyon-56
 owner: B (banit)
 size: M (0.5 day)

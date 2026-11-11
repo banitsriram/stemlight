@@ -1,5 +1,5 @@
 # biyon-40: [B] Creatures 2: hn, brass, perc, harp + envelope pulse
-status: open
+status: done
 blocked_by: biyon-39
 owner: B (banit)
 size: M (0.5 day) | critical path
