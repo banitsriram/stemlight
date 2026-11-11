@@ -15,6 +15,8 @@ claims:
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
+- stemlight/index.html
+- stemlight/docs/progress.md
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
