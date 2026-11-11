@@ -2,6 +2,20 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (10:15 IST): biyon, first deploy (task 32, sir approved in chat)
+
+- **Live: https://stemlight.vercel.app** (Vercel free plan, sir's account, project `stemlight`).
+- How: `npm run build` in `stemlight/`, copy `dist/` to `~/projects/stemlight-deploy/stemlight/` (outside the repo, `pieces/fixture` removed), then `npx vercel deploy --prod --yes` from there. It's a prebuilt static upload: no Git connection, so nothing auto-deploys.
+- `index.html` now carries a visible credit line: Dvořák (Mutopia #1793, CC BY-SA 3.0, our stems and notes under the same licence), Beethoven (Mutopia #941, PD), VSCO 2 CE (CC0), Bravura (OFL). B's in-VR credits (task 53) still needed.
+
+**Verified on 11 Nov (fresh Chromium profile, headless)**
+- index, stems and manifests return 200. Every request goes to `stemlight.vercel.app` (self-hosted). 0 page errors.
+- beethoven5 decodes (8 stems, 128.4 MB).
+- Enter visible after 2.3, 3.4 and 4.1 s on three fresh visits. The very first visit took 25.6 s, most likely Vercel's CDN filling its cache. To recheck on the RC.
+
+**Not verified**
+- Quest Browser: not opened on a headset (none). XR entry was not exercised on the live link.
+
 ## 11 Nov 2026 (09:45 IST): biyon, F41 started
 
 - Sir (Representative) has a Meta developer account: two-factor verification done, Developer NDA accepted, team **"Stemlight"** created in the VR Developer Dashboard.
