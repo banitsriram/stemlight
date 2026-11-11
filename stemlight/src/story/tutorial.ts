@@ -26,12 +26,21 @@ export interface Tutorial {
   start(now: number): void;
 }
 
-export function createTutorial(bus: Pick<Bus, 'on' | 'emit'>, save: SaveApi): Tutorial {
+/** Where an unfinished tutorial got to, kept on this device so a reload doesn't start it over. */
+export interface StepMemory { get(): number; set(i: number): void }
+const KEY = 'stemlight.tutorialStep';
+export const localStepMemory: StepMemory = {
+  get() { try { return Number(localStorage.getItem(KEY)) || 0; } catch { return 0; } },
+  set(i) { try { localStorage.setItem(KEY, String(i)); } catch { /* private mode: start over next time */ } },
+};
+
+export function createTutorial(bus: Pick<Bus, 'on' | 'emit'>, save: SaveApi, memory: StepMemory = localStepMemory): Tutorial {
   let i = save.load().tutorialDone ? STEPS.length : -1; // -1 until the music starts
   let since = 0, nudges = 0, clock = 0;
 
   const go = (next: number) => {
     i = next;
+    memory.set(i);
     since = clock; nudges = 0;
     if (i >= STEPS.length) save.patch({ tutorialDone: true });
     bus.emit('tutorial:step', { step: i >= STEPS.length ? 'free' : STEPS[i].step });
@@ -43,7 +52,7 @@ export function createTutorial(bus: Pick<Bus, 'on' | 'emit'>, save: SaveApi): Tu
     words: () => (i >= 0 && i < STEPS.length ? STEPS[i].words : ''),
     start(now) {
       clock = now;
-      if (i < 0) go(0);
+      if (i < 0) go(Math.min(memory.get(), STEPS.length - 1));
     },
     tick(now) {
       clock = now;

@@ -3,12 +3,34 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createBus } from '../../src/bus.ts';
 import { createTutorial, NUDGE_SEC, SKIP_AFTER_NUDGES, STEPS } from '../../src/story/tutorial.ts';
+import { hasSavedChanges } from '../../src/story/index.ts';
 import { initSequencer, END_CARD_SEC } from '../../src/story/sequencer.ts';
 
 const fakeSave = (s = {}) => {
   let state = { version: 1, tutorialDone: false, perPiece: {}, palette: 'default', ...s };
   return { load: () => state, patch: (p) => { state = { ...state, ...p }; } };
 };
+
+const mem = (v = 0) => ({ v, get() { return this.v; }, set(i) { this.v = i; } });
+
+test('a reload mid-tutorial picks up at the same step', () => {
+  const m = mem(), bus = createBus();
+  createTutorial(bus, fakeSave(), m).start(0);
+  bus.emit('gaze:summon', { stem: 'vln' });
+  bus.emit('stem:mute', { stem: 'vln', state: 'held', lockProgress: 0 });
+  const afterReload = createTutorial(createBus(), fakeSave(), m); // same device memory, fresh page
+  afterReload.start(0);
+  assert.equal(afterReload.step(), 'return');
+});
+
+test('saved changes are recognised for the welcome-back caption', () => {
+  const flat = { low: 0, mid: 0, high: 0 };
+  const mix = (o = {}) => ({ mute: { vln: 'on' }, solo: null, eq: { vln: flat }, cuts: [], parts: [], ...o });
+  assert.equal(hasSavedChanges(undefined), false);
+  assert.equal(hasSavedChanges(mix()), false);
+  assert.equal(hasSavedChanges(mix({ mute: { vln: 'locked' } })), true);
+  assert.equal(hasSavedChanges(mix({ eq: { vln: { ...flat, low: 3 } } })), true);
+});
 
 test('the tutorial has fewer than 15 words', () => {
   const words = STEPS.map((s) => s.words.split(/\s+/).length).reduce((a, b) => a + b);
@@ -18,7 +40,7 @@ test('the tutorial has fewer than 15 words', () => {
 test('each step completes only on its own event, in order, then saves tutorialDone', () => {
   const bus = createBus(), save = fakeSave(), steps = [];
   bus.on('tutorial:step', ({ step }) => steps.push(step));
-  const t = createTutorial(bus, save);
+  const t = createTutorial(bus, save, mem());
   t.start(0);
   bus.emit('stem:solo', { stem: 'vln' }); // out of order: ignored
   assert.equal(t.step(), 'summon');
@@ -37,7 +59,7 @@ test('each step completes only on its own event, in order, then saves tutorialDo
 });
 
 test('idle: a nudge every 10 s, then the step moves on so nobody gets stuck', () => {
-  const bus = createBus(), t = createTutorial(bus, fakeSave());
+  const bus = createBus(), t = createTutorial(bus, fakeSave(), mem());
   t.start(0);
   assert.equal(t.tick(NUDGE_SEC - 0.1), 0);
   assert.equal(t.tick(NUDGE_SEC), 1);
@@ -49,7 +71,7 @@ test('idle: a nudge every 10 s, then the step moves on so nobody gets stuck', ()
 });
 
 test('a returning user skips the tutorial', () => {
-  const t = createTutorial(createBus(), fakeSave({ tutorialDone: true }));
+  const t = createTutorial(createBus(), fakeSave({ tutorialDone: true }), mem());
   t.start(0);
   assert.equal(t.step(), 'free');
   assert.equal(t.words(), '');

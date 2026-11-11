@@ -10,12 +10,18 @@ export interface LandingDeps {
 
 const PITCH = 'The music you can reach into: silence it, reshape it, play your own part, while every real note floats around you.';
 
-export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps): void {
+/** The first visit's words, or the resume screen's after the headset session ends (biyon-58). */
+export const COPY = {
+  first: { title: 'Stemlight', pitch: PITCH, button: 'Enter' },
+  resume: { title: 'Paused', pitch: 'Your place in the music and your mix are kept.', button: 'Resume' },
+};
+
+export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, copy = COPY.first): void {
   root.innerHTML = `
     <main class="landing">
-      <h1 class="landing-in">Stemlight</h1>
-      <p class="landing-pitch landing-in">${PITCH}</p>
-      <button class="landing-enter landing-in" type="button">Enter</button>
+      <h1 class="landing-in">${copy.title}</h1>
+      <p class="landing-pitch landing-in">${copy.pitch}</p>
+      <button class="landing-enter landing-in" type="button">${copy.button}</button>
       <p class="landing-hint landing-in">No account. Seated, hands only, about 5 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
       <p class="landing-status" role="status"></p>
     </main>`;
@@ -37,7 +43,7 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps):
       // Both start inside the click: requestSession needs the user activation.
       await Promise.all([unlock(), enter()]);
     } catch {
-      status.textContent = "Couldn't start VR. Open this page in your headset's browser, then press Enter again.";
+      status.textContent = `Couldn't start VR. Open this page in your headset's browser, then press ${copy.button} again.`;
       button.disabled = false;
       return;
     }

@@ -1,7 +1,7 @@
 import { Color, createSystem, World } from '@iwsdk/core';
 import { Quaternion, Vector3 } from 'three';
 import projectOptions from 'virtual:iwsdk-project';
-import { mountLanding } from '../web/landing';
+import { COPY, mountLanding } from '../web/landing';
 import { createBus } from './bus';
 import { createEngine } from './audio/engine';
 import { loadPiece } from './audio/loader';
@@ -82,15 +82,22 @@ const enterXR = () => new Promise<void>((resolve, reject) => {
     else reject(new Error('XR session did not start'));
   }, 50);
 });
-mountLanding(document.getElementById('landing') as HTMLElement, {
+const landingRoot = document.getElementById('landing') as HTMLElement;
+const landing = {
   unlock: () => ctx.audio.unlock(),
   // XR must be requested inside the Enter gesture, so it starts first and the music waits for the piece.
   enter: () => enterXR().then(async () => {
-    if (world.session) lifecycle.watchSession(world.session);
+    const session = world.session;
+    if (session) {
+      lifecycle.watchSession(session);
+      // Leaving VR pauses (lifecycle); the page offers Resume, which re-enters where the music stopped.
+      session.addEventListener('end', () => mountLanding(landingRoot, landing, COPY.resume));
+    }
     await pieceReady;
     ctx.transport.play();
   }),
-});
+};
+mountLanding(landingRoot, landing);
 
 const glyphs = await loadNoteGlyphs();
 world.scene.add(glyphs.object);
@@ -117,5 +124,5 @@ if (import.meta.env.DEV) {
   world.registerSystem(class DevStatsSystem extends createSystem() {
     update() { stats.update(); }
   });
-  Object.assign(window, { __stemlight: { ctx, engine, parts, lifecycle, stats: stats.sample, statsReset: stats.resetMax } });
+  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, stats: stats.sample, statsReset: stats.resetMax } });
 }
