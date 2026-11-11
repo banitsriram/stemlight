@@ -184,6 +184,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     const s = hands[h], g = s.grab;
     s.pinching = false;
     s.grab = null;
+    bus.emit('hand:pinch', { hand: h, down: false, targetId: grabId(g) });
     if (!g) return;
     switch (g.kind) {
       case 'playhead': {
@@ -291,6 +292,10 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     return null;
   }
 
+  /** The registry id a grab refers to, for hand:pinch (null when the pinch closed on nothing). */
+  const grabId = (g: Grab | null): string | null =>
+    !g ? null : g.kind === 'creature' ? (summoned ? `creature:${summoned}` : null) : g.target.id;
+
   function updatePinch(h: Hand, f: HandFrame, t: number, targets: readonly Target[]) {
     const s = hands[h];
     if (s.pinching) {
@@ -304,6 +309,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     s.downAt = t;
     s.downPos = pos;
     s.grab = grabAt(pos, targets);
+    bus.emit('hand:pinch', { hand: h, down: true, targetId: grabId(s.grab) });
 
     // Double-pinch solo: only a pinch that took hold of the summoned creature, with the other hand idle.
     if (s.grab?.kind !== 'creature' || !idle(other(h))) { s.lastDown = null; return; }

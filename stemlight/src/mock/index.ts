@@ -84,6 +84,7 @@ export function installKeyMap({ bus, transport, audio }: AppContext, manifest: P
     beat: ['b', () => ({ index: 0, t: transport.time(), downbeat: true })],
     'hand:pose': ['p', () => ({ hand: 'right', tracked: true, confidence: 1, palm: [0.1, 1, -0.4], tip: [0.1, 1.05, -0.45], curl: 0, pinching: false })],
     'hand:near': ['n', () => ({ hand: 'right', targetId: `creature:${stem()}`, dist: 0.05 })],
+    'hand:pinch': ['k', () => ({ hand: 'right', down: true, targetId: `creature:${stem()}` })],
     'gaze:summon': ['g', () => ({ stem: stem() })],
     'stem:mute': ['f', () => ({ stem: stem(), state: MUTES[mute++ % 3], lockProgress: 0 })],
     'stem:solo': ['s', () => ({ stem: stem() })],

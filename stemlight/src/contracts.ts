@@ -25,6 +25,10 @@ export interface SaveState { version: 1; tutorialDone: boolean; perPiece: Partia
 
 export type TargetKind = 'creature'|'playhead'|'lane'|'region'|'pad'|'string'|'key'|'reset';
 export interface Target { id: string; kind: TargetKind; stem?: StemId; center: Vec3; radius: number; extra?: Record<string, number> } // B registers, A reads
+// Target.extra keys the gestures read (biyon-16 convention): dx, dy, dz = unit direction of increasing time (playhead, lane)
+// or the pad's face normal; secPerM = seconds per metre along that direction; tCenter = piece time at a lane's center;
+// halfLength = capsule half-length along (dx, dy, dz) for long lanes and regions; pitch = a pad's MIDI note.
+// Ids: 'creature:<stem>', 'region:<cutId>'.
 export interface TargetRegistry { set(t: Target): void; remove(id: string): void; all(): Target[] }
 
 export interface Transport { time(): number; playing(): boolean; play(): void; pause(): void; seek(t: number): void; duration(): number } // A implements
@@ -37,6 +41,7 @@ export interface Events {
   'beat': { index: number; t: number; downbeat: boolean };
   'hand:pose': { hand: Hand; tracked: boolean; confidence: number; palm: Vec3; tip: Vec3; curl: number; pinching: boolean };
   'hand:near': { hand: Hand; targetId: string; dist: number };
+  'hand:pinch': { hand: Hand; down: boolean; targetId: string | null };   // agreed 11 Nov (biyon-16); targetId = what the pinch grabbed
   'gaze:summon': { stem: StemId };
   'stem:mute': { stem: StemId; state: MuteState; lockProgress: number };   // lockProgress 0..1 while held
   'stem:solo': { stem: StemId|null };
