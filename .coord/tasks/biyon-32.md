@@ -1,6 +1,7 @@
 # biyon-32: [A] First Vercel deploy **after sir's approval**
-status: open
+status: done
 blocked_by: biyon-2
+note: 11 Nov: https://stemlight.vercel.app, prebuilt static deploy from ~/projects/stemlight-deploy/stemlight
 owner: A (biyon)
 size: S (<= 0.25 day)
 features: -

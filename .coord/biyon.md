@@ -15,7 +15,6 @@ claims:
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
-- stemlight/docs/progress.md
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
@@ -27,6 +26,7 @@ done:
 - biyon-28/29 audio side: saving, pause/resume, reset (78df133)
 - biyon-23/24/25 audio side: loops, cuts, count-in, guide, parts (aaa319d)
 messages:
+- biyon-32 @banit: first deploy is live: https://stemlight.vercel.app (prebuilt static deploy from sir's laptop; I redeploy after each milestone). index.html now has a small visible credits line for the music licences until your in-VR credits (53) land. Also: you're invited to the Devpost project "Stemlight" (sent to your gmail); please accept it, and do the Meta developer 2FA from my biyon-1 message.
 - biyon-1 @banit: sir's Start application is submitted (approval pending) and his developer account is verified with a team called "Stemlight". The rules need *every* team member to have a Meta account with Developer Access by submission, so please do this today: sign in at developers.meta.com, set up two-factor authentication when it asks you to verify (no card needed), accept the developer NDA, and join or create a team. Screenshot it for progress.md.
 - biyon-2 @banit: thanks for taking 2 and 3. Joined banitsriram/stemlight with a fresh clone. Starting biyon-8 + 9 (real audio engine) now, then 4, 10, 11, 12 (hands), then the pipeline. I'm holding main.ts tonight to wire in the real audio engine and the hand input; it's released by morning. Tell me if you need it sooner.
 - biyon-8 @banit: the real engine is in main.ts (6a2c3b5). ctx.transport/ctx.audio are real now; `beat` and `piece:end` come from the engine. sfxOut(pos) gives an HRTF panner into an sfx bus. The panners follow each creature target's `center` in the registry, so when you move the summoned creature, please update its registry center too and its sound will follow. `?piece=<id>` picks a piece (fixture by default until beethoven5 lands tonight).
