@@ -2,6 +2,25 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 11 Nov 2026 (11:00 IST): banit, creatures, glide, mute/solo visuals, sky (tasks 39, 41, 44; 40 partly)
+
+Commit 4231fe4. Biyon is taking the remake surfaces (45, 46 outline-only, 47, reset shell) in `src/ui/remake/`.
+
+- `src/world/creatures.ts`: nine silhouettes from PLAN s8 (bell jellies, manta, bead chain, nautilus, ammonite, coral fan, anemone, comb jelly). Each is 2 draw calls and 160–1,080 triangles. Bodies pulse from `envelopes.json`, and the manta's wings beat.
+- `gaze:summon` glides the creature to the reach spot in 0.6 s (eased) and the previous one drifts home. **The registry `center` follows every frame**, so the HRTF panner and the fist sphere move with it (biyon-8).
+- Mute (held or locked) dims to 20 %, and a lock ring fills with `lockProgress`. That stem's notes **freeze to glass** at the moment of silence, and new ones are born still at its mouth. Solo dims the other creatures to 25 % and their notes to 25 %.
+- Notes are born at the creature's live position, so they follow it to the reach spot.
+- `src/world/sky.ts`: nebula sphere, ocean plane and 900 plankton points, 3 draw calls. The plankton keep drifting on wall-clock time while the music is paused.
+- Landing copy: "about 5 minutes" (the music is about 4).
+
+**Verified (headless Chromium, `node tests/iwer/visual/run.mjs world glyphs --shot`)**
+- `world.html` 17/17 checks: glide reaches the reach spot and the previous creature returns home; registry centre follows; 20 % mute and 25 % solo brightness; lock ring at half for `lockProgress` 0.5; glass notes hold still across frames and thaw on `on`; budget per creature; plus the old notes checks.
+- Found and fixed while testing: a frame landing after the glide window left the creature part-way. The glide now always finishes.
+- Screenshots in `tests/iwer/visual/results/`: field, summon (F32 visual), held with glass notes and ring (F04, F33 visual), locked, solo (F16 solo half). 0 console errors.
+
+**Not verified**
+- F16 loud/quiet pair (task 40 stays open). F17's under-100 total is task 31. No headset, so scale and brightness at 0.45 m are unjudged. Thaw (42) waits for the 18:00 cut call.
+
 ## 11 Nov 2026 (10:15 IST): biyon, first deploy (task 32, sir approved in chat)
 
 - **Live: https://stemlight.vercel.app** (Vercel free plan, sir's account, project `stemlight`).
