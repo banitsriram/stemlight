@@ -1,6 +1,6 @@
 # biyon
-status: paused          # working | blocked | paused | idle
-task: paused 04:00 IST Wed 11; A gestures, audio, saving, pieces all in. Next A: 17 heap, 31 perf (needs B visuals), 32 deploy (sir approval), 67 text. main.ts, progress.md, features.json, ASSETS.md released.
+status: working          # working | blocked | paused | idle
+task: hand:pinch contract, remake surfaces (45-47 + reset shell), F19 run, redeploy
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -15,6 +15,10 @@ claims:
 - stemlight/tests/unit/pipeline*.test.mjs
 - stemlight/docs/DEVPOST.md
 - stemlight/docs/audits/**
+- stemlight/src/contracts.ts
+- stemlight/src/ui/remake/**
+- stemlight/tests/iwer/visual/remake*
+- stemlight/index.html
 - stemlight/.claude/**
 - .claude/**
 - stemlight/public/pieces/**
