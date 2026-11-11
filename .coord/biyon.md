@@ -1,6 +1,6 @@
 # biyon
 status: working          # working | blocked | paused | idle
-task: hand:pinch contract, remake surfaces (45-47 + reset shell), F19 run, redeploy
+task: F19 onboarding run, perf pass, memory check, Devpost text (on branch biyon/f19-perf-devpost, PR to main)
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -17,6 +17,7 @@ claims:
 - stemlight/docs/audits/**
 - stemlight/docs/progress-pending-biyon.md
 - stemlight/src/ui/remake/**
+- stemlight/src/main.ts
 - stemlight/tests/unit/remake*
 - stemlight/index.html
 - stemlight/.claude/**
