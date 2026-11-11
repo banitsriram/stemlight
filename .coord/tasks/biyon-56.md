@@ -1,5 +1,5 @@
 # biyon-56: [B] Tutorial state machine (TutorialStep), <15 words
-status: open
+status: done
 blocked_by: biyon-55, biyon-45, biyon-47
 owner: B (banit)
 size: M (0.5 day) | critical path

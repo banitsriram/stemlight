@@ -1,5 +1,5 @@
 # biyon-54: [B] Ghost-hands rig (all poses incl. reset)
-status: open
+status: done
 blocked_by: biyon-36
 owner: B (banit)
 size: M (0.5 day) | critical path
