@@ -1,0 +1,23 @@
+PASS  summon perc
+PASS  a lane is registered for the summoned stem  ({"id":"lane:perc","stem":"perc","extra":{"dx":0.9136052797359491,"dy":0,"dz":0.4066022538533182,"halfLength":0.28,"secPerM":28.57142857142857,"tCenter":19.192666666666668}})
+PASS  a playhead is registered (about 6 cm)  ({"center":[0.11324982733041197,1.398688840866089,-0.25446401148914316],"radius":0.06})
+PASS  the reset shell is registered  ([0.27,1.580000023841858,-0.3884999994933605])
+PASS  cut 1: cut:preview while both hands pinch the lane
+PASS  cut 1: release -> cut:add on perc  ({"id":"cut-mwcg02p3-1w4qn","stem":"perc","t0":26.25,"t1":30.625})
+PASS  a hollow region target appears for the cut  ({"center":[0.15661708740066962,1.3286888408660888,-0.35556541311270445],"extra":{"dx":0.9136052797359491,"dy":0,"dz":0.4066022538533182,"halfLength":0.0765625,"secPerM":28.57142857142857,"tCenter":28.4375}})
+screenshot region: results/2026-11-11-remake-region.png
+PASS  pull the region 13 cm away -> cut:remove
+PASS  region target gone after undo
+PASS  cut 2: cut:preview while both hands pinch the lane
+PASS  cut 2: release -> cut:add on perc  ({"id":"cut-mwcg0p21-yewpc","stem":"perc","t0":30.9375,"t1":35.3125})
+PASS  2 pads (the timpani pair) appear after the perc cut  ([43,48])
+PASS  a pads take is running  ({"cutId":"cut-mwcg0p21-yewpc","instrument":"pads","pass":1})
+PASS  index tip down through a real pad -> one strike  ([{"count":1,"pad":"pad:0","pitch":43,"vel":45}])
+screenshot pads: results/2026-11-11-remake-pads.png
+PASS  pinch the real playhead -> paused  ({"t":52.823499999999996,"playing":false})
+PASS  drag 6 cm -> time +1.71 s (within 50 ms)  (1.714 s)
+PASS  release -> playing again
+PASS  hold the real reset shell 2 s -> app:reset
+stats before surfaces visible: {"fps":141,"calls":62,"triangles":32228,"notes":99,"maxCalls":68,"maxTriangles":32244,"maxNotes":103}
+stats after (pads + ribbon shown): {"fps":143,"calls":52,"triangles":29920,"notes":168,"maxCalls":68,"maxTriangles":32704,"maxNotes":180}  (emulator page, not a device number)
+18/18 passed
