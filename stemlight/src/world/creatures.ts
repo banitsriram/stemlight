@@ -244,11 +244,11 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
         const amp = env?.stems[c.stem]?.[frame] ?? 0;
         const bob = Math.sin(now * 0.8 + c.home[0] * 3) * 0.02;
         c.obj.position.set(c.pos[0], c.pos[1] + bob, c.pos[2]);
-        c.obj.scale.setScalar(1 + 0.15 * amp);
+        c.obj.scale.setScalar(0.9 + 0.35 * amp);
         c.bright += (dimFor(c.stem, mute[c.stem], solo) - c.bright) * Math.min(1, dt * 6);
-        c.body.uniforms.uBright.value = c.bright * (0.55 + 0.45 * amp);
+        c.body.uniforms.uBright.value = c.bright * (0.35 + 0.9 * amp);
         c.body.uniforms.uTime.value = now;
-        c.lines.opacity = c.bright * (0.35 + 0.4 * amp);
+        c.lines.opacity = c.bright * (0.25 + 0.6 * amp);
       }
       const s = creatures.find((c) => c.stem === summoned);
       ring.visible = !!s && lock > 0;

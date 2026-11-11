@@ -6,6 +6,12 @@ const LIFE = 4; // seconds. At SPEED a note travels under 2 m, so the plan's 3 m
 const FADE = 1;
 const SPEED = 0.45;
 const HEIGHT = 0.4;
+const TRAIL_MIN_DUR = 1; // seconds: notes this long leave outline copies behind while they sound
+const TRAIL = [0.12, 0.24, 0.36]; // seconds back along the path
+const POP_MAX_DUR = 0.25; // shorter notes pop: a size burst at birth
+
+/** Size factor at birth for a short note: 1.5× decaying to 1 within about 0.3 s. */
+export const popScale = (age: number, dur: number) => (dur < POP_MAX_DUR ? 1 + 0.5 * Math.exp(-age * 12) : 1);
 
 const ACCENT: Record<StemId, Color> = {
   vln: new Color('#5EE6FF'), vla_vc: new Color('#2FC6B0'), cb: new Color('#3D6BFF'),
@@ -108,10 +114,23 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (
           const stem = piece.stems.get(note.stem)!;
           const stop = frozen.get(note.stem);
           const age = stop === undefined ? now - note.t : Math.max(0, Math.min(now, stop) - note.t);
-          placeNote(age, note, seatOf?.(note.stem) ?? stem.homeSeat, stem.pitchRange, p);
+          const seat = seatOf?.(note.stem) ?? stem.homeSeat;
+          placeNote(age, note, seat, stem.pitchRange, p);
           const c = ACCENT[note.stem];
           const dim = solo !== null && solo !== note.stem ? 0.25 : 1;
-          glyphs.push(stop === undefined ? 'normal' : 'glass', note.glyph, p.x, p.y, p.z, p.size * (stop === undefined ? swell : 1), c.r, c.g, c.b, p.alpha * dim);
+          if (stop !== undefined) {
+            glyphs.push('glass', note.glyph, p.x, p.y, p.z, p.size, c.r, c.g, c.b, p.alpha * dim);
+            continue;
+          }
+          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell * popScale(age, note.dur), c.r, c.g, c.b, p.alpha * dim);
+          if (note.dur >= TRAIL_MIN_DUR && age < note.dur) {
+            const alpha = p.alpha;
+            TRAIL.forEach((back, k) => {
+              if (age < back) return;
+              placeNote(age - back, note, seat, stem.pitchRange, p);
+              glyphs.push('ghost', note.glyph, p.x, p.y, p.z, p.size * (0.8 - 0.15 * k), c.r, c.g, c.b, alpha * dim * (0.5 - 0.14 * k));
+            });
+          }
         }
       }
       glyphs.end();

@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Real notes check</title>
+<script type="module">
+// F14 / biyon-38: 20 random drawn glyphs from the real beethoven5 data each match one note in notes.json:
+// same glyph, same stem colour, drawn exactly where placeNote puts that note, height from its pitch.
+// Passes when window.__world.ok is true. Run: node tests/iwer/visual/run.mjs notes-real
+import { Color } from 'three';
+import { createNotesLayer, placeNote } from '../../../src/world/notes/lifecycle.ts';
+
+const handlers = {};
+const bus = { on: (k, f) => (handlers[k] ??= []).push(f), emit: (k, e) => handlers[k]?.forEach((f) => f(e)) };
+let t = 0;
+const ctx = { bus, transport: { time: () => t } };
+let drawn = [];
+const glyphs = { begin: () => { drawn = []; }, push: (...a) => drawn.push(a), end() {} };
+const layer = createNotesLayer(ctx, glyphs);
+
+const base = '/pieces/beethoven5/';
+const [manifest, notes] = await Promise.all(['manifest', 'notes'].map((f) => fetch(base + f + '.json').then((r) => r.json())));
+bus.emit('piece:ready', { id: 'beethoven5', manifest });
+await new Promise((r) => setTimeout(r, 300));
+
+let seed = 3;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const stems = new Map(manifest.stems.map((s) => [s.id, s]));
+const results = [];
+const p = {};
+for (const at of [12, 31, 47, 66]) {
+  t = at;
+  layer.update();
+  const normal = drawn.filter((d) => d[0] === 'normal');
+  for (let k = 0; k < 5 && normal.length; k++) {
+    const d = normal[Math.floor(rnd() * normal.length)];
+    const [, glyph, x, y, z, , r, g, b] = d;
+    const match = notes.find((n) => {
+      if (n.t > at || at - n.t > 4 || n.glyph !== glyph) return false;
+      const s = stems.get(n.stem);
+      placeNote(at - n.t, n, s.homeSeat, s.pitchRange, p);
+      const c = new Color(['#5EE6FF', '#2FC6B0', '#3D6BFF', '#C9B6FF', '#E05BD8', '#7CF0A0', '#F4F1C9', '#EEF2FF', '#FF8FC8'][['vln', 'vla_vc', 'cb', 'fl', 'reeds', 'hn', 'brass', 'perc', 'harp'].indexOf(n.stem)]);
+      return Math.abs(p.x - x) < 1e-6 && Math.abs(p.y - y) < 1e-6 && Math.abs(p.z - z) < 1e-6 && Math.abs(c.r - r) < 1e-6 && Math.abs(c.g - g) < 1e-6 && Math.abs(c.b - b) < 1e-6;
+    });
+    // Height = pitch: at birth the glyph sits ±0.4 m around the seat across the stem's range.
+    let height = false;
+    if (match) {
+      const s = stems.get(match.stem);
+      placeNote(0, match, s.homeSeat, s.pitchRange, p);
+      const want = s.homeSeat[1] + ((match.pitch - s.pitchRange[0]) / (s.pitchRange[1] - s.pitchRange[0]) - 0.5) * 0.8;
+      height = Math.abs(p.y - want) < 1e-6;
+    }
+    results.push({ t: at, glyph, note: match?.id ?? null, stem: match?.stem ?? null, pitch: match?.pitch ?? null, height });
+  }
+}
+const matched = results.filter((r) => r.note !== null && r.height).length;
+window.__world = { matched, of: results.length, results, ok: results.length === 20 && matched === 20 };
+</script>

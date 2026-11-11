@@ -35,6 +35,11 @@ try {
     const out = 'tests/iwer/visual/results';
     const emit = (k, e) => page.evaluate(([k, e]) => window.__stemlight.ctx.bus.emit(k, e), [k, e]);
     const snap = async (name, wait = 1200) => { await page.waitForTimeout(wait); await page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 70 }); };
+    // F16: the same view at the loudest and the quietest passage (envelope pulse: size and glow).
+    const at = (sec) => page.evaluate((sec) => window.__stemlight.ctx.transport.seek(sec), sec);
+    await at(37); await snap('0-loud-37s', 900);
+    await at(22); await snap('0-quiet-22s', 900);
+    await at(20);
     // Each event also completes the tutorial step on screen, so the shots walk the opening in order.
     await snap('1-field-look');
     await emit('gaze:summon', { stem: 'vln' }); await snap('2-summon-vln-ghost-fist');

@@ -79,7 +79,7 @@ const settle = () => { for (let i = 0; i < 120; i++) shell.update(0.05); };
 t = 3;
 bus.emit('stem:mute', { stem: 'cb', state: 'held', lockProgress: 0.5 });
 settle();
-const dim = Math.abs(bodyOf('cb').children[0].material.uniforms.uBright.value - 0.2 * 0.55) < 0.01;
+const dim = Math.abs(bodyOf('cb').children[0].material.uniforms.uBright.value - 0.2 * 0.35) < 0.01;
 const ring = scene.children.find((o) => o.geometry?.type === 'RingGeometry');
 const lockRing = ring.visible && ring.geometry.drawRange.count === 192;
 frame(3.2); const glassA = drawn.filter((d) => d[0] === 'glass');
@@ -88,8 +88,8 @@ const glass = glassA.length > 0 && JSON.stringify(glassA.slice(0, 20)) === JSON.
 bus.emit('stem:mute', { stem: 'cb', state: 'on', lockProgress: 0 });
 frame(3.6); const thawed = !drawn.some((d) => d[0] === 'glass');
 bus.emit('stem:solo', { stem: 'fl' }); settle();
-const soloDim = Math.abs(bodyOf('vln').children[0].material.uniforms.uBright.value - 0.25 * 0.55) < 0.01
-  && Math.abs(bodyOf('fl').children[0].material.uniforms.uBright.value - 0.55) < 0.01;
+const soloDim = Math.abs(bodyOf('vln').children[0].material.uniforms.uBright.value - 0.25 * 0.35) < 0.01
+  && Math.abs(bodyOf('fl').children[0].material.uniforms.uBright.value - 0.35) < 0.01;
 bus.emit('stem:solo', { stem: null });
 
 // Budget: each creature ≤ 8k triangles in 2 draw calls.
