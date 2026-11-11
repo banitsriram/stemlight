@@ -19,6 +19,7 @@ import { initSfx } from './ui/sfx';
 import { initStory } from './story';
 import { endCardSprite, initSequencer } from './story/sequencer';
 import { initInput } from './input/system';
+import { initRemake } from './ui/remake';
 
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
 world.scene.background = new Color('#07060F');
@@ -67,6 +68,7 @@ world.registerSystem(class WorldSystem extends createSystem() {
   update(delta: number) { shell.update(delta); story.update(); }
 });
 const gestures = initInput(ctx, world, { parts, beats: () => engine.beats().beats });
+initRemake(ctx, world.scene, { world, parts, head, beats: () => engine.beats() }); // ribbon, lane, pads, reset shell
 // DevHandPose and the gesture log are dev-only and never reach dist/ (F38).
 if (import.meta.env.DEV) (await import('./dev/devInput')).initDevInput(world, ctx, gestures);
 // The landing page shows at once; the first piece downloads and decodes behind it (cold start).
