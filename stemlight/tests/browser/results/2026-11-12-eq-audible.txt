@@ -1,0 +1,8 @@
+stem measured: brass (weaker band -86.8 dB; next reeds -92.6, cb -96.4)
+PASS flat (low 0, high 0 dB; filters 0.00/0.00): under 120 Hz -0.01 dB, over 8 kHz -0.00 dB (want 0/0 ±0.5; band levels before EQ -67.5/-83.3 dB)
+PASS bass stretch (low 12, high 0 dB; filters 12.00/0.00): under 120 Hz +10.96 dB, over 8 kHz -0.00 dB (want 12/0 ±1.5; band levels before EQ -71.7/-72.2 dB)
+PASS treble stretch (low 0, high -12 dB; filters 0.00/-12.00): under 120 Hz -0.00 dB, over 8 kHz -11.60 dB (want 0/-12 ±1.5; band levels before EQ -80.5/-77.2 dB)
+PASS mixed stretch (low 6, high -6 dB; filters 6.00/-6.00): under 120 Hz +5.54 dB, over 8 kHz -5.82 dB (want 6/-6 ±1.5; band levels before EQ -71.7/-72.7 dB)
+PASS reset (low 0, high 0 dB; filters 0.00/0.00): under 120 Hz -0.00 dB, over 8 kHz -0.00 dB (want 0/0 ±0.5; band levels before EQ -80.1/-76.4 dB)
+PASS music was playing throughout (stopped at 39.5 s)
+PASS no page errors

@@ -1,0 +1,50 @@
+start: playing true at 22.48 s, tutorial at 'silence', vln locked, fl 6/-6, cuts ["pr-cut"]
+ok    setup: music playing, tutorial past the first step, mix set  ('silence')
+ok    headset hidden 1: paused, music stopped, clock frozen  (paused true, playing false, clock 24.401 -> 24.401, events ["app:pause"])
+ok    headset hidden 1: resumed from where it stopped  (playing true, clock 24.40 -> 25.99 -> 28.19, audio running)
+ok    headset hidden 1: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'silence' -> 'silence')
+ok    headset hidden 2: paused, music stopped, clock frozen  (paused true, playing false, clock 30.649 -> 30.649, events ["app:pause"])
+ok    headset hidden 2: resumed from where it stopped  (playing true, clock 30.65 -> 32.30 -> 34.54, audio running)
+ok    headset hidden 2: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'silence' -> 'silence')
+ok    headset hidden 3: paused, music stopped, clock frozen  (paused true, playing false, clock 36.791 -> 36.791, events ["app:pause"])
+ok    headset hidden 3: resumed from where it stopped  (playing true, clock 36.79 -> 38.45 -> 40.66, audio running)
+ok    headset hidden 3: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'silence' -> 'return')
+ok    headset hidden 4: paused, music stopped, clock frozen  (paused true, playing false, clock 42.632 -> 42.632, events ["app:pause"])
+ok    headset hidden 4: resumed from where it stopped  (playing true, clock 42.63 -> 44.24 -> 46.41, audio running)
+ok    headset hidden 4: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'return' -> 'return')
+ok    headset hidden 5: paused, music stopped, clock frozen  (paused true, playing false, clock 48.331 -> 48.331, events ["app:pause"])
+ok    headset hidden 5: resumed from where it stopped  (playing true, clock 48.33 -> 49.95 -> 52.11, audio running)
+ok    headset hidden 5: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'return' -> 'return')
+ok    system menu (visible-blurred): paused, music stopped, clock frozen  (paused true, playing false, clock 54.092 -> 54.092, events ["app:pause"])
+ok    system menu (visible-blurred): resumed from where it stopped  (playing true, clock 54.09 -> 55.76 -> 57.92, audio running)
+ok    system menu (visible-blurred): mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'return' -> 'return')
+ok    page hidden (simulated event): paused, music stopped, clock frozen  (paused true, playing false, clock 59.954 -> 59.954, events ["app:pause"])
+ok    page hidden (simulated event): resumed from where it stopped  (playing true, clock 59.95 -> 61.57 -> 63.77, audio running)
+ok    page hidden (simulated event): mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'return' -> 'lock')
+ok    session end 1: paused, clock frozen, Resume offered  (ended true, paused true, clock 65.264 -> 65.264, Resume button true)
+ok    session end 1: Resume re-enters and the music carries on  (session true, clock 65.26 -> 68.17 -> 70.33, audio running)
+ok    session end 1: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'lock' -> 'lock')
+ok    session end 2: paused, clock frozen, Resume offered  (ended true, paused true, clock 71.833 -> 71.833, Resume button true)
+ok    session end 2: Resume re-enters and the music carries on  (session true, clock 71.83 -> 74.70 -> 76.88, audio running)
+ok    session end 2: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'lock' -> 'lock')
+ok    session end 3: paused, clock frozen, Resume offered  (ended true, paused true, clock 78.428 -> 78.428, Resume button true)
+ok    session end 3: Resume re-enters and the music carries on  (session true, clock 78.43 -> 81.39 -> 83.54, audio running)
+ok    session end 3: mix intact, tutorial not restarted  (vln locked, fl 6/-6, cuts ["pr-cut"]; tutorial 'lock' -> 'solo')
+ok    reload: saved mix restored before entering  (vln locked, fl 6/-6, cuts ["pr-cut"])
+ok    reload: tutorial continues at its step, not from the start  (before reload 'solo' (saved index 4), after 'solo')
+ok    reload: music plays after Enter  (playing true, audio running)
+ok    tutorial finished  ('free')
+ok    reload after finishing: free play, no tutorial (from IndexedDB alone)  ('free', saved index cleared before reload)
+
+PASS  setup: music playing, tutorial past the first step, mix set: 1/1
+PASS  visibility: paused, music stopped, clock frozen: 7/7
+PASS  visibility: resumed from where it stopped: 7/7
+PASS  visibility: mix intact, tutorial not restarted: 7/7
+PASS  session end: paused, clock frozen, Resume offered: 3/3
+PASS  session end: Resume re-enters and the music carries on: 3/3
+PASS  session end: mix intact, tutorial not restarted: 3/3
+PASS  reload: saved mix restored before entering: 1/1
+PASS  reload: tutorial continues at its step, not from the start: 1/1
+PASS  reload: music plays after Enter: 1/1
+PASS  tutorial finished: 1/1
+PASS  reload after finishing: free play, no tutorial (from IndexedDB alone): 1/1

@@ -100,3 +100,32 @@
 
 **Not verified**
 - Quest Browser, hand feel and frame rate (no headset). The amber at headset brightness is judged only from emulator screenshots.
+
+## 12 Nov 2026 (09:00–10:30 IST): biyon, F23 passes, F08 audible (branch `biyon/f08-f23-evidence`, PR stacked on PR #1)
+
+**F23 (A side, task 29), IWER: `tests/iwer/input/pause-resume.mjs` passes 31/31.** Log: `tests/iwer/input/results/2026-11-12-pause-resume.txt`. No code changes were needed; `src/audio/lifecycle.ts` already handled every case.
+- **Setup.** A fresh first visit on Dvořák: storage cleared, tutorial not skipped. The real gaze summon passes the first step. Then a mix is set over the bus: violins locked, flutes EQ +6/−6, a cut on the cellos.
+- **5 headset-hidden cycles and 1 system-menu cycle.** These go through IWER's own `XRDevice.updateVisibilityState` ('hidden' and 'visible-blurred'), the real session `visibilitychange`. Each one:
+  - fires `app:pause`;
+  - stops the music with the clock frozen to the millisecond;
+  - on 'visible', fires `app:resume`, and the music runs on from where it stopped;
+  - leaves the audio context running, the mix intact and the tutorial step kept (7/7 each).
+- **Page-hidden cycle.** A simulated document `visibilitychange`, because headless Chromium never hides the page. Same checks, all pass.
+- **3 session ends** (`iwsdk xr exit`). Each one pauses with the clock frozen, and the page offers **Resume**. A real click re-enters, and the music carries on from the paused time with the mix intact (3/3 × 3).
+- **Reload.**
+  - The saved mix (lock, EQ, cut) is back from IndexedDB before Enter.
+  - The tutorial continues at its saved step ('solo'), not from 'summon'.
+  - Music plays after Enter.
+  - The tutorial is then finished. A second reload, with the localStorage step cleared, starts in free play from IndexedDB `tutorialDone` alone.
+- **Together with banit's B half** (Paused/Resume screen and returning-user caption, progress.md 11 Nov 14:00), **F23 now passes**: features.json is 22/41.
+- The tutorial advanced a step or two during the run by its own 3-nudge skip. That is expected and is never a restart.
+
+**F08 audible (A side), real browser: `tests/browser/eq-audible.mjs` passes 7/7.** Log: `tests/browser/results/2026-11-12-eq-audible.txt`.
+- **Method.** The real Dvořák stems play in headless Chromium. Two analysers sit on one stem (brass, picked automatically as the loudest in both bands): one before its EQ, one after. That way the music's own changes cancel out.
+- **Results, measured below 120 Hz / above 8 kHz:**
+  - Flat: −0.01 / 0.00 dB.
+  - Bass stretch (+12 low): **+10.96** / 0.00 dB.
+  - Treble stretch (−12 high): 0.00 / **−11.60** dB.
+  - Mixed (+6/−6): +5.54 / −5.82 dB.
+  - Reset: 0.00 / 0.00 dB.
+- **Status.** With the 11 Nov gesture run (10 stretches + 10 resets, acceptance.mjs f08), the A side of F08 is complete. F08 stays false until the B half: task 43 (shape-morph before/after) is on the cut list. **If sir and banit cut 43, F08 passes on this evidence.**
