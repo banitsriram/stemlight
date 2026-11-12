@@ -12,7 +12,7 @@ test('draw() writes visible geometry into the arrays the GPU reads', () => {
   v.draw({
     visible: true, ribbon: frame, seat: frame, now: 10, clock: 1, stem: 'perc', ticks: [{ x: 0, down: true }], notes: [], regions: [],
     preview: null, playheadHeld: false, pads: [{ center: [-0.27, 1.05, -0.42], pitch: 47, flash: 0 }, { center: [0.27, 1.05, -0.42], pitch: 52, flash: 0 }],
-    countIn: null, reset: { center: [0.27, 1.18, -0.42], progress: 0.5, flash: 0 }, flights: [],
+    strings: [], keys: [], countIn: null, reset: { center: [0.27, 1.18, -0.42], progress: 0.5, flash: 0 }, flights: [],
   }, [0, 1.2, 0]);
   for (const mesh of v.group.children.slice(0, 2)) {
     const g = mesh.geometry, n = g.drawRange.count;
@@ -32,7 +32,7 @@ test('a pad hit reads warm amber, not clipped white (F15)', () => {
   v.draw({
     visible: true, ribbon: frame, seat: frame, now: 10, clock: 1, stem: 'perc', ticks: [], notes: [], regions: [],
     preview: null, playheadHeld: false, pads: [{ center: pad, pitch: 47, flash: 1 }],
-    countIn: null, reset: { center: [0.27, 1.18, -0.42], progress: 0, flash: 0 }, flights: [],
+    strings: [], keys: [], countIn: null, reset: { center: [0.27, 1.18, -0.42], progress: 0, flash: 0 }, flights: [],
   }, [0, 1.2, 0]);
   // Sum every triangle vertex sitting exactly on the pad centre (the fill fan and the halo centre): additive
   // blending adds them, so the sum is what the eye sees at the middle of the pad.

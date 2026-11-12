@@ -4,8 +4,9 @@ import type {
   AppContext, Beats, Cut, Hand, Instrument, NoteEvent, PieceId, PieceManifest, StemId, Target, UserPart, Vec3,
 } from '../../contracts';
 import {
-  IDS, countInLook, laneTarget, lerpFrame, padPair, padPitches, padTargets, padsWanted, playheadTarget, regionTarget,
-  resetTarget, RIBBON, ribbonX, spanX, toWorld, laneLocal, pitchY, type CountIn, type Frame,
+  IDS, countInLook, harpTargets, keyTargets, laneTarget, lerpFrame, melodicWanted, octaveFor, padPair, padPitches, padTargets,
+  padsWanted, playheadTarget, regionTarget, resetTarget, RIBBON, ribbonX, spanX, stemFor, toWorld, laneLocal, pitchY,
+  type CountIn, type Frame,
 } from './layout.ts';
 
 export const GLIDE_SEC = 0.6; // same glide as the creatures
@@ -45,7 +46,10 @@ export interface RemakeView {
   preview: { x0: number; x1: number } | null;
   playheadHeld: boolean;
   pads: { center: Vec3; pitch: number; flash: number }[]; // empty while the pads are hidden
+  strings: { a: Vec3; b: Vec3; pitch: number; flash: number }[]; // the harp's strings, bottom a to top b; empty while hidden
+  keys: { center: Vec3; pitch: number; flash: number }[]; // the keyboard's key tops; empty while hidden
   countIn: { fill: number; pulse: number } | null;
+  countInOn: 'pads' | 'row' | null; // which surface the count-in belongs to: the running take's instrument
   reset: { center: Vec3; progress: number; flash: number };
   flights: Flight[];
 }
@@ -77,8 +81,9 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   const holders = new Set<Hand>();
   let countIn: CountIn | null = null;
   let resetProgress = 0, resetFlashAt = -Infinity;
-  let hits: { at: number; from: Vec3; t: number; pitch: number; cutId: string; flashPad: number }[] = [];
+  let hits: { at: number; from: Vec3; t: number; pitch: number; cutId: string; flashPad: number; instrument: Instrument }[] = [];
   let pitches: number[] = [];
+  let harpPitches: number[] = [], keyPitches: number[] = [];
   let clock = 0;
   const registered = new Set<string>();
 
@@ -89,6 +94,9 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
     manifest = m;
     summoned = null; preview = null; countIn = null; hits = []; resetProgress = 0;
     pitches = padPair(padPitches(m.scale.tonic));
+    const range = (inst: Instrument) => { const st = stemFor(m, inst); return st ? m.stems.find((x) => x.id === st)?.pitchRange : undefined; };
+    harpPitches = octaveFor(m.scale, range('harp'));
+    keyPitches = octaveFor(m.scale, range('keys'));
     notes = new Map();
     const r = ++request;
     (deps.loadNotes ?? defaultLoad)(id).then((list) => {
@@ -132,10 +140,10 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   bus.on('cut:remove', ({ id }) => { if (countIn?.cutId === id) countIn = null; });
   bus.on('reset:progress', ({ progress }) => { resetProgress = progress; });
   bus.on('app:reset', () => { preview = null; countIn = null; hits = []; resetFlashAt = clock; });
-  bus.on('part:hit', ({ cutId, pitch, t, from }) => {
+  bus.on('part:hit', ({ cutId, instrument, pitch, t, from }) => {
     let flashPad = 0;
     pitches.forEach((p, i) => { if (Math.abs(p - pitch) < Math.abs(pitches[flashPad] - pitch)) flashPad = i; });
-    hits.push({ at: clock, from, t, pitch, cutId, flashPad });
+    hits.push({ at: clock, from, t, pitch, cutId, flashPad: instrument === 'pads' ? flashPad : -1, instrument });
     if (hits.length > 24) hits.splice(0, hits.length - 24);
   });
 
@@ -169,6 +177,8 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
     /** Ghost outlines of a cut: exactly the cut stem's notes with onset in [t0, t1). */
     ghostNotes: (cut: Cut) => notesIn(cut.stem, cut.t0, cut.t1),
     padPitches: () => [...pitches],
+    harpPitches: () => [...harpPitches],
+    keyPitches: () => [...keyPitches],
     /** Call once a frame with the frame time in seconds. Updates the registry and returns what to draw. */
     update(dt: number): RemakeView {
       clock += dt;
@@ -179,7 +189,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       const visible = manifest !== null;
       const view: RemakeView = {
         visible, ribbon, seat: seatF, now, clock, stem: null, ticks: [], notes: [], regions: [], preview: null,
-        playheadHeld: holders.size > 0, pads: [], countIn: null,
+        playheadHeld: holders.size > 0, pads: [], strings: [], keys: [], countIn: null, countInOn: null,
         reset: { center: resetTarget(seatF).center, progress: resetProgress, flash: Math.max(0, 1 - (clock - resetFlashAt) / 0.8) },
         flights: [],
       };
@@ -230,8 +240,28 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
           const last = [...hits].reverse().find((h) => h.flashPad === i);
           return { center: p.center, pitch: p.extra!.pitch, flash: last ? Math.max(0, 1 - (clock - last.at) / FLASH_SEC) : 0 };
         });
-        view.countIn = countInLook(countIn, clock);
       }
+      // Harp or keyboard: whichever replaces the stem being remade; a struck string or key flashes amber.
+      const melodic = melodicWanted(deps.parts, manifest);
+      const flashOf = (inst: Instrument, pitch: number) => {
+        const last = [...hits].reverse().find((h) => h.instrument === inst && h.pitch === pitch);
+        return last ? Math.max(0, 1 - (clock - last.at) / FLASH_SEC) : 0;
+      };
+      if (melodic === 'harp') {
+        const strings = harpTargets(seatF, harpPitches);
+        targets.push(...strings);
+        view.strings = strings.map((t) => {
+          const h = t.extra!.halfLength;
+          return { a: [t.center[0], t.center[1] - h, t.center[2]], b: [t.center[0], t.center[1] + h, t.center[2]], pitch: t.extra!.pitch, flash: flashOf('harp', t.extra!.pitch) };
+        });
+      } else if (melodic === 'keys') {
+        const keys = keyTargets(seatF, keyPitches);
+        targets.push(...keys);
+        view.keys = keys.map((t) => ({ center: t.center, pitch: t.extra!.pitch, flash: flashOf('keys', t.extra!.pitch) }));
+      }
+      const takeInst = deps.parts.taking()?.instrument;
+      const on = takeInst === 'pads' && view.pads.length ? 'pads' : takeInst && takeInst === melodic ? 'row' : null;
+      if (on) { view.countIn = countInLook(countIn, clock); view.countInOn = on; }
 
       hits = hits.filter((h) => clock - h.at < 1);
       for (const h of hits) {

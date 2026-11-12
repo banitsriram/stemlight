@@ -166,7 +166,7 @@ evalInPage(() => {
   b.emit('stem:mute', { stem: 'hn', state: 'on', lockProgress: 0 });
   b.emit('stem:mute', { stem: 'hn', state: 'locked', lockProgress: 1 });
   b.emit('stem:solo', { stem: 'brass' });
-  b.emit('cut:add', { cut: { id: 'pr-cut2', stem: 'reeds', t0: 120, t1: 121 } });
+  b.emit('cut:add', { cut: { id: 'pr-cut2', stem: 'cb', t0: 120, t1: 121 } }); // a plain stem: no take starts
   b.emit('part:hit', { cutId: 'pr-cut2', instrument: 'pads', pitch: 52, vel: 90, t: 0.5, from: [0, 1, -0.4] });
   return true;
 });

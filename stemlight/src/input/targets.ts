@@ -6,7 +6,9 @@
 // - `halfLength` (with a direction): the collider is a capsule, `radius` around the segment center ± halfLength
 //   along the direction, for long lanes and regions.
 // - `secPerM`: seconds of piece time per metre along the direction; `tCenter`: piece time at the center (lanes).
-// - `pitch`: a pad's MIDI pitch.
+// - `pitch`: a pad's, string's or key's MIDI pitch.
+// - `nx, ny, nz` (strings, keys): the direction across the strings / along the key row. Strings also carry
+//   `halfLength` and `depthTol`; keys carry `halfW` and `halfD` (half the key's width and depth).
 import type { Target, Vec3 } from '../contracts';
 import { dist } from './handmath.ts';
 
@@ -50,4 +52,17 @@ export function padLocal(t: Target, p: Vec3): { height: number; radial: number }
   const d: Vec3 = [p[0] - t.center[0], p[1] - t.center[1], p[2] - t.center[2]];
   const height = dot(d, n);
   return { height, radial: Math.hypot(d[0] - n[0] * height, d[1] - n[1] * height, d[2] - n[2] * height) };
+}
+
+/** p in a string's or key's own axes: `up` along (dx, dy, dz), `across` along (nx, ny, nz), `depth` along
+ *  their cross product (towards or away from the player). */
+export function rowLocal(t: Target, p: Vec3): { up: number; across: number; depth: number } {
+  const a = axisOf(t) ?? [0, 1, 0];
+  const e = t.extra ?? {};
+  let n: Vec3 = [e.nx ?? 1, e.ny ?? 0, e.nz ?? 0];
+  const nl = Math.hypot(...n) || 1;
+  n = [n[0] / nl, n[1] / nl, n[2] / nl];
+  const w: Vec3 = [a[1] * n[2] - a[2] * n[1], a[2] * n[0] - a[0] * n[2], a[0] * n[1] - a[1] * n[0]];
+  const d: Vec3 = [p[0] - t.center[0], p[1] - t.center[1], p[2] - t.center[2]];
+  return { up: dot(d, a), across: dot(d, n), depth: dot(d, w) };
 }

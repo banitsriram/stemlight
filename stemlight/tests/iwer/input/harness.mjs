@@ -12,10 +12,20 @@ const CLI = fileURLToPath(new URL('../../../node_modules/@iwsdk/cli/bin/iwsdk.js
 
 /** One CLI call, e.g. iw('xr', 'look-at', {...}). Returns the parsed result. */
 export function iw(group, action, params = {}) {
-  const out = execFileSync(process.execPath, [CLI, group, action, '--input-json', JSON.stringify(params), '--raw'], {
-    cwd: APP, encoding: 'utf8', timeout: 60000,
-  });
-  return JSON.parse(out);
+  // Under load the CLI's probe of the dev runtime can time out ("Runtime ownership is unknown"); that call did
+  // nothing, so it is safe to retry after a short wait.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const out = execFileSync(process.execPath, [CLI, group, action, '--input-json', JSON.stringify(params), '--raw'], {
+        cwd: APP, encoding: 'utf8', timeout: 60000,
+      });
+      return JSON.parse(out);
+    } catch (e) {
+      const text = `${e.stdout ?? ''}${e.message ?? ''}`;
+      if (attempt >= 4 || !text.includes('Runtime ownership is unknown')) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500 * attempt);
+    }
+  }
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

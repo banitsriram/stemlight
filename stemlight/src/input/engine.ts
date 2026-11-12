@@ -3,7 +3,7 @@
 import type { Bus, Hand, Instrument, MuteState, PieceId, StemId, Target, Transport, Vec3 } from '../contracts';
 import { snapCut } from '../audio/mix.ts';
 import { dist, handCurl, mid } from './handmath.ts';
-import { inside, padLocal, surfaceDist, timeAt, timeDelta } from './targets.ts';
+import { inside, padLocal, rowLocal, surfaceDist, timeAt, timeDelta } from './targets.ts';
 import type { HandFrame, HeadFrame, InputFrame } from './types';
 
 /** The thresholds from PLAN section 3. Seconds and metres. */
@@ -38,6 +38,13 @@ export const SPEC = {
   padVelMax: 127,
   padLockout: 0.09,
   padPitch: 50,
+  rowHysteresis: 0.004, // m: the tip must get this far past a string (or above a key) before it can play it again
+  rowStale: 0.1, // s: an older last sample (the row was hidden, or the hand elsewhere) starts afresh
+  rowMaxStep: 0.12, // m: a tip that moved further than this in one sample is a tracking jump, not a strum
+  harpMinSpeed: 0.1, // m/s sideways through a string: a slow brush still plucks
+  harpMaxSpeed: 1.5,
+  keyMinSpeed: 0.15, // m/s down through a key top (plan: ≥0.15 m/s, 90 ms lockout)
+  keyMaxSpeed: 1.5,
   resetHold: 2,
 } as const;
 
@@ -80,12 +87,14 @@ interface HandState {
   grab: Grab | null;
   lastDown: { t: number; pos: Vec3; gapSerial: number; stem: StemId } | null;
   padPrev: Map<string, { t: number; height: number }>; // last fresh index-tip height per pad
+  rowPrev: Map<string, { t: number; across: number; height: number; side: number; armed: boolean }>; // last fresh index tip per string / key
+  rowTip: Vec3 | null; // the tip on the last fresh sample, to spot tracking jumps
 }
 
 const freshHand = (): HandState => ({
   last: null, lostAt: null, released: true, gapSerial: 0,
   fist: 'idle', fistSince: 0, fistStem: null, pinching: false,
-  downAt: 0, downPos: [0, 0, 0], grab: null, lastDown: null, padPrev: new Map(),
+  downAt: 0, downPos: [0, 0, 0], grab: null, lastDown: null, padPrev: new Map(), rowPrev: new Map(), rowTip: null,
 });
 
 /** The reach spot for a head pose: 0.45 m ahead (level) and 0.15 m below the eye. Matches world/shell.ts reachSpot. */
@@ -108,6 +117,12 @@ const pinchPoint = (f: HandFrame): Vec3 => mid(f.tip, f.thumbTip);
 export function padVelocity(speed: number): number {
   const s = Math.max(SPEC.padMinSpeed, Math.min(SPEC.padMaxSpeed, speed));
   return Math.round(SPEC.padVelMin + ((s - SPEC.padMinSpeed) / (SPEC.padMaxSpeed - SPEC.padMinSpeed)) * (SPEC.padVelMax - SPEC.padVelMin));
+}
+
+/** Speed in [min, max] m/s → MIDI velocity 30–127 (harp plucks and key presses). */
+export function rowVelocity(speed: number, min: number, max: number): number {
+  const s = Math.max(min, Math.min(max, speed));
+  return Math.round(SPEC.padVelMin + ((s - min) / (max - min)) * (SPEC.padVelMax - SPEC.padVelMin));
 }
 
 type Eq = { low: number; mid: number; high: number };
@@ -176,6 +191,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
   };
 
   const idle = (h: Hand) => !hands[h].pinching && hands[h].fist === 'idle';
+  const rowUp = (targets: readonly Target[]) => targets.some((t) => t.kind === 'string' || t.kind === 'key');
 
   // ---- release paths ----
 
@@ -232,6 +248,9 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     const ownedByOther = hands[other(h)].fist !== 'idle';
     switch (s.fist) {
       case 'idle':
+        // While the harp or keyboard is up (it sits inside the summoned creature's sphere), a pointing hand
+        // playing it curls the other three fingers like a fist: only a fist with the index curled too counts.
+        if (rowUp(targets) && f.curls[0] < SPEC.fistCurl) break;
         if (curl >= SPEC.fistCurl && summoned && !ownedByOther && !s.pinching && !eq && insideSummoned(targets, f.palm)) {
           s.fist = 'arming'; s.fistSince = t; s.fistStem = summoned;
         }
@@ -436,6 +455,56 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     }
   }
 
+  // ---- harp strings and keys ----
+
+  /**
+   * Harp: the index tip crossing a string sideways (across changes sign) within the string's length and
+   * depthTol of its plane, at harpMinSpeed or more: a pluck. Keys: the tip moving down through a key top
+   * (height changes sign) inside the key's width and depth, at keyMinSpeed or more: a press. Both share the
+   * pads' lockout per target, and only fresh frames count, so a tracking gap is never a note.
+   */
+  function updateRow(h: Hand, f: HandFrame | undefined, fresh: boolean, t: number, targets: readonly Target[]) {
+    const s = hands[h];
+    if (!f || !fresh) { s.rowPrev.clear(); s.rowTip = null; return; }
+    // A tracking jump across the row would cross every string at once: start afresh instead.
+    const was = s.rowTip;
+    s.rowTip = [f.tip[0], f.tip[1], f.tip[2]];
+    if (was && Math.hypot(f.tip[0] - was[0], f.tip[1] - was[1], f.tip[2] - was[2]) > SPEC.rowMaxStep) s.rowPrev.clear();
+    for (const tg of targets) {
+      if (tg.kind !== 'string' && tg.kind !== 'key') continue;
+      const e = tg.extra ?? {};
+      const { up, across, depth } = rowLocal(tg, f.tip);
+      const old = s.rowPrev.get(tg.id);
+      const prev = old && t > old.t && t - old.t <= SPEC.rowStale ? old : undefined;
+      // Hysteresis against tracking jitter at the plane: a string remembers which side the tip was last
+      // clearly on (more than rowHysteresis away); a key is armed once the tip has been that far above it.
+      const H = SPEC.rowHysteresis;
+      const side = Math.abs(across) >= H ? Math.sign(across) : prev?.side ?? 0;
+      const armed = up >= H ? true : prev?.armed ?? false;
+      s.rowPrev.set(tg.id, { t, across, height: up, side, armed: up <= 0 ? false : armed });
+      if (!prev) continue;
+      let speed: number;
+      if (tg.kind === 'string') {
+        const crossed = prev.side !== 0 && side !== 0 && side !== prev.side;
+        if (!crossed || Math.abs(up) > (e.halfLength ?? 0.05) || Math.abs(depth) > (e.depthTol ?? 0.03)) continue;
+        speed = Math.abs(across - prev.across) / (t - prev.t);
+        if (speed < SPEC.harpMinSpeed) continue;
+      } else {
+        if (!(prev.armed && prev.height > 0 && up <= 0) || Math.abs(across) > (e.halfW ?? tg.radius) || Math.abs(depth) > (e.halfD ?? tg.radius)) continue;
+        speed = (prev.height - up) / (t - prev.t);
+        if (speed < SPEC.keyMinSpeed) continue;
+      }
+      const last = padLastHit.get(tg.id);
+      if (last !== undefined && t - last < SPEC.padLockout) continue;
+      padLastHit.set(tg.id, t);
+      const harp = tg.kind === 'string';
+      const pitch = e.pitch ?? SPEC.padPitch;
+      const vel = harp ? rowVelocity(speed, SPEC.harpMinSpeed, SPEC.harpMaxSpeed) : rowVelocity(speed, SPEC.keyMinSpeed, SPEC.keyMaxSpeed);
+      strikes++; lastStrike = { pad: tg.id, pitch, vel };
+      parts?.strike(harp ? 'harp' : 'keys', pitch, vel, f.tip);
+    }
+  }
+
   // ---- summon and near ----
 
   function updateSummon(head: HeadFrame, t: number, targets: readonly Target[]) {
@@ -500,6 +569,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
         const f = live[h];
         if (f && hands[h].pinching) holdGrab(h, f, t);
         updatePads(h, f, fresh[h], t, targets);
+        updateRow(h, f, fresh[h], t, targets);
       }
 
       for (const h of HANDS) {

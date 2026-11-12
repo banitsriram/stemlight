@@ -159,3 +159,25 @@
   - the field-of-view sentence flagged until banit's rerun is committed;
   - remake roles and remake still candidates added;
   - a top note that the live link still runs the 11 Nov build until the merge and redeploy.
+
+## 12–13 Nov 2026 (to 00:15 IST): biyon, harp and keyboard, logic and plain visuals (tasks 26, 27; F12, F13; branch `biyon/f08-f23-evidence`, PR #2)
+
+- **What it is.** Cutting the flutes gives an 8-string harp; cutting the reeds gives an 8-key keyboard. Both sit just below eye line, inside the 70×66° view and 0.61 m reach, tuned to one octave of the piece's scale inside the replaced stem's range (Dvořák: 76–88 and 52–64; Beethoven: 72–84 and 60–72). Notes record into the take, snap to the 1/8 grid and loop, exactly as the pads do.
+  - **Harp:** the index tip crossing a string sideways, at 0.1 m/s or faster, within the string's length.
+  - **Keyboard:** the index tip moving down through a key top, at 0.15 m/s or faster, inside the key.
+  - Both share the pads' 90 ms lockout. Speed sets loudness.
+  - Manifests: `replace` is now `perc:pads`, `fl:harp`, `reeds:keys` for both pieces.
+- **Guards, each with a unit test:**
+  - a tip resting on a string or key and wobbling 1.5 mm plays nothing (4 mm hysteresis);
+  - a tracking gap, or a tip that jumps more than 12 cm in one sample, plays nothing;
+  - a pointing hand inside the summoned creature no longer counts as a fist while the row is up (it used to mute and lock the stem);
+  - the count-in shows only on the instrument being recorded.
+- **Audio engine fix found on the way.** A take's loop wrap was only scheduled inside a 0.25 s window before the loop end. A frame stall longer than that skipped the window: the loop never wrapped, the take hung and the music ran on to the end of the piece. The engine now wraps late instead (a short glitch, the loop carries on). Unit test: a 0.9 s frame across the loop end.
+- **Evidence:**
+  - **Real gestures in the emulator: `tests/iwer/input/harp-keys.mjs`, 25/25.** On Dvořák: a two-hand cut on the flute lane starts a harp take and registers 8 strings; a sweep up and back at 0.5 m/s gives 16 plucks in string order, all in E minor, 16 hits recorded; the loop goes round and the part keeps them. Then the same on the reeds: 8 presses, one per key, in order, 8 hits recorded. Jumping the hand to and from the row plays nothing. No console errors. Log and two screenshots: `tests/iwer/input/results/2026-11-13-harp-keys.txt`, `-harp-pluck.png`, `-keys-press.png`.
+  - **Loop timing in a real browser: `tests/browser/harp-keys-loop.mjs`, all pass.** Off-grid strikes snap to the 1/8 grid; three wraps, each exactly one region apart; replays 6/6 at 0.00 µs from wrap + offset, for both instruments. Log: `tests/browser/results/2026-11-13-harp-keys-loop.txt`.
+  - **Pause/resume rerun after the engine change:** all 12 groups pass (`tests/iwer/input/results/2026-11-13-pause-resume.txt`). Its second cut moved from the reeds to the basses, because a reed cut now starts a keyboard take.
+  - `npm test` 115/115, `tsc` clean.
+- **F12 and F13 pass: 24/41.**
+- **Not verified:** how plucking and pressing feel on a real hand, and the look on a headset. The visuals are plain lines and quads in `src/ui/remake/`; in the harp screenshot the strings stand in front of the summoned creature and overlap it.
+- **Why the emulator run took several tries.** The test moved the hand with one CLI call per position, seconds each on a loaded laptop, while the music kept playing: the piece ended and the next one loaded mid-test. The hand moves now run inside the page in real time, one call per sweep.
