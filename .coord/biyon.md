@@ -1,6 +1,6 @@
 # biyon
 status: paused           # working | blocked | paused | idle
-task: paused 04:45 IST Thu 12; PR #1 (biyon/f19-perf-devpost) waiting for banit's review: remake surfaces render, 21/41 features, F19/perf/memory runs, Devpost draft 2
+task: paused 10:30 IST Thu 12; PR #1 then PR #2 (stacked) waiting for banit's review; 22/41 features
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -25,6 +25,7 @@ claims:
 - .claude/**
 - stemlight/public/pieces/**
 done:
+- biyon-29 F23 pause/resume 31/31 in IWER + F08 audible 7/7 in Chromium (fba9036, on PR #2)
 - biyon-45/46/47 remake surfaces rendering fix + F10/F11/F15/F22/F36 evidence (2155c9a, on PR #1)
 - biyon-55 F19 run, biyon-31 perf pass, biyon-17 memory check (0e2e239, on PR #1)
 - biyon-15, 16, 23, 24, 25, 28, 29: EQ, ribbon, trim/undo, pads, reset gestures + audio side (c8fe49f)
@@ -33,4 +34,4 @@ done:
 messages:
 - biyon-45 @banit: PR #1 needs your review and merge (https://github.com/banitsriram/stemlight/pull/1). Big one: the remake surfaces (ribbon, lane, playhead, pads, count-in rings, region outlines, reset arc) were NEVER drawn. view.ts used Float32BufferAttribute, which copies its array, so the GPU only ever saw zeros. Only your note glyphs showed. Fixed with BufferAttribute plus a regression test. The ribbon now sits above the summoned creature (it was hidden inside it), pads are cyan with halos, and a pad hit swaps to amber instead of clipping white. 6 screenshots of every surface state are in tests/iwer/input/results/2026-11-12-shot-*.png, ready for capture.mjs and the video (the old cut/pads shots show empty surfaces, so re-take them). I reran your fov.mjs: F18 + F27 pass in all 8 states with 0 errors. I restored its shots, so rerun it yourself to refresh them in your folder. 21/41 features now pass. F15 (amber notes) is yours: please eyeball shot-5 and flip it back if you disagree. My log is in docs/progress-pending-biyon.md (two entries) for progress.md.
 - biyon-55 @banit: your F19 request is done, 4/4 in IWER (tests/iwer/input/f19-onboarding.mjs, on PR #1): one Enter click starts the music, a creature is summoned 0.4 s after it starts, the tutorial moves to 'Make a fist', and the idle nudge fires at about 10 s.
-- biyon-57 @banit: thanks for the credits line OK. Closing this.
+- biyon-29 @banit: PR #2 (https://github.com/banitsriram/stemlight/pull/2) is stacked on PR #1, so merge #1 first and #2 retargets to main. Tests and docs only. F23 passes: my half is 31/31 in IWER (headset hidden x5, system menu, page hidden, 3 session ends with a Resume click, reload restores the mix and continues the tutorial, a finished tutorial reloads into free play), and your Paused/Resume half from 11 Nov 14:00 completes it. F08: the tone change is now proven audible in a real browser (+10.96 dB below 120 Hz for a +12 bass stretch, -11.60 dB above 8 kHz for a -12 treble one). Its other half is your task 43 (shape-morph), which is on the cut list. If you and sir cut 43, flip F08 to true. Also, please flip F19 when you review, since it's your feature (4/4, biyon-55 above). 22/41 with F23.
