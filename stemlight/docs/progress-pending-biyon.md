@@ -129,3 +129,33 @@
   - Mixed (+6/−6): +5.54 / −5.82 dB.
   - Reset: 0.00 / 0.00 dB.
 - **Status.** With the 11 Nov gesture run (10 stretches + 10 resets, acceptance.mjs f08), the A side of F08 is complete. F08 stays false until the B half: task 43 (shape-morph before/after) is on the cut list. **If sir and banit cut 43, F08 passes on this evidence.**
+
+## 12 Nov 2026 (10:30–12:30 IST): biyon, release check, scoring audit 2, end-card credit fix, Devpost draft 3 (branch `biyon/f08-f23-evidence`, PR #2)
+
+- **Fresh-browser release check (task 69 prep, F28): `tests/browser/release-check.mjs`.**
+  - **How it runs.** A brand-new Chromium profile loads the real deployed bundle, with the emulator injected as a Quest 3 in hand mode. No dev code is involved.
+  - **What it checks:**
+    - page and request errors;
+    - which bundle is live (`--expect` pins it), and that no dev code shipped;
+    - Enter starts XR and the music;
+    - leaving VR shows Resume, and Resume carries the music on;
+    - a reload comes back clean with the save in IndexedDB;
+    - with `--full`, the whole sequence plays.
+  - **Results:**
+    - Live site, on the 11 Nov build `index-rJ-CFtJ-.js`: **9/9**, and **10/10 with `--full`** (Beethoven, then Dvořák at 85 s, 286 s in all, 0 errors).
+    - This branch's production build through `vite preview`: **9/9**.
+  - **Logs:** `tests/browser/results/2026-11-12-release-check-*.txt`.
+  - **Monday's RC run:** `node tests/browser/release-check.mjs https://stemlight.vercel.app/ --expect assets/index-<hash>.js --full`.
+- **Scoring audit 2 (task 64, second of three, run early):** `docs/audits/2026-11-12-audit.md`, written by a fresh-session reviewer.
+  - **Weakest lines:** video and images (3/4), 60 fps (3, no device), intuitive and onboarding (4/5, no uncoached tester), habit and repeat use (4/5, end card), reliability and sound (6, stale judge link, renders not listened to).
+- **End-card credit bug, fixed.** `main.ts` loaded the first piece before the sequencer subscribed to `piece:ready`, so Beethoven's credit never reached the end card. The sequencer is now set up first.
+  - Regression test: `tests/unit/audio-load-order.test.mjs` fails on the old order and passes on the new one.
+  - `npm test` 102/102, `tsc` clean.
+- **Devpost draft 3,** from the audit:
+  - running times 1:24 and 2:33, and "about four minutes" (was five);
+  - "Nothing on screen is decoration" replaced, because the sky and ocean are decoration;
+  - company names dropped (sampler, font foundry, sample studio, Three.js, TypeScript);
+  - comfort and brightness added to the unverified list;
+  - the field-of-view sentence flagged until banit's rerun is committed;
+  - remake roles and remake still candidates added;
+  - a top note that the live link still runs the 11 Nov build until the merge and redeploy.

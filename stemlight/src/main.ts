@@ -110,6 +110,8 @@ world.registerSystem(class NotesSystem extends createSystem() {
   }
 });
 
+// The sequencer listens before the first piece loads, so that piece's credits reach the end card.
+initSequencer(ctx, PIECE_ORDER, (id) => loadPiece(engine, bus, id), endCard.show);
 // ?piece=<id> picks a piece; otherwise the first piece (dev only: the fixture if it's missing).
 const piece = (new URLSearchParams(location.search).get('piece') ?? PIECE_ORDER[0]) as PieceId;
 const manifest = await loadPiece(engine, bus, piece).catch((e) => {
@@ -118,7 +120,6 @@ const manifest = await loadPiece(engine, bus, piece).catch((e) => {
   return loadPiece(engine, bus, 'fixture' as PieceId);
 });
 markReady();
-initSequencer(ctx, PIECE_ORDER, (id) => loadPiece(engine, bus, id), endCard.show);
 if (import.meta.env.DEV) {
   installKeyMap(ctx, manifest);
   // ?stats shows the overlay, ?fov (or key m) the 70×66° mask; __stemlight.stats() for scripted logs.
