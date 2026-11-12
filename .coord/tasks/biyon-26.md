@@ -1,5 +1,5 @@
 # biyon-26: [A] Harp logic
-status: open
+status: done
 blocked_by: biyon-25
 owner: A (biyon)
 size: M (0.5 day)

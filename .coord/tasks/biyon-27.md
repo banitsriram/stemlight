@@ -1,5 +1,5 @@
 # biyon-27: [A] Keyboard logic
-status: open
+status: done
 note: proposed cut (cut 2) for the Wed 11 18:00 checkpoint; not decided
 blocked_by: biyon-25
 owner: A (biyon)
