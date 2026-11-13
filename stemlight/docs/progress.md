@@ -2,6 +2,14 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 13 Nov 2026 (evening): banit, the nine sections are now real instruments, modelled in code
+
+- banit asked for proper instruments in place of the sea creatures. `src/world/instruments.ts` builds all nine from code (no downloaded assets, so no new `ASSETS.md` rows): violin, cello (violas and cellos), double bass (sloped shoulders, endpin), flute (lip plate, 12 key cups on rods), clarinet (barrel, mouthpiece and reed, ring keys, bell), French horn (1.3-turn coil into a flared bell, 3 rotary valves with slides and levers), trumpet (lead pipe, tuning slide, 3 piston valves with pearl buttons, flared bell), timpani (copper bowl, head, hoop, 8 lugs, legs, pedal, two mallets) and concert harp (column, harmonic curve, soundbox, base, 26 strings with red Cs and dark Fs).
+- Each is still **two draw calls** (one merged body with per-vertex tint + metal, one LineSegments for strings) and 2.3k–6.5k triangles (cap 8k). Registry ids `creature:<stem>`, kind, radius 0.25, glide and `contracts.ts` are unchanged.
+- `creatures.ts`: bodies are opaque and lit without scene lights (view-fixed key light, fake sky reflection on metal, rim in the section's colour that grows with loudness). A silenced section goes dim and grey. Strings swing with the section's envelope. Instruments turn to face the listener with a slow sway. The glow quad now sits 0.3 m behind each instrument so it never cuts through it.
+- Evidence: `node tests/iwer/visual/run.mjs --shot` PASS (17 checks), 0 console errors; `node tests/iwer/visual/closeups.mjs <dir> fixture` writes one close-up per instrument (`results/close-<stem>.jpg`, all nine). `tsc` clean, `npm test` 97/97. Emulator only: **Quest frame rate and real-world scale are unchecked**.
+- Open: `PLAN.md`, `DEVPOST.md` and the video script still describe sea creatures (needs sir's OK); the playable harp, keyboard and pads in `src/ui/remake/` are biyon's and still plain; video shots need retaking.
+
 ## 13 Nov 2026 (later): banit, visual quality pass (notes, creatures, ghost hands, sky, ocean)
 
 - **Notes** (`world/notes/NoteGlyphs.ts`): a soft bloom from the MSDF distance field outside each outline, a white-hot core, and a fade for notes within 0.5 m of the eye, so notes at the summoned creature's mouth no longer fill the view. Trails get a fainter halo. Same 4 draw calls.

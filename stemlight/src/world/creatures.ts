@@ -1,13 +1,13 @@
-// Nine creature silhouettes (PLAN s8), their glide to the reach spot, and the mute / solo / envelope look.
-// Each creature is two draw calls: a glowing body mesh and one LineSegments for its threads.
+// The nine sections as instruments (built in instruments.ts), their glide to the reach spot, and the
+// mute / solo / envelope look. Each is two draw calls: a lit body mesh and one LineSegments for its strings.
+// They keep the registry id creature:<stem> and kind 'creature'.
 import {
-  AdditiveBlending, BufferGeometry, Color, CylinderGeometry, DoubleSide, Float32BufferAttribute, Group,
-  IcosahedronGeometry, LatheGeometry, LineSegments, Mesh, MeshBasicMaterial, Object3D,
-  RingGeometry, ShaderMaterial, SphereGeometry, TubeGeometry, Vector2, Vector3, CatmullRomCurve3,
+  AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, LineSegments, Mesh, MeshBasicMaterial,
+  Object3D, RingGeometry, ShaderMaterial,
 } from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { AppContext, Envelopes, MuteState, StemId, Vec3 } from '../contracts';
 import { endCardUp } from '../story/sequencer';
+import { instrument } from './instruments';
 
 export const GLIDE_SEC = 0.6;
 export const ACCENT: Record<StemId, string> = {
@@ -29,169 +29,63 @@ export function dimFor(stem: StemId, mute: MuteState | undefined, solo: StemId |
   return 1;
 }
 
-// ---- silhouettes ----
 
-type Pts = number[]; // flat x,y,z pairs for LineSegments
+/** The section's instrument (kept under the old name: checks and tests import it). */
+export const silhouette = instrument;
 
-const lathe = (profile: [number, number][], seg = 20) => new LatheGeometry(profile.map(([r, y]) => new Vector2(r, y)), seg);
-/** A smooth dome that flares out and curls under at the rim, with a fainter inner bell for depth. */
-const bell = (r: number, h: number) => {
-  const dome = (k: number) => Array.from({ length: 16 }, (_, i) => {
-    const u = i / 15, a = u * Math.PI * 0.56;
-    return [Math.max(0.001, r * k * Math.sin(a) * (1 + 0.12 * u ** 4)), h * k * Math.cos(a) - h * 0.1 * u ** 6 + h * (1 - k) * 0.4] as [number, number];
-  });
-  return mergeGeometries([lathe(dome(1), 40), lathe(dome(0.62), 28)]);
-};
-const tube = (pts: Vec3[], r: number, seg = 40) => new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p))), seg, r, 10);
-
-function threads(n: number, ringR: number, len: number, wave: number, out: Pts, y0 = 0) {
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2;
-    let px = Math.cos(a) * ringR, pz = Math.sin(a) * ringR, py = y0;
-    for (let s = 1; s <= 8; s++) {
-      const nx = Math.cos(a) * ringR * (1 - s * 0.06) + Math.sin(s * 0.9 + i) * wave;
-      const nz = Math.sin(a) * ringR * (1 - s * 0.06) + Math.cos(s * 0.8 + i) * wave;
-      const ny = y0 - (len * s) / 8;
-      out.push(px, py, pz, nx, ny, nz);
-      [px, py, pz] = [nx, ny, nz];
-    }
-  }
-}
-
-function spiral(turns: number, r0: number, grow: number, steps: number, lift = 0): Vec3[] {
-  return Array.from({ length: steps }, (_, i) => {
-    const a = (i / (steps - 1)) * turns * Math.PI * 2;
-    const r = r0 * Math.exp(grow * a);
-    return [Math.cos(a) * r, Math.sin(a) * r, lift * i / steps] as Vec3;
-  });
-}
-
-/** Body geometry and thread points per family, sized to sit inside the 25 cm collider. */
-export function silhouette(stem: StemId): { body: BufferGeometry; lines: Pts } {
-  const lines: Pts = [];
-  switch (stem) {
-    case 'vln': { // tall slender bell, many fine threads
-      threads(18, 0.07, 0.24, 0.012, lines);
-      return { body: bell(0.08, 0.2), lines };
-    }
-    case 'vla_vc': { // wide bell, thick ribbon tendrils (paired lines read as ribbons)
-      threads(6, 0.1, 0.18, 0.03, lines);
-      threads(6, 0.112, 0.18, 0.03, lines);
-      return { body: bell(0.15, 0.11), lines };
-    }
-    case 'cb': { // heavy manta: flat diamond body with a tail
-      const g = new SphereGeometry(0.2, 32, 14);
-      g.scale(1, 0.16, 0.6);
-      lines.push(0, 0, 0.1, 0, 0, 0.32);
-      return { body: g, lines };
-    }
-    case 'fl': { // bead-chain siphonophore
-      const beads = Array.from({ length: 7 }, (_, i) => {
-        const b = new IcosahedronGeometry(0.028 - i * 0.002, 3);
-        b.translate(Math.sin(i * 0.9) * 0.03, 0.12 - i * 0.04, 0);
-        if (i) lines.push(Math.sin((i - 1) * 0.9) * 0.03, 0.12 - (i - 1) * 0.04, 0, Math.sin(i * 0.9) * 0.03, 0.12 - i * 0.04, 0);
-        return b;
-      });
-      return { body: mergeGeometries(beads), lines };
-    }
-    case 'reeds': { // coiled nautilus spiral
-      const g = tube(spiral(2.2, 0.02, 0.17, 64), 0.022, 96);
-      return { body: g, lines };
-    }
-    case 'hn': { // curled ammonite with a glowing flare at the mouth
-      const coil = spiral(1.6, 0.03, 0.2, 36);
-      const end = coil[coil.length - 1];
-      const flare = new CylinderGeometry(0.07, 0.025, 0.06, 32, 4, true);
-      flare.rotateX(Math.PI / 2);
-      flare.translate(end[0], end[1], 0.03);
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2;
-        lines.push(end[0], end[1], 0.06, end[0] + Math.cos(a) * 0.1, end[1] + Math.sin(a) * 0.1, 0.12);
-      }
-      return { body: mergeGeometries([tube(coil, 0.03, 64).toNonIndexed(), flare.toNonIndexed()]), lines };
-    }
-    case 'brass': { // branching coral fan, bright tips
-      const parts: BufferGeometry[] = [];
-      const branch = (x: number, y: number, a: number, len: number, depth: number) => {
-        const x2 = x + Math.sin(a) * len, y2 = y + Math.cos(a) * len;
-        parts.push(tube([[x, y, 0], [(x + x2) / 2, (y + y2) / 2, 0.005], [x2, y2, 0]], 0.016 - depth * 0.003, 8).toNonIndexed());
-        if (depth < 3) { branch(x2, y2, a - 0.45, len * 0.72, depth + 1); branch(x2, y2, a + 0.45, len * 0.72, depth + 1); }
-        else lines.push(x2, y2, 0, x2 + Math.sin(a) * 0.02, y2 + Math.cos(a) * 0.02, 0);
-      };
-      branch(0, -0.2, 0, 0.15, 0);
-      return { body: mergeGeometries(parts), lines };
-    }
-    case 'perc': { // anemone sphere with spines
-      const spines = new IcosahedronGeometry(0.1, 2);
-      const g = new IcosahedronGeometry(0.1, 4);
-      const p = spines.getAttribute('position');
-      for (let i = 0; i < p.count; i += 3) lines.push(p.getX(i), p.getY(i), p.getZ(i), p.getX(i) * 1.7, p.getY(i) * 1.7, p.getZ(i) * 1.7);
-      return { body: g, lines };
-    }
-    case 'harp': { // comb jelly: an egg with 8 shimmering cilia rows
-      const g = new SphereGeometry(0.09, 32, 20);
-      g.scale(0.8, 1.3, 0.8);
-      for (let r = 0; r < 8; r++) {
-        const a = (r / 8) * Math.PI * 2;
-        for (let s = 0; s < 10; s++) {
-          const v0 = (s / 10) * Math.PI, v1 = ((s + 1) / 10) * Math.PI;
-          const pt = (v: number) => [Math.sin(v) * Math.cos(a) * 0.078, -Math.cos(v) * 0.125, Math.sin(v) * Math.sin(a) * 0.078];
-          lines.push(...pt(v0), ...pt(v1));
-        }
-      }
-      return { body: g, lines };
-    }
-  }
-}
-
+// Lit like studio objects without scene lights: a key light fixed to the view, a fake sky reflection for
+// metal, and a rim in the section's colour that brightens with its loudness. tint.a is metal 0..1.
 const BODY_VERT = /* glsl */ `
-uniform float uFlap; uniform float uTime; uniform float uPulse;
-varying vec3 vN; varying vec3 vView; varying vec3 vPos;
+attribute vec4 tint;
+varying vec3 vN; varying vec3 vView; varying vec4 vTint;
 void main() {
-  vec3 p = position;
-  p.y += sin(uTime * 2.2) * abs(p.x) * p.x * uFlap * 3.0;
-  // Swimming: a slow contraction wave down the body, deeper when the stem is loud.
-  float swim = sin(uTime * 2.4 - p.y * 18.0) * (0.035 + 0.06 * uPulse);
-  p.xz *= 1.0 + swim;
-  vPos = position;
-  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
   vN = normalize(normalMatrix * normal);
   vView = normalize(-mv.xyz);
+  vTint = tint;
   gl_Position = projectionMatrix * mv;
 }`;
-// Bioluminescence: a fresnel rim with a slow rainbow sheen, light bands travelling down the body, radial canals
-// and a soft inner core. Additive, so overlapping parts read as depth.
 const BODY_FRAG = /* glsl */ `
-uniform vec3 uColor; uniform float uBright; uniform float uTime; uniform float uPulse;
-varying vec3 vN; varying vec3 vView; varying vec3 vPos;
+uniform vec3 uColor; uniform float uBright; uniform float uPulse;
+varying vec3 vN; varying vec3 vView; varying vec4 vTint;
 void main() {
-  float facing = abs(dot(normalize(vN), normalize(vView)));
-  float rim = pow(1.0 - facing, 2.5);
-  vec3 sheen = 0.5 + 0.5 * cos(6.2831 * (rim * 0.8 + uTime * 0.05 + vec3(0.0, 0.33, 0.67)));
-  float bands = pow(0.5 + 0.5 * sin(vPos.y * 70.0 + uTime * 3.0), 8.0);
-  float canals = pow(abs(cos(atan(vPos.z, vPos.x) * 4.0)), 24.0);
-  float core = pow(facing, 3.0) * 0.25;
-  vec3 c = uColor * (0.12 + 1.5 * rim + (0.3 + 0.6 * uPulse) * bands + 0.35 * canals + core);
-  c += sheen * rim * 0.35;
-  c = mix(c, vec3(1.0), clamp(uPulse * rim * 0.6, 0.0, 0.5)); // loud passages burn white at the edges
-  gl_FragColor = vec4(c * uBright, 1.0);
+  vec3 V = normalize(vView);
+  vec3 N = normalize(vN);
+  if (dot(N, V) < 0.0) N = -N; // inside of a bell
+  vec3 L = normalize(vec3(-0.45, 0.7, 0.55));
+  float metal = vTint.a;
+  float diff = max(dot(N, L), 0.0);
+  float spec = pow(max(dot(N, normalize(L + V)), 0.0), mix(20.0, 80.0, metal));
+  vec3 R = reflect(-V, N);
+  vec3 sky = mix(vec3(0.03, 0.04, 0.08), vec3(0.42, 0.36, 0.7), smoothstep(-0.2, 0.9, R.y))
+    + vec3(0.15, 0.6, 0.65) * pow(1.0 - abs(R.y), 6.0) * 0.5;
+  vec3 wood = vTint.rgb * (0.3 + 0.8 * diff) + vec3(spec * 0.3);
+  vec3 shiny = vTint.rgb * (0.12 + 0.45 * diff) + vTint.rgb * sky * 1.7 + mix(vTint.rgb, vec3(1.0), 0.6) * spec * 1.3;
+  vec3 c = mix(wood, shiny, metal);
+  // uBright is 0.35 for a quiet section, more as it plays, about 0.07 when silenced.
+  float awake = clamp(uBright / 0.35, 0.0, 1.0);
+  c = mix(vec3(dot(c, vec3(0.3, 0.6, 0.1))), c, 0.25 + 0.75 * awake) * (0.3 + 0.7 * awake);
+  float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+  c += uColor * rim * (0.16 * awake + 1.1 * max(uBright - 0.35, 0.0));
+  c += vTint.rgb * uPulse * 0.12;
+  gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
-// Threads sway more toward their tips and fade out along them.
+// Strings swing across the instrument while its section plays; vib is 0 at their ends.
 const LINE_VERT = /* glsl */ `
-uniform float uTime; varying float vTip;
+uniform float uTime; uniform float uPulse;
+attribute vec3 tint; attribute float vib;
+varying vec3 vTint;
 void main() {
   vec3 p = position;
-  float down = max(0.0, -p.y);
-  p.x += sin(uTime * 1.7 + p.y * 16.0 + p.z * 9.0) * down * 0.22;
-  p.z += cos(uTime * 1.3 + p.y * 13.0 + p.x * 7.0) * down * 0.22;
-  vTip = clamp(down / 0.3, 0.0, 1.0);
+  p.z += sin(uTime * 70.0 + p.x * 400.0) * vib * uPulse * 0.003;
+  vTint = tint;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 const LINE_FRAG = /* glsl */ `
-uniform vec3 uColor; uniform float uOpacity; varying float vTip;
+uniform float uOpacity; varying vec3 vTint;
 void main() {
-  gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.25), uOpacity * (1.0 - 0.75 * vTip));
+  gl_FragColor = vec4(vTint * uOpacity, 1.0);
   #include <colorspace_fragment>
 }`;
 // One billboarded glow per creature, all nine in one draw call: four corners share a centre attribute.
@@ -202,6 +96,7 @@ void main() {
   vUv = position.xy;
   vTint = tint; vGlow = glow;
   vec4 mv = modelViewMatrix * vec4(center, 1.0);
+  mv.xyz *= 1.0 + 0.3 / max(0.3, -mv.z); // sits 0.3 m behind the instrument along the line of sight, so it never cuts through it
   mv.xy += position.xy * size;
   vGlow *= smoothstep(0.15, 0.45, -mv.z); // no glow fog right at the face
   gl_Position = projectionMatrix * mv;
@@ -288,17 +183,19 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     const r = ++request;
     fetch(`/pieces/${id}/envelopes.json`).then((res) => res.json()).then((e: Envelopes) => { if (r === request) env = e; }).catch(() => {});
     creatures = manifest.stems.map(({ id: stem, homeSeat }) => {
-      const { body, lines } = silhouette(stem);
+      const { body, lines, lineColors, vib } = instrument(stem);
       const color = new Color(ACCENT[stem]);
       const bodyMat = new ShaderMaterial({
-        vertexShader: BODY_VERT, fragmentShader: BODY_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide,
-        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uFlap: { value: stem === 'cb' ? 0.5 : 0 }, uTime: { value: 0 }, uPulse: { value: 0 } },
+        vertexShader: BODY_VERT, fragmentShader: BODY_FRAG, side: DoubleSide,
+        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uPulse: { value: 0 } },
       });
       const lineGeo = new BufferGeometry();
       lineGeo.setAttribute('position', new Float32BufferAttribute(lines, 3));
+      lineGeo.setAttribute('tint', new Float32BufferAttribute(lineColors, 3));
+      lineGeo.setAttribute('vib', new Float32BufferAttribute(vib, 1));
       const lineMat = new ShaderMaterial({
-        vertexShader: LINE_VERT, fragmentShader: LINE_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false,
-        uniforms: { uColor: { value: color }, uOpacity: { value: 1 }, uTime: { value: 0 } },
+        vertexShader: LINE_VERT, fragmentShader: LINE_FRAG,
+        uniforms: { uOpacity: { value: 1 }, uTime: { value: 0 }, uPulse: { value: 0 } },
       });
       const obj = new Group();
       obj.add(new Mesh(body, bodyMat));
@@ -320,7 +217,6 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     if (!c) return;
     const { eye, yaw } = head();
     glideTo(c, reachSpot(eye, yaw), now);
-    c.obj.rotation.y = yaw;
     summoned = stem;
   });
   ctx.bus.on('stem:mute', ({ stem, state, lockProgress }) => {
@@ -340,6 +236,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       // The end card needs the space ahead: send the summoned creature home while it shows.
       const held = endCardUp() && creatures.find((c) => c.stem === summoned);
       if (held) { glideTo(held, held.home, now); summoned = null; }
+      const { eye } = head();
       const frame = env ? Math.floor(ctx.transport.time() * env.rate) : -1;
       for (const c of creatures) {
         if (c.gliding) {
@@ -351,13 +248,16 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
         const amp = env?.stems[c.stem]?.[frame] ?? 0;
         const bob = Math.sin(now * 0.8 + c.home[0] * 3) * 0.02;
         c.obj.position.set(c.pos[0], c.pos[1] + bob, c.pos[2]);
-        c.obj.scale.setScalar(0.9 + 0.35 * amp);
+        c.obj.scale.setScalar(0.97 + 0.08 * amp);
+        // Face the listener, with a slow turn so the shape reads in the round.
+        c.obj.rotation.y = Math.atan2(eye[0] - c.pos[0], eye[2] - c.pos[2]) + 0.3 * Math.sin(now * 0.4 + c.home[0] * 5);
+        c.obj.rotation.z = 0.05 * Math.sin(now * 0.55 + c.home[0] * 3);
         c.bright += (dimFor(c.stem, mute[c.stem], solo) - c.bright) * Math.min(1, dt * 6);
         c.body.uniforms.uBright.value = c.bright * (0.35 + 0.9 * amp);
-        c.body.uniforms.uTime.value = now;
         c.body.uniforms.uPulse.value = amp;
         c.lines.uniforms.uTime.value = now;
-        c.lines.uniforms.uOpacity.value = c.bright * (0.3 + 0.6 * amp);
+        c.lines.uniforms.uPulse.value = amp;
+        c.lines.uniforms.uOpacity.value = Math.min(1, c.bright) * (0.75 + 0.5 * amp);
         glow.set(creatures.indexOf(c), [c.pos[0], c.pos[1] + bob, c.pos[2]], c.color, c.bright * (0.22 + 0.55 * amp), 0.3 + 0.12 * amp);
       }
       glow.commit(creatures.length);
