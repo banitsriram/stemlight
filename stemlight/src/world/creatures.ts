@@ -7,6 +7,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { AppContext, Envelopes, MuteState, StemId, Vec3 } from '../contracts';
+import { endCardUp } from '../story/sequencer';
 
 export const GLIDE_SEC = 0.6;
 export const ACCENT: Record<StemId, string> = {
@@ -233,6 +234,9 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     solo: () => solo,
     update(dt: number) {
       const now = performance.now() / 1000;
+      // The end card needs the space ahead: send the summoned creature home while it shows.
+      const held = endCardUp() && creatures.find((c) => c.stem === summoned);
+      if (held) { glideTo(held, held.home, now); summoned = null; }
       const frame = env ? Math.floor(ctx.transport.time() * env.rate) : -1;
       for (const c of creatures) {
         if (c.gliding) {

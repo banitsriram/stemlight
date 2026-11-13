@@ -5,6 +5,7 @@ import type { AppContext, MixState, StemId, Vec3 } from '../contracts';
 import type { HeadFn } from '../world/creatures';
 import { textSprite } from './card.ts';
 import { createGhost } from './ghost.ts';
+import { endCardUp } from './sequencer.ts';
 import { createTutorial } from './tutorial.ts';
 
 const BACK_SEC = 5;
@@ -46,7 +47,7 @@ export function initStory(
       const at = step === 'summon' && first ? creatureAt(first) : undefined;
       const spot: Vec3 = at ? [at[0], at[1] + 0.12, at[2]] : reachSpot(eye, yaw);
       const glow = nudges > 0 ? 0.5 + 0.5 * Math.sin(now * 6) : 0;
-      ghost.update(step, tutorial.words(), now, spot, step === 'summon' ? Math.atan2(eye[0] - spot[0], eye[2] - spot[2]) : yaw, glow);
+      ghost.update(step, endCardUp() ? '' : tutorial.words(), now, spot, step === 'summon' ? Math.atan2(eye[0] - spot[0], eye[2] - spot[2]) : yaw, glow);
       // Shown once the music plays, 1.2 m ahead and above the eye, clear of the tutorial caption.
       back.sprite.visible = now < backUntil && ctx.transport.playing();
       if (back.sprite.visible) back.sprite.position.set(eye[0] - Math.sin(yaw) * 1.2, eye[1] + 0.35, eye[2] - Math.cos(yaw) * 1.2);

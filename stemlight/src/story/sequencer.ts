@@ -52,6 +52,10 @@ export function initSequencer(
   });
 }
 
+let cardUp = false;
+/** True while the end card shows: the tutorial caption hides and the summoned creature goes home, so nothing covers it. */
+export const endCardUp = () => cardUp;
+
 /** The end card as a world sprite, 2.2 m ahead at eye height. */
 export function endCardSprite() {
   const card = textSprite(1.6, 2048, 1.6);
@@ -60,7 +64,7 @@ export function endCardSprite() {
   return {
     sprite: card.sprite,
     show(lines: string[] | null) {
-      card.sprite.visible = !!lines;
+      card.sprite.visible = cardUp = !!lines;
       if (lines) card.set(lines, 0.034);
     },
   };

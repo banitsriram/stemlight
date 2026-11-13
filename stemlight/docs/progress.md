@@ -2,6 +2,13 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 13 Nov 2026: banit, end card clear of the creature and caption, landing minutes (audit 2 items 1-2)
+
+- Reviewed PR #1 and PR #2 (tip of #2 includes #1): `tsc` clean, `npm test` 115/115, `vite build` OK. Merge is waiting on banit.
+- Landing copy now says "about 4 minutes" (1:24 + 2:33), matching Devpost.
+- While the end card shows (`endCardUp()` in `src/story/sequencer.ts`), the tutorial caption hides and the summoned creature glides home. `tests/iwer/visual/run.mjs --shot`: world checks PASS, 0 console errors; `results/7-ghost-tap.jpg` (before: 'Tap' caption over the creature) vs `results/8-end-card.jpg` (after: caption gone, creature leaving). Main: `tsc` clean, 97/97.
+- Still open for banit: rerun `fov.mjs` once the PRs are on main (ribbon, lane, pads, shell, harp, keys with a flute cut); eyeball F15 shot-5 and F25 end card for biyon to flip.
+
 ## 11 Nov 2026 (16:00 IST): banit, video captures, shot ledger, rough cut, stills, voiceover draft (tasks 59; 60, 68 partly)
 
 - **Captures (59):** `node video/capture.mjs [shot]` runs the real dev build in the IWER emulator on the Mac's GPU (about 55 fps at 1080p, headless).

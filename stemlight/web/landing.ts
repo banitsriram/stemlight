@@ -22,7 +22,7 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, 
       <h1 class="landing-in">${copy.title}</h1>
       <p class="landing-pitch landing-in">${copy.pitch}</p>
       <button class="landing-enter landing-in" type="button">${copy.button}</button>
-      <p class="landing-hint landing-in">No account. Seated, hands only, about 5 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
+      <p class="landing-hint landing-in">No account. Seated, hands only, about 4 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
       <p class="landing-status" role="status"></p>
     </main>`;
 
