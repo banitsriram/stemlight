@@ -20,6 +20,7 @@ void main() {
   vUv = mix(iUv.xy, iUv.zw, position.xy);
   vColor = iColor;
   vec4 mv = modelViewMatrix * vec4(iPos, 1.0);
+  vColor.a *= smoothstep(0.18, 0.5, -mv.z); // a note right at the face fades instead of filling the view
   mv.xy += mix(iQuad.xy, iQuad.zw, position.xy) * iSize; // always faces the viewer
   gl_Position = projectionMatrix * mv;
 }`;
@@ -35,11 +36,19 @@ void main() {
   float fill = clamp(screenRange * sd + 0.5, 0.0, 1.0);
   vec3 rgb = vColor.rgb;
   float a = fill;
+  // Soft bloom from the distance field outside the outline (no post-processing on Quest).
+  float halo = smoothstep(-0.5, 0.0, sd);
+  halo *= halo;
+#if !defined(GLASS) && !defined(GHOST) && !defined(AMBER)
+  rgb = mix(rgb, vec3(1.0), 0.45 * smoothstep(0.02, 0.2, sd)); // hot core
+  a = max(fill, 0.5 * halo);
+#endif
 #if defined(GLASS)
   rgb = mix(rgb, vec3(0.8, 0.92, 1.0), 0.6);
   a *= 0.2 + 0.8 * (1.0 - smoothstep(0.1, 0.3, sd));
 #elif defined(GHOST)
   a *= 1.0 - smoothstep(0.18, 0.28, sd);
+  a = max(a, 0.3 * halo);
 #elif defined(AMBER)
   a = max(a, 0.35 * smoothstep(-0.3, 0.0, sd));
 #endif

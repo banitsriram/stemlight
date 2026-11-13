@@ -2,6 +2,14 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 13 Nov 2026 (later): banit, visual quality pass (notes, creatures, ghost hands, sky, ocean)
+
+- **Notes** (`world/notes/NoteGlyphs.ts`): a soft bloom from the MSDF distance field outside each outline, a white-hot core, and a fade for notes within 0.5 m of the eye, so notes at the summoned creature's mouth no longer fill the view. Trails get a fainter halo. Same 4 draw calls.
+- **Creatures** (`world/creatures.ts`): smooth bells (16-point dome flaring and curling under at the rim, 40 segments, plus a fainter inner bell), smoother tubes and spheres; 500–2,400 triangles each (cap 8k). New body shader: fresnel rim with a slow rainbow sheen, light bands travelling down the body, radial canals, an inner core, and a swimming contraction wave that deepens with the stem's loudness; loud passages burn white at the edges. Threads sway toward their tips and fade along them. One soft glow per creature, all nine in **one** extra draw call (billboarded quads, fades near the face).
+- **Ghost hands** (`story/ghost.ts`): glass fresnel shader on smoother bones, still one draw call.
+- **Sky and ocean** (`world/sky.ts`): rose cores in the nebula, a cyan horizon glow, stars that twinkle at their own rates with a few bright ones; thin caustic lines near the seat (2 noise octaves) and far water that picks up the horizon glow; plankton with gaussian falloff, varied size and some violet.
+- Evidence: `node tests/iwer/visual/run.mjs --shot` PASS (all 17 world checks, budget), 0 console errors; shots in `tests/iwer/visual/results/` (compare with the previous commit's). `tsc` clean, `npm test` 97/97. Emulator only (SwiftShader): **frame rate on a Quest is unmeasured**. The extra fragment work is the halo quads (large when a creature sits at the reach spot) and the ocean's extra noise; biyon's perf-heaviest run should be repeated on a headset.
+
 ## 13 Nov 2026: banit, end card clear of the creature and caption, landing minutes (audit 2 items 1-2)
 
 - Reviewed PR #1 and PR #2 (tip of #2 includes #1): `tsc` clean, `npm test` 115/115, `vite build` OK. Merge is waiting on banit.

@@ -1,7 +1,7 @@
 // Ghost hands (biyon-54): translucent hands that loop the gesture for the current tutorial step,
 // with its caption above. Both hands are one InstancedMesh of bones, so one draw call.
 import {
-  AdditiveBlending, CylinderGeometry, Group, InstancedMesh, Matrix4, MeshBasicMaterial, Object3D, Quaternion, Vector3,
+  AdditiveBlending, Color, CylinderGeometry, Group, InstancedMesh, Matrix4, Object3D, Quaternion, ShaderMaterial, Vector3,
 } from 'three';
 import type { TutorialStep, Vec3 } from '../contracts';
 import { textSprite } from './card.ts';
@@ -75,10 +75,31 @@ function writeHand(mesh: InstancedMesh, base: number, side: 1 | -1, p: HandPose 
   bone(mesh, i++, knuckle, tip, 0.7);
 }
 
+// Glass bones: bright at the silhouette, nearly clear face-on, so the hand reads as light, not a solid.
+const GHOST_VERT = /* glsl */ `
+varying vec3 vN; varying vec3 vView;
+void main() {
+  vec4 mv = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+  vN = normalize(normalMatrix * mat3(instanceMatrix) * normal);
+  vView = normalize(-mv.xyz);
+  gl_Position = projectionMatrix * mv;
+}`;
+const GHOST_FRAG = /* glsl */ `
+uniform vec3 uColor; uniform float opacity;
+varying vec3 vN; varying vec3 vView;
+void main() {
+  float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vView))), 2.0);
+  gl_FragColor = vec4(mix(uColor, vec3(1.0), rim * 0.5) * (0.15 + 1.3 * rim) * opacity * 2.0, 1.0);
+  #include <colorspace_fragment>
+}`;
+
 export function createGhost(parent: Object3D) {
   const group = new Group();
-  const mat = new MeshBasicMaterial({ color: '#6FF3FF', transparent: true, opacity: 0.35, blending: AdditiveBlending, depthWrite: false });
-  const mesh = new InstancedMesh(new CylinderGeometry(0.01, 0.01, 1, 8, 1), mat, BONES * 2);
+  const mat = new ShaderMaterial({
+    vertexShader: GHOST_VERT, fragmentShader: GHOST_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false,
+    uniforms: { uColor: { value: new Color('#6FF3FF') }, opacity: { value: 0.35 } },
+  });
+  const mesh = new InstancedMesh(new CylinderGeometry(0.01, 0.01, 1, 16, 1), mat, BONES * 2);
   mesh.frustumCulled = false;
   const caption = textSprite(0.36);
   caption.sprite.position.set(0, 0.16, 0);
@@ -98,7 +119,7 @@ export function createGhost(parent: Object3D) {
       writeHand(mesh, 0, -1, rig.left);
       writeHand(mesh, BONES, 1, rig.right);
       mesh.instanceMatrix.needsUpdate = true;
-      mat.opacity = 0.3 + 0.35 * glow;
+      mat.uniforms.opacity.value = 0.3 + 0.35 * glow;
       caption.set([words]);
       caption.sprite.material.opacity = 0.75 + 0.25 * glow;
     },

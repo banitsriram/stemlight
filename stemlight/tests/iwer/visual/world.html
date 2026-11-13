@@ -41,7 +41,7 @@ const frame = (at) => { t = at; layer.update(); return JSON.stringify(drawn); };
 await ready(9);
 const nine = registry.all();
 // rock + nebula, ocean, plankton + lock ring + 9 creatures
-const seated = nine.length === 9 && nine.every((x) => x.kind === 'creature' && x.radius === 0.25) && scene.children.length === 14;
+const seated = nine.length === 9 && nine.every((x) => x.kind === 'creature' && x.radius === 0.25) && scene.children.length === 15; // + one draw call for all nine creature glows
 await ready(8);
 const swap = registry.all().length === 8 && !targets.has('creature:harp');
 await ready(9);

@@ -28,8 +28,15 @@ void main() {
   vec3 voidC = vec3(0.027, 0.024, 0.059), violet = vec3(0.165, 0.106, 0.29), teal = vec3(0.055, 0.373, 0.42);
   vec3 c = mix(voidC, violet, smoothstep(0.35, 0.8, gas) * up);
   c = mix(c, teal, smoothstep(0.55, 0.85, wisps) * up * 0.6);
-  float star = step(0.9985, h(floor(d * 380.0))) * up;
-  gl_FragColor = vec4(c + star * 0.7, 1.0);
+  // Rose cores where the gas is densest, and a cyan glow along the horizon where sky meets sea.
+  c += vec3(0.32, 0.07, 0.26) * smoothstep(0.62, 0.9, gas) * (1.0 - smoothstep(0.45, 0.75, wisps)) * up * 0.6;
+  c += vec3(0.04, 0.26, 0.3) * exp(-abs(d.y - 0.02) * 10.0) * 0.55;
+  // Stars: most faint, a few bright, each twinkling at its own rate.
+  vec3 cell = floor(d * 380.0);
+  float s = h(cell);
+  float twinkle = 0.55 + 0.45 * sin(uTime * (0.8 + fract(s * 97.0) * 3.0) + s * 60.0);
+  float star = (step(0.9982, s) * 0.55 + step(0.99965, s) * 0.9) * twinkle * up;
+  gl_FragColor = vec4(c + star * mix(vec3(0.8, 0.9, 1.0), vec3(1.0, 0.85, 0.95), fract(s * 31.0)), 1.0);
   #include <colorspace_fragment>
 }`,
   });
@@ -49,6 +56,13 @@ void main() {
   float r = length(vXZ);
   float caust = fbm(vec3(vXZ * 0.6, uTime * 0.05));
   vec3 c = mix(vec3(0.02, 0.05, 0.09), vec3(0.055, 0.373, 0.42), smoothstep(0.55, 0.9, caust) * 0.35);
+  // Thin shimmering caustic lines near the seat (two noise octaves: the ocean fills half the view).
+  vec3 q = vec3(vXZ * 1.3, uTime * 0.12);
+  float n = n3(q) * 0.65 + n3(q * 2.1 + 4.0) * 0.35;
+  float lines = pow(1.0 - abs(n * 2.0 - 1.0), 22.0);
+  c += vec3(0.25, 0.85, 0.95) * lines * 0.07 * (1.0 - smoothstep(1.5, 9.0, r));
+  // The far water picks up the horizon glow.
+  c = mix(c, vec3(0.05, 0.2, 0.26), smoothstep(10.0, 38.0, r) * 0.6);
   float a = (1.0 - smoothstep(4.0, 40.0, r)) * 0.95;
   gl_FragColor = vec4(c, a);
   #include <colorspace_fragment>
@@ -78,22 +92,23 @@ function plankton(): Points {
   const mat = new ShaderMaterial({
     transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 } },
     vertexShader: /* glsl */ `
-uniform float uTime; attribute float seed; varying float vA;
+uniform float uTime; attribute float seed; varying float vA; varying vec3 vC;
 void main() {
   vec3 p = position;
   float t = uTime * (0.05 + seed * 0.08) + seed * 40.0;
   p += vec3(sin(t) * 0.25, sin(t * 0.7 + seed * 9.0) * 0.15, cos(t * 0.8) * 0.25);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   vA = (0.25 + 0.75 * fract(seed * 13.0)) * (0.6 + 0.4 * sin(uTime * (0.5 + seed) + seed * 20.0));
-  gl_PointSize = clamp(6.0 / -mv.z, 1.0, 6.0);
+  gl_PointSize = clamp((4.0 + 6.0 * fract(seed * 7.0)) / -mv.z, 1.0, 9.0);
+  vC = mix(vec3(0.44, 0.95, 1.0), vec3(0.75, 0.6, 1.0), step(0.8, fract(seed * 5.0)));
   gl_Position = projectionMatrix * mv;
 }`,
     fragmentShader: /* glsl */ `
-varying float vA;
+varying float vA; varying vec3 vC;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
-  gl_FragColor = vec4(vec3(0.44, 0.95, 1.0) * vA * (1.0 - d * 2.0), 1.0);
+  gl_FragColor = vec4(vC * vA * exp(-d * d * 14.0), 1.0);
 }`,
   });
   const p = new Points(g, mat);

@@ -2,7 +2,7 @@
 // Each creature is two draw calls: a glowing body mesh and one LineSegments for its threads.
 import {
   AdditiveBlending, BufferGeometry, Color, CylinderGeometry, DoubleSide, Float32BufferAttribute, Group,
-  IcosahedronGeometry, LatheGeometry, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D,
+  IcosahedronGeometry, LatheGeometry, LineSegments, Mesh, MeshBasicMaterial, Object3D,
   RingGeometry, ShaderMaterial, SphereGeometry, TubeGeometry, Vector2, Vector3, CatmullRomCurve3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -34,8 +34,15 @@ export function dimFor(stem: StemId, mute: MuteState | undefined, solo: StemId |
 type Pts = number[]; // flat x,y,z pairs for LineSegments
 
 const lathe = (profile: [number, number][], seg = 20) => new LatheGeometry(profile.map(([r, y]) => new Vector2(r, y)), seg);
-const bell = (r: number, h: number) => lathe([[0.001, h], [r * 0.55, h * 0.92], [r * 0.9, h * 0.6], [r, h * 0.2], [r * 0.85, 0]]);
-const tube = (pts: Vec3[], r: number, seg = 40) => new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p))), seg, r, 6);
+/** A smooth dome that flares out and curls under at the rim, with a fainter inner bell for depth. */
+const bell = (r: number, h: number) => {
+  const dome = (k: number) => Array.from({ length: 16 }, (_, i) => {
+    const u = i / 15, a = u * Math.PI * 0.56;
+    return [Math.max(0.001, r * k * Math.sin(a) * (1 + 0.12 * u ** 4)), h * k * Math.cos(a) - h * 0.1 * u ** 6 + h * (1 - k) * 0.4] as [number, number];
+  });
+  return mergeGeometries([lathe(dome(1), 40), lathe(dome(0.62), 28)]);
+};
+const tube = (pts: Vec3[], r: number, seg = 40) => new TubeGeometry(new CatmullRomCurve3(pts.map((p) => new Vector3(...p))), seg, r, 10);
 
 function threads(n: number, ringR: number, len: number, wave: number, out: Pts, y0 = 0) {
   for (let i = 0; i < n; i++) {
@@ -73,14 +80,14 @@ export function silhouette(stem: StemId): { body: BufferGeometry; lines: Pts } {
       return { body: bell(0.15, 0.11), lines };
     }
     case 'cb': { // heavy manta: flat diamond body with a tail
-      const g = new SphereGeometry(0.2, 18, 8);
+      const g = new SphereGeometry(0.2, 32, 14);
       g.scale(1, 0.16, 0.6);
       lines.push(0, 0, 0.1, 0, 0, 0.32);
       return { body: g, lines };
     }
     case 'fl': { // bead-chain siphonophore
       const beads = Array.from({ length: 7 }, (_, i) => {
-        const b = new IcosahedronGeometry(0.028 - i * 0.002, 1);
+        const b = new IcosahedronGeometry(0.028 - i * 0.002, 3);
         b.translate(Math.sin(i * 0.9) * 0.03, 0.12 - i * 0.04, 0);
         if (i) lines.push(Math.sin((i - 1) * 0.9) * 0.03, 0.12 - (i - 1) * 0.04, 0, Math.sin(i * 0.9) * 0.03, 0.12 - i * 0.04, 0);
         return b;
@@ -88,26 +95,26 @@ export function silhouette(stem: StemId): { body: BufferGeometry; lines: Pts } {
       return { body: mergeGeometries(beads), lines };
     }
     case 'reeds': { // coiled nautilus spiral
-      const g = tube(spiral(2.2, 0.02, 0.17, 48), 0.022, 64);
+      const g = tube(spiral(2.2, 0.02, 0.17, 64), 0.022, 96);
       return { body: g, lines };
     }
     case 'hn': { // curled ammonite with a glowing flare at the mouth
       const coil = spiral(1.6, 0.03, 0.2, 36);
       const end = coil[coil.length - 1];
-      const flare = new CylinderGeometry(0.07, 0.025, 0.06, 16, 1, true);
+      const flare = new CylinderGeometry(0.07, 0.025, 0.06, 32, 4, true);
       flare.rotateX(Math.PI / 2);
       flare.translate(end[0], end[1], 0.03);
       for (let i = 0; i < 12; i++) {
         const a = (i / 12) * Math.PI * 2;
         lines.push(end[0], end[1], 0.06, end[0] + Math.cos(a) * 0.1, end[1] + Math.sin(a) * 0.1, 0.12);
       }
-      return { body: mergeGeometries([tube(coil, 0.03, 48).toNonIndexed(), flare.toNonIndexed()]), lines };
+      return { body: mergeGeometries([tube(coil, 0.03, 64).toNonIndexed(), flare.toNonIndexed()]), lines };
     }
     case 'brass': { // branching coral fan, bright tips
       const parts: BufferGeometry[] = [];
       const branch = (x: number, y: number, a: number, len: number, depth: number) => {
         const x2 = x + Math.sin(a) * len, y2 = y + Math.cos(a) * len;
-        parts.push(tube([[x, y, 0], [(x + x2) / 2, (y + y2) / 2, 0.005], [x2, y2, 0]], 0.016 - depth * 0.003, 6).toNonIndexed());
+        parts.push(tube([[x, y, 0], [(x + x2) / 2, (y + y2) / 2, 0.005], [x2, y2, 0]], 0.016 - depth * 0.003, 8).toNonIndexed());
         if (depth < 3) { branch(x2, y2, a - 0.45, len * 0.72, depth + 1); branch(x2, y2, a + 0.45, len * 0.72, depth + 1); }
         else lines.push(x2, y2, 0, x2 + Math.sin(a) * 0.02, y2 + Math.cos(a) * 0.02, 0);
       };
@@ -115,13 +122,14 @@ export function silhouette(stem: StemId): { body: BufferGeometry; lines: Pts } {
       return { body: mergeGeometries(parts), lines };
     }
     case 'perc': { // anemone sphere with spines
-      const g = new IcosahedronGeometry(0.1, 2);
-      const p = g.getAttribute('position');
+      const spines = new IcosahedronGeometry(0.1, 2);
+      const g = new IcosahedronGeometry(0.1, 4);
+      const p = spines.getAttribute('position');
       for (let i = 0; i < p.count; i += 3) lines.push(p.getX(i), p.getY(i), p.getZ(i), p.getX(i) * 1.7, p.getY(i) * 1.7, p.getZ(i) * 1.7);
       return { body: g, lines };
     }
     case 'harp': { // comb jelly: an egg with 8 shimmering cilia rows
-      const g = new SphereGeometry(0.09, 16, 12);
+      const g = new SphereGeometry(0.09, 32, 20);
       g.scale(0.8, 1.3, 0.8);
       for (let r = 0; r < 8; r++) {
         const a = (r / 8) * Math.PI * 2;
@@ -137,27 +145,117 @@ export function silhouette(stem: StemId): { body: BufferGeometry; lines: Pts } {
 }
 
 const BODY_VERT = /* glsl */ `
-uniform float uFlap; uniform float uTime;
-varying vec3 vN; varying vec3 vView;
+uniform float uFlap; uniform float uTime; uniform float uPulse;
+varying vec3 vN; varying vec3 vView; varying vec3 vPos;
 void main() {
   vec3 p = position;
   p.y += sin(uTime * 2.2) * abs(p.x) * p.x * uFlap * 3.0;
+  // Swimming: a slow contraction wave down the body, deeper when the stem is loud.
+  float swim = sin(uTime * 2.4 - p.y * 18.0) * (0.035 + 0.06 * uPulse);
+  p.xz *= 1.0 + swim;
+  vPos = position;
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   vN = normalize(normalMatrix * normal);
   vView = normalize(-mv.xyz);
   gl_Position = projectionMatrix * mv;
 }`;
+// Bioluminescence: a fresnel rim with a slow rainbow sheen, light bands travelling down the body, radial canals
+// and a soft inner core. Additive, so overlapping parts read as depth.
 const BODY_FRAG = /* glsl */ `
-uniform vec3 uColor; uniform float uBright;
-varying vec3 vN; varying vec3 vView;
+uniform vec3 uColor; uniform float uBright; uniform float uTime; uniform float uPulse;
+varying vec3 vN; varying vec3 vView; varying vec3 vPos;
 void main() {
-  float rim = pow(1.0 - abs(dot(normalize(vN), vView)), 2.0);
-  gl_FragColor = vec4(uColor * uBright * (0.25 + 1.4 * rim), 1.0);
+  float facing = abs(dot(normalize(vN), normalize(vView)));
+  float rim = pow(1.0 - facing, 2.5);
+  vec3 sheen = 0.5 + 0.5 * cos(6.2831 * (rim * 0.8 + uTime * 0.05 + vec3(0.0, 0.33, 0.67)));
+  float bands = pow(0.5 + 0.5 * sin(vPos.y * 70.0 + uTime * 3.0), 8.0);
+  float canals = pow(abs(cos(atan(vPos.z, vPos.x) * 4.0)), 24.0);
+  float core = pow(facing, 3.0) * 0.25;
+  vec3 c = uColor * (0.12 + 1.5 * rim + (0.3 + 0.6 * uPulse) * bands + 0.35 * canals + core);
+  c += sheen * rim * 0.35;
+  c = mix(c, vec3(1.0), clamp(uPulse * rim * 0.6, 0.0, 0.5)); // loud passages burn white at the edges
+  gl_FragColor = vec4(c * uBright, 1.0);
+  #include <colorspace_fragment>
+}`;
+// Threads sway more toward their tips and fade out along them.
+const LINE_VERT = /* glsl */ `
+uniform float uTime; varying float vTip;
+void main() {
+  vec3 p = position;
+  float down = max(0.0, -p.y);
+  p.x += sin(uTime * 1.7 + p.y * 16.0 + p.z * 9.0) * down * 0.22;
+  p.z += cos(uTime * 1.3 + p.y * 13.0 + p.x * 7.0) * down * 0.22;
+  vTip = clamp(down / 0.3, 0.0, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+}`;
+const LINE_FRAG = /* glsl */ `
+uniform vec3 uColor; uniform float uOpacity; varying float vTip;
+void main() {
+  gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.25), uOpacity * (1.0 - 0.75 * vTip));
+  #include <colorspace_fragment>
+}`;
+// One billboarded glow per creature, all nine in one draw call: four corners share a centre attribute.
+const HALO_VERT = /* glsl */ `
+attribute vec3 center; attribute vec3 tint; attribute float glow; attribute float size;
+varying vec2 vUv; varying vec3 vTint; varying float vGlow;
+void main() {
+  vUv = position.xy;
+  vTint = tint; vGlow = glow;
+  vec4 mv = modelViewMatrix * vec4(center, 1.0);
+  mv.xy += position.xy * size;
+  vGlow *= smoothstep(0.15, 0.45, -mv.z); // no glow fog right at the face
+  gl_Position = projectionMatrix * mv;
+}`;
+const HALO_FRAG = /* glsl */ `
+varying vec2 vUv; varying vec3 vTint; varying float vGlow;
+void main() {
+  float d = length(vUv);
+  float f = max(0.0, 1.0 - d);
+  float a = f * f * f * f * vGlow; // reaches zero at the quad's circle, so no visible edge after sRGB encoding
+  if (a < 0.001) discard;
+  gl_FragColor = vec4(vTint * a, 1.0);
   #include <colorspace_fragment>
 }`;
 
+function halos(n: number) {
+  const g = new BufferGeometry();
+  const corner: number[] = [], index: number[] = [];
+  for (let i = 0; i < n; i++) {
+    corner.push(-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0);
+    index.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
+  }
+  g.setAttribute('position', new Float32BufferAttribute(corner, 3));
+  g.setIndex(index);
+  const attr = (name: string, size: number) => {
+    const a = new Float32BufferAttribute(new Float32Array(n * 4 * size), size);
+    g.setAttribute(name, a);
+    return a;
+  };
+  const center = attr('center', 3), tint = attr('tint', 3), glow = attr('glow', 1), size = attr('size', 1);
+  const mesh = new Mesh(g, new ShaderMaterial({
+    vertexShader: HALO_VERT, fragmentShader: HALO_FRAG, transparent: true, depthWrite: false, blending: AdditiveBlending,
+  }));
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 1;
+  return {
+    mesh,
+    set(i: number, pos: Vec3, color: Color, g: number, s: number) {
+      for (let k = i * 4; k < i * 4 + 4; k++) {
+        center.setXYZ(k, pos[0], pos[1], pos[2]);
+        tint.setXYZ(k, color.r, color.g, color.b);
+        glow.setX(k, g);
+        size.setX(k, s);
+      }
+    },
+    commit(count: number) {
+      g.setDrawRange(0, count * 6);
+      center.needsUpdate = tint.needsUpdate = glow.needsUpdate = size.needsUpdate = true;
+    },
+  };
+}
+
 interface Creature {
-  stem: StemId; home: Vec3; obj: Group; body: ShaderMaterial; lines: LineBasicMaterial;
+  stem: StemId; home: Vec3; obj: Group; body: ShaderMaterial; lines: ShaderMaterial; color: Color;
   from: Vec3; to: Vec3; glideStart: number; gliding: boolean; pos: Vec3; bright: number;
 }
 
@@ -178,6 +276,8 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
   const ringCount = ring.geometry.index!.count;
   ring.visible = false;
   scene.add(ring);
+  const glow = halos(9);
+  scene.add(glow.mesh);
 
   const clear = () => { mute = {}; solo = null; summoned = null; lock = 0; };
 
@@ -192,18 +292,21 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       const color = new Color(ACCENT[stem]);
       const bodyMat = new ShaderMaterial({
         vertexShader: BODY_VERT, fragmentShader: BODY_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide,
-        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uFlap: { value: stem === 'cb' ? 0.5 : 0 }, uTime: { value: 0 } },
+        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uFlap: { value: stem === 'cb' ? 0.5 : 0 }, uTime: { value: 0 }, uPulse: { value: 0 } },
       });
       const lineGeo = new BufferGeometry();
       lineGeo.setAttribute('position', new Float32BufferAttribute(lines, 3));
-      const lineMat = new LineBasicMaterial({ color, transparent: true, blending: AdditiveBlending, depthWrite: false });
+      const lineMat = new ShaderMaterial({
+        vertexShader: LINE_VERT, fragmentShader: LINE_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false,
+        uniforms: { uColor: { value: color }, uOpacity: { value: 1 }, uTime: { value: 0 } },
+      });
       const obj = new Group();
       obj.add(new Mesh(body, bodyMat));
       if (lines.length) obj.add(new LineSegments(lineGeo, lineMat));
       obj.position.set(...homeSeat);
       scene.add(obj);
       ctx.registry.set({ id: `creature:${stem}`, kind: 'creature', stem, center: homeSeat, radius });
-      return { stem, home: homeSeat, obj, body: bodyMat, lines: lineMat, from: homeSeat, to: homeSeat, glideStart: 0, gliding: false, pos: homeSeat, bright: 1 };
+      return { stem, home: homeSeat, obj, body: bodyMat, lines: lineMat, color, from: homeSeat, to: homeSeat, glideStart: 0, gliding: false, pos: homeSeat, bright: 1 };
     });
   });
 
@@ -252,8 +355,12 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
         c.bright += (dimFor(c.stem, mute[c.stem], solo) - c.bright) * Math.min(1, dt * 6);
         c.body.uniforms.uBright.value = c.bright * (0.35 + 0.9 * amp);
         c.body.uniforms.uTime.value = now;
-        c.lines.opacity = c.bright * (0.25 + 0.6 * amp);
+        c.body.uniforms.uPulse.value = amp;
+        c.lines.uniforms.uTime.value = now;
+        c.lines.uniforms.uOpacity.value = c.bright * (0.3 + 0.6 * amp);
+        glow.set(creatures.indexOf(c), [c.pos[0], c.pos[1] + bob, c.pos[2]], c.color, c.bright * (0.22 + 0.55 * amp), 0.3 + 0.12 * amp);
       }
+      glow.commit(creatures.length);
       const s = creatures.find((c) => c.stem === summoned);
       ring.visible = !!s && lock > 0;
       if (s && ring.visible) {
