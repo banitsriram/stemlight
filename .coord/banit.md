@@ -1,6 +1,6 @@
 # banit
-status: paused          # working | blocked | paused | idle
-task: paused 13 Nov; audit 2 items 1-2 done (f055ff9). PRs #1 and #2 reviewed (tsc, 115/115, build OK), merge waits on banit. Next: fov.mjs rerun once PRs land, F15/F25 eyeball, cut/pads/harp shots for video.
+status: working          # working | blocked | paused | idle
+task: visual quality pass (banit asked): note glow, creature shaders + geometry, ghost hands, sky/ocean. In src/world/** and src/story/** only.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
