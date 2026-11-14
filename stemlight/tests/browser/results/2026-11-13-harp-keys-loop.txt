@@ -1,0 +1,25 @@
+note: this workspace already has a dev runtime; attached to it at https://localhost:8081 instead of starting vite on 8098
+PASS surface pitch sets from octaveFor: harp (fl) 76,78,79,81,83,84,86,88, keys (reeds) 52,54,55,57,59,60,62,64
+PASS manifest replace has fl→harp and reeds→keys
+-- harp: cut harp1 on fl, region 40.2631-41.8420 s (1.5789 s, beat ≈ 0.3947 s)
+harp strike lateness vs the target time (ms of scheduler jitter): 4, 7, 7
+harp hit log (raw → snapped): 78 40.525→40.460 p0; 81 41.197→41.250 p1; 84 40.807→40.855 p2
+PASS harp: cut kept as the beat-aligned region and a harp take ran (taking {"cutId":"harp1","instrument":"harp","pass":0})
+PASS harp: 3 off-grid strikes (50-70 ms) snapped to the 1/8 grid: 78@0.1973 84@0.5920 81@0.9868 (expected 78@0.1974 81@0.9868 84@0.5921)
+harp note: tOffsets are multiples of len/8 = 0.1974 s within 1 ms (beats vary slightly; the grid check above uses the piece's own beats)
+PASS harp: every recorded pitch in E minor and in the harp set: 78,84,81
+PASS harp: parts() entry has instrument 'harp'
+PASS harp: 3 wraps, each exactly 1.578900 s after the last (1.578900, 1.578900)
+PASS harp: hits replayed on later passes at wrap + offset: 6/6, worst 0.00 µs (one sample = 20.8 µs)
+PASS cut:remove cleared the harp cut, part and take ({"cuts":0,"parts":0,"taking":null})
+-- keys: cut keys1 on reeds, region 59.9999-61.5788 s (1.5789 s, beat ≈ 0.3947 s)
+keys strike lateness vs the target time (ms of scheduler jitter): 4, 15, 9
+keys hit log (raw → snapped): 54 60.262→60.197 p0; 57 60.941→60.987 p1; 60 60.546→60.592 p2
+PASS keys: cut kept as the beat-aligned region and a keys take ran (taking {"cutId":"keys1","instrument":"keys","pass":0})
+PASS keys: 3 off-grid strikes (50-70 ms) snapped to the 1/8 grid: 54@0.1973 60@0.5920 57@0.9868 (expected 54@0.1974 57@0.9868 60@0.5921)
+keys note: tOffsets are multiples of len/8 = 0.1974 s within 1 ms (beats vary slightly; the grid check above uses the piece's own beats)
+PASS keys: every recorded pitch in E minor and in the keys set: 54,60,57
+PASS keys: parts() entry has instrument 'keys'
+PASS keys: 3 wraps, each exactly 1.578900 s after the last (1.578900, 1.578900)
+PASS keys: hits replayed on later passes at wrap + offset: 6/6, worst 0.00 µs (one sample = 20.8 µs)
+PASS no page errors

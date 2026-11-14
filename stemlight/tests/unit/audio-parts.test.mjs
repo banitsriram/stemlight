@@ -126,3 +126,23 @@ test('3 loop passes stay sample-exact while the user keeps playing (F11)', async
   assert.equal(parts.parts()[0].hits.length, 3);
   assert.ok(engine.transport.time() >= 8 && engine.transport.time() < 10, 'still inside the loop');
 });
+
+test('a frame stall across the loop end wraps late: the take keeps looping, then ends as usual', async () => {
+  const { bus, engine, parts, step } = await setup(40);
+  bus.emit('cut:add', { cut: { id: 'p', stem: 'perc', t0: 8, t1: 10 } });
+  while (engine.transport.time() < 8.5) step(0.004);
+  parts.strike('pads', 50, 100, [0, 1, -0.4]);
+  while (engine.transport.time() < 9.6) step(0.004);
+  step(0.9); // one 0.9 s frame: the 0.25 s wrap window at t = 10 is skipped
+  assert.equal(engine.pass(), 1, 'counted as a pass');
+  assert.ok(engine.transport.time() >= 8 && engine.transport.time() < 8.2, `back at the loop start (${engine.transport.time().toFixed(3)})`);
+  assert.equal(parts.taking()?.cutId, 'p', 'still the same take');
+  assert.ok(engine.log.some((e) => e.kind === 'wrap-late'));
+  assert.equal(parts.parts()[0].hits.length, 1, 'the part keeps its hit');
+  // An empty pass after a hit ends the take, stalled again or not; the piece then plays on.
+  while (engine.transport.time() < 9.6) step(0.004);
+  step(0.9);
+  assert.equal(parts.taking(), null);
+  for (let i = 0; i < 300; i++) step(0.004);
+  assert.ok(engine.transport.time() > 10.5 && engine.pass() === 1, 'no further wrap');
+});

@@ -1,6 +1,6 @@
-# Devpost submission text: DRAFT 2 (task 67)
+# Devpost submission text: DRAFT 3 (task 67)
 
-Updated 12 Nov 2026 by sir's account to match the build as it stands (live at https://stemlight.vercel.app). Nothing is published without sir's approval. **[CHECK]** marks a line that depends on a decision or a number not yet final; resolve or delete each before submitting. No brand names except the tools we must disclose. Re-read against the build at the Sat 14 freeze.
+Updated 12 Nov 2026 (after scoring audit 2, `docs/audits/2026-11-12-audit.md`) by sir's account. It describes the build on PRs #1 and #2. **The live link still runs the 11 Nov build until those merge and sir's approved redeploy goes out**, so don't submit before that. Nothing is published without sir's approval. **[CHECK]** marks a line that depends on a decision or a number not yet final; resolve or delete each before submitting. No brand names except the tools we must disclose. Re-read against the build at the Sat 14 freeze.
 
 ---
 
@@ -24,9 +24,9 @@ The music you can reach into: silence it, reshape it, play your own part, while 
 We love music but neither of us plays in an orchestra. Tools that split a song into its parts made us want to sit *inside* one: hear the horns alone, take the timpani out and play them ourselves. A screen keeps you outside the music. A headset and your bare hands put you in the middle of it.
 
 ### What it is, and who it's for
-- **Entertainment, music visualisation.** For adults who love music but don't play, at home in the evening, seated, for about five minutes and then as long as they like. No score and no win state: the pleasure is listening and remaking.
-- Each instrument family is a glowing sea creature around you, and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Nothing on screen is decoration.
-- Two pieces: the opening of Beethoven’s 5th (about 1:23) and the finale of Dvořák’s *New World* Symphony (about 2:32), then free play.
+- **Entertainment, music visualisation.** For adults who love music but don't play, at home in the evening, seated, for about four minutes and then as long as they like. No score and no win state: the pleasure is listening and remaking.
+- Each instrument family is a glowing sea creature around you, and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Every note on screen is a real note from the score.
+- Two pieces: the opening of Beethoven’s 5th (about 1:24) and the finale of Dvořák’s *New World* Symphony (about 2:33), then free play.
 
 ### What your hands do
 | Gesture | What happens |
@@ -48,34 +48,34 @@ Seated, inside a small reach, hands only. No controller, no account, no menus. A
 Described on a phone, it stops working. The music is *around* you: each instrument plays from where its creature is, through head-related spatial audio, and you change it by *reaching in*. A flat screen gives you a mixer; Stemlight gives you an orchestra you can touch.
 
 ### How we built it
-- **IWSDK (WebXR, TypeScript, Three.js under IWSDK's entity system).** A static build that opens in the Quest Browser: https://stemlight.vercel.app.
-- **An offline score-to-stems pipeline.** Public-domain and CC BY-SA orchestral scores (Mutopia Project) → eight instrument groups → rendered with free CC0 orchestral samples (VSCO 2 Community Edition) through sfizz → one shared reverb → level-matched mono stems, plus the note, beat and loudness data the visuals use. Note counts are checked against the source score (1,840 and 4,249 notes).
+- **IWSDK (WebXR), using its entity system.** A static build that opens in the Quest Browser: https://stemlight.vercel.app.
+- **An offline score-to-stems pipeline.** Public-domain and CC BY-SA orchestral scores (Mutopia Project) → eight instrument groups → rendered with free CC0 orchestral samples (VSCO 2 Community Edition) through an open-source sampler → one shared reverb → level-matched mono stems, plus the note, beat and loudness data the visuals use. Note counts are checked against the source score (1,840 and 4,249 notes).
 - **One clock for sound and sight.** Every stem starts on the same audio-clock instant, so they never drift. Every note's position is a pure function of that clock: pause freezes the notes, scrubbing rewinds them, and loops are sample-exact.
 - **The hard problem: fist versus pinch.** Both curl the fingers. We gave them thresholds that can't overlap: a fist needs 3 of 4 fingers curled ≥0.75; a pinch needs the other fingers ≤0.6, with hysteresis and debounce. Short tracking drop-outs (≤0.3 s) hold the gesture; longer ones release quietly with no action. In 120 scripted fists, pinches and double pinches near and far from instruments there were **0 cross-triggers**, and 20 gap-injected double pinches gave 0 false solos.
 - **Gaze without eye tracking.** Quest 3 and 3S have no eye tracking, so "look to summon" uses head direction (within 12° for half a second).
 - **Your part, in time.** The cut snaps to the beat, a one-bar count-in leads into a sample-exact loop, your hits snap to the eighth-note grid and replay on every pass, and the original part plays quietly (−18 dB) under your first pass as a guide.
-- **Saved on the device.** Your mix, cuts and recorded drum parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off and ending the session all resume cleanly.
+- **Saved on the device.** Your mix, cuts and recorded drum parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off, the system menu and ending the session all resume cleanly (31/31 scripted checks in the emulator).
 - **Within budget.** At the busiest moment (Dvořák's densest four seconds with pads and ribbon showing): 68 draw calls, 34.5k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
 - **Testing without a headset.** Every interaction was scripted in the IWSDK emulator (IWER) with a dev-only hand-pose switch that never ships, plus unit tests and headless-browser checks of the audio clock, saving and memory.
 - **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it. **[CHECK, sir: live rules read 12 Nov. They don't ask for AI tools to be disclosed, and ban brand names, logos and slogans in the Project ("commercial or corporate advertising"). So this line discloses the help without naming the product. Keep it, name the tool, or drop the line.]**
 
 ### Accessibility and comfort
-- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m (checked in the emulator with a field-of-view mask).
+- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m (checked in the emulator with a field-of-view mask). **[CHECK: banit reruns `tests/iwer/visual/fov.mjs` with the ribbon, lane, pads and shell showing and commits the results, or this sentence narrows to what's committed]**
 - Instruments are told apart by shape first (jellyfish, manta, nautilus, coral, anemone…), with colour second. **[CHECK: add "and a colour-blind palette" only if task 51 ships]**
 - No failure state, and a quiet reset is always within reach.
 
 ### Credits
 - Dvořák, Symphony No. 9 "From the New World", 4th movement: Mutopia Project #1793, **CC BY-SA 3.0**. Our stems and note data made from it are shared under CC BY-SA 3.0.
 - Beethoven, Symphony No. 5, 1st movement: Mutopia Project #941, public domain.
-- Orchestral samples: VSCO 2 Community Edition (Versilian Studios), CC0.
-- Music notation font: Bravura (Steinberg), SIL Open Font License 1.1.
+- Orchestral samples: VSCO 2 Community Edition, CC0.
+- Music notation font: Bravura, SIL Open Font License 1.1.
 - Reverb, pads, ticks and interface sounds are generated in code.
 
 ### What's next
 **Any song.** Split a track on your own laptop, then sit inside it on Quest: four parts, processed on your own device, nothing uploaded. **Target launch: public beta on 15 February 2027.**
 
 ### Known limits
-- We had no headset during the build. Frame rate and hand feel on a real Quest 3/3S are **unverified**; everything was tested in the emulator.
+- We had no headset during the build. Frame rate, hand feel, comfort and brightness on a real Quest 3/3S are **unverified**; everything was tested in the emulator.
 - Two pieces, fixed excerpts.
 - No passthrough or room use: Stemlight is a fully immersive, seated experience by design.
 
@@ -85,13 +85,13 @@ Use the "What your hands do" table and the fist-versus-pinch paragraph above. Wh
 ## Judge instructions
 1. Open https://stemlight.vercel.app in the Quest Browser.
 2. Press **Enter** (a pinch works). No account, nothing to install.
-3. Sit down and use your hands only. The guided part takes about five minutes, then you're free to play.
+3. Sit down and use your hands only. The two pieces take about four minutes, then you're free to play.
 4. Sound on, ideally with headphones.
 
 ## Team (form fields)
-- Biyon: Representative; audio engine, hand gestures, music pipeline, saving, deploy, write-up.
+- Biyon: Representative; audio engine, hand gestures, music pipeline, the remake surfaces (score ribbon, cut lanes, drum pads, reset shell), saving, deploy, write-up.
 - Banit: creatures and world art, notes, sound effects, tutorial and ghost hands, sequencer and credits, video.
 **[CHECK: emails and roles as each person wants them shown]**
 
 ## Screenshots (at least 5, real build, same colour treatment)
-From banit's stills set (`video/`, `docs/tests/fov/`): the landing; the first fist freezing an instrument to glass; the Dvořák brass entry with a full field of notes; a cut lane with ghost outlines and amber notes; the end card. **[CHECK: final picks]**
+From banit's stills set (`video/`, `docs/tests/fov/`): the landing; the first fist freezing an instrument to glass; the Dvořák brass entry with a full field of notes; a cut lane with ghost outlines and amber notes; the end card (retake it after the 12 Nov credit fix, so Beethoven's credit shows). Remake candidates from sir's account: `tests/iwer/input/results/2026-11-12-shot-{1..6}-*.png` (ribbon and lane, playhead held, cut preview, region with pads and count-in, pad hit in amber, reset ring). **[CHECK: final picks]**

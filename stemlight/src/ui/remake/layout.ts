@@ -5,6 +5,7 @@
 // creature (the frame taken at summon time, like world/shell.ts reachSpot); the pads and the reset shell
 // stay where the seat faced when the music started, so looking around never moves them.
 import type { Cut, Instrument, PieceManifest, StemId, Target, Vec3 } from '../../contracts';
+import { scaleNote } from '../../audio/synth.ts';
 
 export interface Frame { eye: Vec3; yaw: number }
 
@@ -33,7 +34,24 @@ export const RESET = { right: 0.27, below: 0.02, ahead: 0.42, radius: 0.05 } as 
 /** Pad pitches are the piece's tonic and dominant, kept as near this MIDI range as possible (timpani). */
 export const PAD_RANGE: [number, number] = [40, 52];
 
-export const IDS = { playhead: 'playhead', reset: 'reset', lane: (s: StemId) => `lane:${s}`, region: (id: string) => `region:${id}`, pad: (i: number) => `pad:${i}` };
+/**
+ * The harp (biyon-26): 8 upright strings, 5 cm apart, 10 cm long, in a plane facing the seat 32 cm ahead and
+ * 15 cm below the eye, so a sideways sweep of the index tip plucks them in turn. In front of the summoned
+ * creature and lower: outermost string 29° to the side, the bottoms 32° down (inside 70×66°), all within 0.4 m.
+ * The creature's 25 cm fist sphere overlaps them, so while a harp or keyboard is up the input engine only
+ * arms a fist with the index finger curled too (a pointing hand playing them is not a fist).
+ */
+export const HARP = { ahead: 0.32, below: 0.15, spacing: 0.05, halfLength: 0.05, radius: 0.03, depthTol: 0.03, count: 8 } as const;
+/**
+ * The keyboard (biyon-27): one key-locked octave of 8 big keys (5 cm wide, 8 cm deep, 4 mm gaps), flat, 34 cm
+ * ahead and 17 cm below the eye: the outer front corners 33.4° to the side, the front edge 29.5° down.
+ */
+export const KEYS = { ahead: 0.34, below: 0.17, spacing: 0.05, width: 0.046, depth: 0.08, count: 8 } as const;
+
+export const IDS = {
+  playhead: 'playhead', reset: 'reset', lane: (s: StemId) => `lane:${s}`, region: (id: string) => `region:${id}`, pad: (i: number) => `pad:${i}`,
+  string: (i: number) => `string:${i}`, key: (i: number) => `key:${i}`,
+};
 
 export const forwardOf = (f: Frame): Vec3 => [-Math.sin(f.yaw), 0, -Math.cos(f.yaw)];
 export const rightOf = (f: Frame): Vec3 => [Math.cos(f.yaw), 0, -Math.sin(f.yaw)];
@@ -147,6 +165,70 @@ export function padsWanted(
 ): boolean {
   if (parts.taking()?.instrument === 'pads') return true;
   return parts.cuts().some((c) => instrumentFor(manifest, c.stem) === 'pads');
+}
+
+/**
+ * The 8 notes (one octave, scale degrees 1..8) a harp or keyboard plays: the octave of the piece's scale that
+ * fits the replaced stem's range, preferring one wholly inside it and then the one centred nearest. Dvořák (E
+ * minor): flutes 64–95 → 76..88, reeds 35–86 → 52..64; Beethoven (C minor): flutes 70–92 → 72..84, reeds → 60..72.
+ */
+export function octaveFor(scale: PieceManifest['scale'], range: [number, number] | undefined, count = 8): number[] {
+  const n = scale.steps.length;
+  const octave = (k: number) => Array.from({ length: count }, (_, i) => scaleNote(scale, k * n + i));
+  if (!range) return octave(0);
+  const mid = (range[0] + range[1]) / 2;
+  let best = octave(0), score = Infinity;
+  for (let k = -4; k <= 4; k++) {
+    const o = octave(k), lo = o[0], hi = o[o.length - 1];
+    const s = (lo >= range[0] && hi <= range[1] ? 0 : 1000) + Math.abs((lo + hi) / 2 - mid);
+    if (s < score) { score = s; best = o; }
+  }
+  return best;
+}
+
+const spreadX = (i: number, n: number, spacing: number) => (i - (n - 1) / 2) * spacing;
+
+/** One string per pitch, low to high from the left. The axis (dx, dy, dz) runs up the string; (nx, ny, nz) is
+ *  the sweep direction across the strings; halfLength is half the string; depthTol how far in front of or
+ *  behind the plane a crossing still counts. */
+export function harpTargets(f: Frame, pitches: number[]): Target[] {
+  const r = rightOf(f);
+  return pitches.map((pitch, i) => ({
+    id: IDS.string(i), kind: 'string', center: toWorld(f, [spreadX(i, pitches.length, HARP.spacing), -HARP.below, HARP.ahead]), radius: HARP.radius,
+    extra: { pitch, dx: 0, dy: 1, dz: 0, nx: r[0], ny: r[1], nz: r[2], halfLength: HARP.halfLength, depthTol: HARP.depthTol },
+  }));
+}
+
+/** One key per pitch, low to high from the left. center is the middle of the key top; (dx, dy, dz) its normal
+ *  (up); (nx, ny, nz) the direction along the row; halfW and halfD half the key's width and depth. */
+export function keyTargets(f: Frame, pitches: number[]): Target[] {
+  const r = rightOf(f);
+  return pitches.map((pitch, i) => ({
+    id: IDS.key(i), kind: 'key', center: toWorld(f, [spreadX(i, pitches.length, KEYS.spacing), -KEYS.below, KEYS.ahead]), radius: KEYS.width / 2,
+    extra: { pitch, dx: 0, dy: 1, dz: 0, nx: r[0], ny: r[1], nz: r[2], halfW: KEYS.width / 2, halfD: KEYS.depth / 2 },
+  }));
+}
+
+/** The stem a piece's manifest gives to an instrument, if any. */
+export const stemFor = (m: PieceManifest | null, inst: Instrument): StemId | null =>
+  m?.replace.find((r) => r.instrument === inst)?.stem ?? null;
+
+/**
+ * Which melodic instrument shows in front of the seat (they share the spot): the one a take is running for,
+ * else the one replacing the most recently cut stem, else none.
+ */
+export function melodicWanted(
+  parts: { cuts(): Cut[]; taking(): { instrument: Instrument } | null },
+  manifest: PieceManifest | null,
+): 'harp' | 'keys' | null {
+  const t = parts.taking()?.instrument;
+  if (t === 'harp' || t === 'keys') return t;
+  const cuts = parts.cuts();
+  for (let i = cuts.length - 1; i >= 0; i--) {
+    const inst = instrumentFor(manifest, cuts[i].stem);
+    if (inst === 'harp' || inst === 'keys') return inst;
+  }
+  return null;
 }
 
 export interface CountIn { cutId: string; total: number; beatsLeft: number; at: number; beatLen: number }

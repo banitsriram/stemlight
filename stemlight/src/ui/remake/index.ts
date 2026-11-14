@@ -4,6 +4,7 @@
 import { createSystem, type World } from '@iwsdk/core';
 import type { Object3D } from 'three';
 import type { AppContext } from '../../contracts';
+import { ACCENT } from '../../world/creatures';
 import { loadNoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { createRemakeState, type RemakeStateDeps } from './state.ts';
 import { createRemakeView } from './view.ts';
@@ -15,7 +16,7 @@ export interface RemakeDeps extends RemakeStateDeps {
 
 export function initRemake(ctx: AppContext, scene: Object3D, deps: RemakeDeps) {
   const state = createRemakeState(ctx, deps);
-  const view = createRemakeView(scene, ctx.save.load().palette);
+  const view = createRemakeView(scene, ctx.save.load().palette, ACCENT);
   // Our own glyph instance (banit's class and atlas, unchanged): its begin/end can't clash with the notes layer's.
   loadNoteGlyphs().then((g) => view.attachGlyphs(g)).catch((e) => console.warn('[remake] note glyphs unavailable', e));
   let last = state.update(0);

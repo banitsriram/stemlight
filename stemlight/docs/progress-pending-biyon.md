@@ -100,3 +100,84 @@
 
 **Not verified**
 - Quest Browser, hand feel and frame rate (no headset). The amber at headset brightness is judged only from emulator screenshots.
+
+## 12 Nov 2026 (09:00–10:30 IST): biyon, F23 passes, F08 audible (branch `biyon/f08-f23-evidence`, PR stacked on PR #1)
+
+**F23 (A side, task 29), IWER: `tests/iwer/input/pause-resume.mjs` passes 31/31.** Log: `tests/iwer/input/results/2026-11-12-pause-resume.txt`. No code changes were needed; `src/audio/lifecycle.ts` already handled every case.
+- **Setup.** A fresh first visit on Dvořák: storage cleared, tutorial not skipped. The real gaze summon passes the first step. Then a mix is set over the bus: violins locked, flutes EQ +6/−6, a cut on the cellos.
+- **5 headset-hidden cycles and 1 system-menu cycle.** These go through IWER's own `XRDevice.updateVisibilityState` ('hidden' and 'visible-blurred'), the real session `visibilitychange`. Each one:
+  - fires `app:pause`;
+  - stops the music with the clock frozen to the millisecond;
+  - on 'visible', fires `app:resume`, and the music runs on from where it stopped;
+  - leaves the audio context running, the mix intact and the tutorial step kept (7/7 each).
+- **Page-hidden cycle.** A simulated document `visibilitychange`, because headless Chromium never hides the page. Same checks, all pass.
+- **3 session ends** (`iwsdk xr exit`). Each one pauses with the clock frozen, and the page offers **Resume**. A real click re-enters, and the music carries on from the paused time with the mix intact (3/3 × 3).
+- **Reload.**
+  - The saved mix (lock, EQ, cut) is back from IndexedDB before Enter.
+  - The tutorial continues at its saved step ('solo'), not from 'summon'.
+  - Music plays after Enter.
+  - The tutorial is then finished. A second reload, with the localStorage step cleared, starts in free play from IndexedDB `tutorialDone` alone.
+- **Together with banit's B half** (Paused/Resume screen and returning-user caption, progress.md 11 Nov 14:00), **F23 now passes**: features.json is 22/41.
+- The tutorial advanced a step or two during the run by its own 3-nudge skip. That is expected and is never a restart.
+
+**F08 audible (A side), real browser: `tests/browser/eq-audible.mjs` passes 7/7.** Log: `tests/browser/results/2026-11-12-eq-audible.txt`.
+- **Method.** The real Dvořák stems play in headless Chromium. Two analysers sit on one stem (brass, picked automatically as the loudest in both bands): one before its EQ, one after. That way the music's own changes cancel out.
+- **Results, measured below 120 Hz / above 8 kHz:**
+  - Flat: −0.01 / 0.00 dB.
+  - Bass stretch (+12 low): **+10.96** / 0.00 dB.
+  - Treble stretch (−12 high): 0.00 / **−11.60** dB.
+  - Mixed (+6/−6): +5.54 / −5.82 dB.
+  - Reset: 0.00 / 0.00 dB.
+- **Status.** With the 11 Nov gesture run (10 stretches + 10 resets, acceptance.mjs f08), the A side of F08 is complete. F08 stays false until the B half: task 43 (shape-morph before/after) is on the cut list. **If sir and banit cut 43, F08 passes on this evidence.**
+
+## 12 Nov 2026 (10:30–12:30 IST): biyon, release check, scoring audit 2, end-card credit fix, Devpost draft 3 (branch `biyon/f08-f23-evidence`, PR #2)
+
+- **Fresh-browser release check (task 69 prep, F28): `tests/browser/release-check.mjs`.**
+  - **How it runs.** A brand-new Chromium profile loads the real deployed bundle, with the emulator injected as a Quest 3 in hand mode. No dev code is involved.
+  - **What it checks:**
+    - page and request errors;
+    - which bundle is live (`--expect` pins it), and that no dev code shipped;
+    - Enter starts XR and the music;
+    - leaving VR shows Resume, and Resume carries the music on;
+    - a reload comes back clean with the save in IndexedDB;
+    - with `--full`, the whole sequence plays.
+  - **Results:**
+    - Live site, on the 11 Nov build `index-rJ-CFtJ-.js`: **9/9**, and **10/10 with `--full`** (Beethoven, then Dvořák at 85 s, 286 s in all, 0 errors).
+    - This branch's production build through `vite preview`: **9/9**.
+  - **Logs:** `tests/browser/results/2026-11-12-release-check-*.txt`.
+  - **Monday's RC run:** `node tests/browser/release-check.mjs https://stemlight.vercel.app/ --expect assets/index-<hash>.js --full`.
+- **Scoring audit 2 (task 64, second of three, run early):** `docs/audits/2026-11-12-audit.md`, written by a fresh-session reviewer.
+  - **Weakest lines:** video and images (3/4), 60 fps (3, no device), intuitive and onboarding (4/5, no uncoached tester), habit and repeat use (4/5, end card), reliability and sound (6, stale judge link, renders not listened to).
+- **End-card credit bug, fixed.** `main.ts` loaded the first piece before the sequencer subscribed to `piece:ready`, so Beethoven's credit never reached the end card. The sequencer is now set up first.
+  - Regression test: `tests/unit/audio-load-order.test.mjs` fails on the old order and passes on the new one.
+  - `npm test` 102/102, `tsc` clean.
+- **Devpost draft 3,** from the audit:
+  - running times 1:24 and 2:33, and "about four minutes" (was five);
+  - "Nothing on screen is decoration" replaced, because the sky and ocean are decoration;
+  - company names dropped (sampler, font foundry, sample studio, Three.js, TypeScript);
+  - comfort and brightness added to the unverified list;
+  - the field-of-view sentence flagged until banit's rerun is committed;
+  - remake roles and remake still candidates added;
+  - a top note that the live link still runs the 11 Nov build until the merge and redeploy.
+
+## 12–13 Nov 2026 (to 00:15 IST): biyon, harp and keyboard, logic and plain visuals (tasks 26, 27; F12, F13; branch `biyon/f08-f23-evidence`, PR #2)
+
+- **What it is.** Cutting the flutes gives an 8-string harp; cutting the reeds gives an 8-key keyboard. Both sit just below eye line, inside the 70×66° view and 0.61 m reach, tuned to one octave of the piece's scale inside the replaced stem's range (Dvořák: 76–88 and 52–64; Beethoven: 72–84 and 60–72). Notes record into the take, snap to the 1/8 grid and loop, exactly as the pads do.
+  - **Harp:** the index tip crossing a string sideways, at 0.1 m/s or faster, within the string's length.
+  - **Keyboard:** the index tip moving down through a key top, at 0.15 m/s or faster, inside the key.
+  - Both share the pads' 90 ms lockout. Speed sets loudness.
+  - Manifests: `replace` is now `perc:pads`, `fl:harp`, `reeds:keys` for both pieces.
+- **Guards, each with a unit test:**
+  - a tip resting on a string or key and wobbling 1.5 mm plays nothing (4 mm hysteresis);
+  - a tracking gap, or a tip that jumps more than 12 cm in one sample, plays nothing;
+  - a pointing hand inside the summoned creature no longer counts as a fist while the row is up (it used to mute and lock the stem);
+  - the count-in shows only on the instrument being recorded.
+- **Audio engine fix found on the way.** A take's loop wrap was only scheduled inside a 0.25 s window before the loop end. A frame stall longer than that skipped the window: the loop never wrapped, the take hung and the music ran on to the end of the piece. The engine now wraps late instead (a short glitch, the loop carries on). Unit test: a 0.9 s frame across the loop end.
+- **Evidence:**
+  - **Real gestures in the emulator: `tests/iwer/input/harp-keys.mjs`, 25/25.** On Dvořák: a two-hand cut on the flute lane starts a harp take and registers 8 strings; a sweep up and back at 0.5 m/s gives 16 plucks in string order, all in E minor, 16 hits recorded; the loop goes round and the part keeps them. Then the same on the reeds: 8 presses, one per key, in order, 8 hits recorded. Jumping the hand to and from the row plays nothing. No console errors. Log and two screenshots: `tests/iwer/input/results/2026-11-13-harp-keys.txt`, `-harp-pluck.png`, `-keys-press.png`.
+  - **Loop timing in a real browser: `tests/browser/harp-keys-loop.mjs`, all pass.** Off-grid strikes snap to the 1/8 grid; three wraps, each exactly one region apart; replays 6/6 at 0.00 µs from wrap + offset, for both instruments. Log: `tests/browser/results/2026-11-13-harp-keys-loop.txt`.
+  - **Pause/resume rerun after the engine change:** all 12 groups pass (`tests/iwer/input/results/2026-11-13-pause-resume.txt`). Its second cut moved from the reeds to the basses, because a reed cut now starts a keyboard take.
+  - `npm test` 115/115, `tsc` clean.
+- **F12 and F13 pass: 24/41.**
+- **Not verified:** how plucking and pressing feel on a real hand, and the look on a headset. The visuals are plain lines and quads in `src/ui/remake/`; in the harp screenshot the strings stand in front of the summoned creature and overlap it.
+- **Why the emulator run took several tries.** The test moved the hand with one CLI call per position, seconds each on a loaded laptop, while the music kept playing: the piece ended and the next one loaded mid-test. The hand moves now run inside the page in real time, one call per sweep.

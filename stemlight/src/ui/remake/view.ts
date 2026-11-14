@@ -8,9 +8,8 @@ import {
   LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, Vector2,
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
-import { ACCENT } from '../../world/creatures.ts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
-import { laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
+import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
 import type { RemakeView } from './state.ts';
 
 const TRI_CAP = 12000; // vertices
@@ -21,7 +20,6 @@ const C = {
 };
 const AMBER_CB = new Color('#D55E00');
 const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
-const STEM = Object.fromEntries(Object.entries(ACCENT).map(([k, v]) => [k, new Color(v)])) as Record<StemId, Color>;
 
 class Buf {
   readonly pos: Float32Array; readonly col: Float32Array; n = 0;
@@ -76,7 +74,12 @@ function shellGeometry(): BufferGeometry {
   return g;
 }
 
-export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'default') {
+/**
+ * `accent` is each section's colour (banit's ACCENT, passed in by index.ts rather than imported here, so this
+ * file and its unit tests never load the world modules).
+ */
+export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'default', accent: Partial<Record<StemId, string>> = {}) {
+  const STEM = Object.fromEntries(Object.entries(accent).map(([k, v]) => [k, new Color(v)])) as Partial<Record<StemId, Color>>;
   const group = new Group();
   group.name = 'remake';
   const tris = new Buf(TRI_CAP), lines = new Buf(LINE_CAP);
@@ -134,7 +137,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   function drawAll(view: RemakeView, eye: Vec3) {
     const R = view.ribbon, hw = RIBBON.halfWidth, lr = RIBBON.laneRadius;
     const L = (x: number, y = 0): Vec3 => { const l = laneLocal(x); return toWorld(R, [l[0], l[1] + y, l[2]]); };
-    const stemC = view.stem ? STEM[view.stem] : C.cyan;
+    const stemC = (view.stem && STEM[view.stem]) || C.cyan;
 
     // Ribbon band: violet, fading out at both ends (12 slices).
     const N = 12;
@@ -213,7 +216,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     };
     for (const pad of view.pads) {
       const flash = pad.flash;
-      const base = view.stem === 'perc' || !view.stem ? STEM.perc : C.cyan;
+      const base = (view.stem === 'perc' || !view.stem ? STEM.perc : null) ?? C.cyan;
       // A hit swaps the pad's cyan for amber rather than adding amber on top: cyan + amber at these
       // strengths sums past 1 in every channel and the flash read as white (IWER shot 5, 12 Nov).
       const padC = tmpC.copy(C.cyan).lerp(amber, flash);
@@ -227,7 +230,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       rim(addS(pad.center, up, -0.006), r * 0.98, padC, 1); // a second rim just below: the pad reads as a solid disc
       glowDisc(pad.center, eye, r * 1.5, padC, 0.5 + 0.2 * flash); // a soft eye-facing halo, so a flat pad seen at a shallow angle still reads
     }
-    if (view.countIn && view.pads.length) {
+    if (view.countIn && view.pads.length && view.countInOn !== 'row') {
       // Count-in: a ring around each pad fills clockwise over the bar, pulsing on each tick.
       const { fill, pulse } = view.countIn;
       for (const pad of view.pads) {
@@ -235,6 +238,40 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
         ring(c, sx, sz, r + 0.012, r + 0.02, Math.PI * 2, C.teal, 0.5, 48);
         ring(c, sx, sz, r + 0.01, r + 0.024, Math.PI * 2 * fill, C.cyan, 0.8 + 1.2 * pulse, 48);
       }
+    }
+
+    // Harp: glowing upright strings between two rails; a plucked string swaps cyan for amber and brightens.
+    if (view.strings.length) {
+      const first = view.strings[0], last = view.strings[view.strings.length - 1];
+      const rail = (k: 'a' | 'b', dy: number) => line(addS(first[k], sx, -0.02, up, dy), addS(last[k], sx, 0.02, up, dy), C.teal, 0.8);
+      rail('a', -0.006); rail('b', 0.006);
+      for (const st of view.strings) {
+        const col = tmpC.copy(C.cyan).lerp(amber, st.flash);
+        line(st.a, st.b, col, 1.2 + 1.2 * st.flash);
+        // A thin bright band behind the line so a 1-pixel string still reads at 0.4 m.
+        const w = 0.003 + 0.004 * st.flash;
+        quad(addS(st.a, sx, -w), addS(st.b, sx, -w), addS(st.b, sx, w), addS(st.a, sx, w), col, 0.35 + 0.5 * st.flash);
+        glowDisc(st.b, eye, 0.008, col, 0.9, 8);
+        if (st.flash > 0) glowDisc([(st.a[0] + st.b[0]) / 2, (st.a[1] + st.b[1]) / 2, (st.a[2] + st.b[2]) / 2], eye, 0.03, amber, 0.6 * st.flash);
+      }
+    }
+    // Keyboard: flat glowing key tops with rims; a pressed key swaps cyan for amber and dips 6 mm.
+    for (const k of view.keys) {
+      const col = tmpC.copy(C.cyan).lerp(amber, k.flash);
+      const c = addS(k.center, up, -0.006 * k.flash), hw = KEYS.width / 2, hd = KEYS.depth / 2;
+      const p = (u: number, v: number) => addS(c, sx, u * hw, sz, v * hd);
+      quad(p(-1, -1), p(-1, 1), p(1, 1), p(1, -1), col, 0.3 + 0.5 * k.flash);
+      line(p(-1, -1), p(-1, 1), col, 1.2); line(p(-1, 1), p(1, 1), col, 1.2); line(p(1, 1), p(1, -1), col, 1.2); line(p(1, -1), p(-1, -1), col, 1.6);
+      if (k.flash > 0) glowDisc(c, eye, 0.03, amber, 0.6 * k.flash);
+    }
+    // Count-in for the harp or keyboard: a bar under the row fills left to right over the bar, pulsing on each tick.
+    const row = view.strings.length ? view.strings.map((x) => x.a) : view.keys.map((x) => addS(x.center, sz, -KEYS.depth / 2));
+    if (view.countIn && row.length && view.countInOn !== 'pads') {
+      const { fill, pulse } = view.countIn;
+      const a = addS(row[0], sx, -0.03, up, -0.02), b = addS(row[row.length - 1], sx, 0.03, up, -0.02);
+      const m: Vec3 = [a[0] + (b[0] - a[0]) * fill, a[1] + (b[1] - a[1]) * fill, a[2] + (b[2] - a[2]) * fill];
+      line(a, b, C.teal, 0.5);
+      quad(addS(a, up, -0.004), addS(a, up, 0.004), addS(m, up, 0.004), addS(m, up, -0.004), C.cyan, 0.8 + 1.2 * pulse);
     }
 
     // Reset shell at eye level on the right, a ring around it filling while pinched, a bloom on reset.

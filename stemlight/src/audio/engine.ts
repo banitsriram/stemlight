@@ -190,6 +190,24 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
     note('wrap', { at, to: loop.t0, pass: passes + 1 });
   };
 
+  /**
+   * The wrap window was missed (a frame stall longer than WRAP_LOOKAHEAD at the loop end): wrap late, by
+   * restarting the sources at the loop start, so a hitch costs a short glitch and never ends the loop.
+   */
+  const lateWrap = () => {
+    if (!loop) return;
+    if (beforeWrap && !beforeWrap(passes)) {
+      note('loop-end', { pass: passes, late: true });
+      loop = null;
+      scheduleTrims(startedAt + (time() - offset) + 0.02, time() + 0.02, length, passes);
+      return;
+    }
+    passes++;
+    startSources(loop.t0);
+    wrapped = true;
+    note('wrap-late', { to: loop.t0, pass: passes });
+  };
+
   const announce = () => bus.emit('transport:state', { playing: running, t: time() });
 
   const transport: Transport = {
@@ -310,7 +328,8 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
       }
       for (const b of beatsCrossed(beats.beats, beats.downbeats, lastT, t)) bus.emit('beat', b);
       lastT = t;
-      if (loop && !wrap && t < loop.t1 && t > loop.t1 - WRAP_LOOKAHEAD) scheduleWrap();
+      if (loop && !wrap && t >= loop.t1) lateWrap();
+      else if (loop && !wrap && t > loop.t1 - WRAP_LOOKAHEAD) scheduleWrap();
       if (!ended && raw() >= length) {
         ended = true;
         offset = length;

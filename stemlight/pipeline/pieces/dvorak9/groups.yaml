@@ -12,7 +12,7 @@ excerpt:
   tail_sec: 3.0
 fermatas: {}
 scale: {tonic: 64, steps: [0, 2, 3, 5, 7, 8, 10]}   # E natural minor
-replace: [{stem: perc, instrument: pads}]           # pads take over the timpani lane (task 22)
+replace: [{stem: perc, instrument: pads}, {stem: fl, instrument: harp}, {stem: reeds, instrument: keys}]           # pads take over the timpani lane (task 22)
 credits:
   - text: "Antonín Dvořák, Symphony No. 9, Op. 95, IV. Allegro con fuoco. Score from the Mutopia Project (piece 1793), Simrock 1894 edition, maintained by Keith OHara, licensed CC BY-SA 3.0. Our stems and note data derived from it are released under CC BY-SA 3.0. Rendered with VSCO 2 Community Edition samples (CC0)."
     licence: CC BY-SA 3.0

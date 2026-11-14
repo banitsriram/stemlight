@@ -22,7 +22,8 @@ for (const id of ['beethoven5', 'dvorak9']) {
       assert.equal(s.homeSeat.length, 3);
       assert.ok(s.pitchRange[0] <= s.pitchRange[1]);
     }
-    assert.deepEqual(m.replace, [{ stem: 'perc', instrument: 'pads' }]);
+    // Pads replace the timpani; harp the flutes and keyboard the reeds (biyon-26, 27).
+    assert.deepEqual(m.replace, [{ stem: 'perc', instrument: 'pads' }, { stem: 'fl', instrument: 'harp' }, { stem: 'reeds', instrument: 'keys' }]);
     assert.ok(m.credits.length > 0);
     if (id === 'dvorak9') assert.match(JSON.stringify(m.credits), /CC BY-SA 3\.0/);
   });
