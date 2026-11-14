@@ -1,0 +1,43 @@
+summon vln: yes
+cut 1: 10.263-13.816 s; gain 0.0000 at 11.55 s, 1.0000 at 8.50 s
+cut 2: 16.974-20.131 s; gain 0.0000 at 18.21 s, 1.0000 at 15.23 s
+  undo 1: cut:remove yes, gain 1.0000 at 18.23 s
+cut 3: 23.289-26.842 s; gain 0.0000 at 24.55 s, 1.0000 at 21.54 s
+cut 4: 29.605-33.158 s; gain 0.0000 at 30.86 s, 1.0000 at 27.88 s
+  undo 2: cut:remove yes, gain 1.0000 at 30.88 s
+cut 5: 36.316-39.868 s; gain 0.0000 at 37.56 s, 1.0000 at 34.58 s
+cut 6: 42.632-46.184 s; gain 0.0000 at 43.87 s, 1.0000 at 40.91 s
+  undo 3: cut:remove yes, gain 1.0000 at 43.88 s
+cut 7: 49.342-52.895 s; gain 0.0000 at 50.57 s, 1.0000 at 47.59 s
+cut 8: 55.658-59.210 s; gain 0.0000 at 56.93 s, 1.0000 at 53.93 s
+  undo 4: cut:remove yes, gain 1.0000 at 56.94 s
+cut 9: 62.368-65.526 s; gain 0.0000 at 63.62 s, 1.0000 at 60.64 s
+cut 10: 68.684-72.237 s; gain 0.0000 at 69.98 s, 1.0000 at 66.96 s
+  undo 5: cut:remove yes, gain 1.0000 at 69.94 s
+cut 11: 75.395-78.552 s; gain 0.0000 at 76.66 s, 1.0000 at 73.64 s
+cut 12: 81.710-85.263 s; gain 0.0000 at 82.98 s, 1.0000 at 79.98 s
+  undo 6: cut:remove yes, gain 1.0000 at 82.99 s
+cut 13: 88.421-91.579 s; gain 0.0000 at 89.70 s, 1.0000 at 86.71 s
+cut 14: 94.737-98.289 s; gain 0.0000 at 96.00 s, 1.0000 at 93.03 s
+  undo 7: cut:remove yes, gain 1.0000 at 96.02 s
+cut 15: 101.447-104.605 s; gain 0.0000 at 102.75 s, 1.0000 at 99.73 s
+cut 16: 107.763-111.316 s; gain 0.0000 at 109.03 s, 1.0000 at 106.05 s
+  undo 8: cut:remove yes, gain 1.0000 at 109.07 s
+cut 17: 114.473-117.631 s; gain 0.0000 at 115.78 s, 1.0000 at 112.76 s
+cut 18: 120.789-124.342 s; gain 0.0000 at 122.08 s, 1.0000 at 119.08 s
+  undo 9: cut:remove yes, gain 1.0000 at 122.08 s
+cut 19: 127.105-130.658 s; gain 0.0000 at 128.39 s, 1.0000 at 125.37 s
+cut 20: 133.815-137.368 s; gain 0.0000 at 135.10 s, 1.0000 at 132.14 s
+  undo 10: cut:remove yes, gain 1.0000 at 135.15 s
+
+PASS  cut:preview while both hands pinch: 20/20
+PASS  release -> cut:add on vln: 20/20
+PASS  hollow region target registered: 20/20
+PASS  a reading landed inside the region: 20/20
+PASS  a reading landed outside the region: 20/20
+PASS  region silent on playback (trim gain 0 inside): 20/20
+PASS  outside the region stays full (trim gain 1): 20/20
+PASS  pull the region away -> cut:remove: 10/10
+PASS  region target gone after undo: 10/10
+PASS  undone region plays again (trim gain 1): 10/10
+PASS  10 cuts kept at the end: 1/1

@@ -1,0 +1,23 @@
+PASS  summon perc
+PASS  a lane is registered for the summoned stem  ({"id":"lane:perc","stem":"perc","extra":{"dx":0.9136052797359491,"dy":0,"dz":0.4066022538533182,"halfLength":0.28,"secPerM":28.57142857142857,"tCenter":18.270000000000003}})
+PASS  a playhead is registered (about 6 cm)  ({"center":[0.11324982733041197,1.688688840866089,-0.25446401148914316],"radius":0.06})
+PASS  the reset shell is registered  ([0.27,1.580000023841858,-0.3884999994933605])
+PASS  cut 1: cut:preview while both hands pinch the lane
+PASS  cut 1: release -> cut:add on perc  ({"id":"cut-mwchxza2-1u718","stem":"perc","t0":24.8684,"t1":29.2105})
+PASS  a hollow region target appears for the cut  ({"center":[0.1996138642795629,1.7586888408660888,-0.3364295928901691],"extra":{"dx":0.9136052797359491,"dy":0,"dz":0.4066022538533182,"halfLength":0.07598674999999998,"secPerM":28.57142857142857,"tCenter":27.039450000000002}})
+screenshot region: results/2026-11-12-remake-region.png
+PASS  pull the region 13 cm away -> cut:remove
+PASS  region target gone after undo
+PASS  cut 2: cut:preview while both hands pinch the lane
+PASS  cut 2: release -> cut:add on perc  ({"id":"cut-mwchyln9-85ya1","stem":"perc","t0":28.421,"t1":32.7631})
+PASS  2 pads (the timpani pair) appear after the perc cut  ([47,52])
+PASS  a pads take is running  ({"cutId":"cut-mwchyln9-85ya1","instrument":"pads","pass":1})
+PASS  index tip down through a real pad -> one strike  ([{"count":1,"pad":"pad:0","pitch":47,"vel":45}])
+screenshot pads: results/2026-11-12-remake-pads.png
+PASS  pinch the real playhead -> paused  ({"t":58.26856666666668,"playing":false})
+PASS  drag 6 cm -> time +1.71 s (within 50 ms)  (1.714 s)
+PASS  release -> playing again
+PASS  hold the real reset shell 2 s -> app:reset
+stats before surfaces visible: {"fps":121,"calls":64,"triangles":32656,"notes":150,"maxCalls":66,"maxTriangles":32656,"maxNotes":150}
+stats after (pads + ribbon shown): {"fps":144,"calls":50,"triangles":30156,"notes":214,"maxCalls":66,"maxTriangles":32848,"maxNotes":369}  (emulator page, not a device number)
+18/18 passed

@@ -293,3 +293,55 @@ test('F27 layout: pads and reset shell sit inside 70×66° of the forward view, 
     if (pad) assert.ok(Math.hypot(c[0] - creature[0], c[1] - creature[1], c[2] - creature[2]) > 0.25, `${id} outside the creature's fist sphere`);
   }
 });
+
+test('ribbon, lane ends and playhead sit outside the summoned creature, inside 70×66° and reach', () => {
+  const f = { eye: [0, 0, 0], yaw: 0 };
+  const creature = [0, -0.15, -0.45], R = 0.25;
+  const lane = laneTarget(f, 'perc', 0), ph = playheadTarget(f);
+  const d = [lane.extra.dx, lane.extra.dy, lane.extra.dz], h = lane.extra.halfLength;
+  const pts = [
+    ['lane centre', lane.center], ['lane left end', lane.center.map((c, i) => c - d[i] * h)], ['lane right end', lane.center.map((c, i) => c + d[i] * h)],
+    ['playhead', ph.center],
+  ];
+  for (const [id, c] of pts) {
+    const yaw = Math.atan2(c[0], -c[2]) * 57.2958, pitch = Math.atan2(c[1], Math.hypot(c[0], c[2])) * 57.2958, dist = Math.hypot(...c);
+    assert.ok(Math.abs(yaw) <= 35 && Math.abs(pitch) <= 33, `${id} inside 70×66° (yaw ${yaw.toFixed(1)}, pitch ${pitch.toFixed(1)})`);
+    assert.ok(dist <= 0.61, `${id} within reach (${dist.toFixed(2)} m)`);
+    const gap = Math.hypot(c[0] - creature[0], c[1] - creature[1], c[2] - creature[2]) - R;
+    assert.ok(gap > 0.02, `${id} clear of the creature's body (gap ${gap.toFixed(3)} m)`);
+  }
+});
+
+test('ghost outlines match exactly the cut region\'s notes in the real Dvořák notes.json (F36)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (f) => JSON.parse(readFileSync(new URL(`../../public/pieces/dvorak9/${f}`, import.meta.url), 'utf8'));
+  const manifest = read('manifest.json'), beats = read('beats.json'), raw = read('notes.json');
+  const notes = Array.isArray(raw) ? raw : raw.notes;
+  const bus = createBus();
+  let clock = 0;
+  const transport = createMockTransport(bus, manifest.durationSec, () => clock);
+  const registry = createMockRegistry();
+  const state = createRemakeState({ bus, transport, registry }, {
+    parts: fakeParts(bus), head: () => FRAME, beats: () => beats, loadNotes: async () => notes,
+  });
+  bus.emit('piece:ready', { id: 'dvorak9', manifest });
+  await new Promise((r) => setImmediate(r));
+  const near1 = (t) => beats.beats.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
+  // The densest 4 s of each stem: perc around 64 s (15 notes), violins around 70.5 s (60 notes).
+  for (const [stem, from] of [['perc', 64], ['vln', 70.5]]) {
+    const t0 = near1(from), t1 = near1(from + 4);
+    const id = `real-${stem}`;
+    bus.emit('gaze:summon', { stem });
+    transport.seek((t0 + t1) / 2); // the whole region inside the ±8 s ribbon window
+    bus.emit('cut:add', { cut: { id, stem, t0, t1 } });
+    clock += 1 / 72;
+    const v = state.update(1 / 72);
+    const region = v.regions.find((r) => r.id === id) ?? v.regions[0];
+    const want = notes.filter((n) => n.stem === stem && n.t >= t0 && n.t < t1).map((n) => n.id).sort((a, b) => a - b);
+    const got = region.ghosts.map((m) => m.note.id).sort((a, b) => a - b);
+    assert.ok(want.length >= 10, `${stem}: a real, busy region (${want.length} notes)`);
+    assert.deepEqual(got, want, `${stem} ${t0.toFixed(2)}-${t1.toFixed(2)} s: outlines = exactly the notes.json notes in the region`);
+    assert.ok(!v.notes.some((m) => want.includes(m.note.id)), `${stem}: none of them is also drawn solid`);
+    bus.emit('cut:remove', { id });
+  }
+});

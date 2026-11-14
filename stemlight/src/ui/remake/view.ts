@@ -4,11 +4,11 @@
 // instance (banit's class, reused unchanged) for the score, ghost outlines and amber notes.
 // About 6 draw calls in all; the glyph layers only draw when they have notes.
 import {
-  AdditiveBlending, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Float32BufferAttribute, Group, LatheGeometry,
+  AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Group, LatheGeometry,
   LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, Vector2,
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
-import { ACCENT } from '../../world/creatures';
+import { ACCENT } from '../../world/creatures.ts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
 import type { RemakeView } from './state.ts';
@@ -20,15 +20,20 @@ const C = {
   violet: new Color('#2A1B4A'), teal: new Color('#0E5F6B'), cyan: new Color('#6FF3FF'), amber: new Color('#FFB547'),
 };
 const AMBER_CB = new Color('#D55E00');
+const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
 const STEM = Object.fromEntries(Object.entries(ACCENT).map(([k, v]) => [k, new Color(v)])) as Record<StemId, Color>;
 
 class Buf {
   readonly pos: Float32Array; readonly col: Float32Array; n = 0;
   readonly geometry = new BufferGeometry();
-  constructor(readonly cap: number) {
+  readonly cap: number;
+  constructor(cap: number) {
+    this.cap = cap;
     this.pos = new Float32Array(cap * 3); this.col = new Float32Array(cap * 3);
-    const p = new Float32BufferAttribute(this.pos, 3).setUsage(DynamicDrawUsage);
-    const c = new Float32BufferAttribute(this.col, 3).setUsage(DynamicDrawUsage);
+    // BufferAttribute shares the array (Float32BufferAttribute would copy it, and every write below would
+    // land in an array the GPU never sees: the ribbon, pads and rings rendered empty until 12 Nov).
+    const p = new BufferAttribute(this.pos, 3).setUsage(DynamicDrawUsage);
+    const c = new BufferAttribute(this.col, 3).setUsage(DynamicDrawUsage);
     this.geometry.setAttribute('position', p);
     this.geometry.setAttribute('color', c);
   }
@@ -42,7 +47,7 @@ class Buf {
   end() {
     this.geometry.setDrawRange(0, this.n);
     for (const name of ['position', 'color']) {
-      const a = this.geometry.getAttribute(name) as Float32BufferAttribute;
+      const a = this.geometry.getAttribute(name) as BufferAttribute;
       a.clearUpdateRanges();
       a.addUpdateRange(0, this.n * 3);
       a.needsUpdate = true;
@@ -79,7 +84,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   const triMesh = new Mesh(tris.geometry, new MeshBasicMaterial({ ...glow, side: DoubleSide }));
   const lineMesh = new LineSegments(lines.geometry, new LineBasicMaterial(glow));
   triMesh.frustumCulled = lineMesh.frustumCulled = false;
-  const shellMat = new MeshBasicMaterial({ color: C.teal, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
+  const shellMat = new MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
   const shell = new Mesh(shellGeometry(), shellMat);
   group.add(triMesh, lineMesh, shell);
   scene.add(group);
@@ -193,33 +198,46 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
         glyphs.push('amber', f.glyph, p[0], p[1], p[2], 0.04 - 0.014 * e, amber.r, amber.g, amber.b, 1);
       }
     }
-    for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 1.2);
+    for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 0.7);
 
-    // Pads: glowing discs facing up with a rim; a hit flashes amber.
+    // Pads: glowing discs facing up with a bright rim; a hit flashes amber. Cyan, not the ocean's teal, so they
+    // read against the water from a seated eye (IWER shots, 12 Nov).
     const up: Vec3 = [0, 1, 0];
     const S = view.seat, sx: Vec3 = [Math.cos(S.yaw), 0, -Math.sin(S.yaw)], sz: Vec3 = [-Math.sin(S.yaw), 0, -Math.cos(S.yaw)];
+    const r = PADS.radius;
+    const rim = (c: Vec3, rr: number, col: Color, k: number) => {
+      for (let i = 0; i < 32; i++) {
+        const a0 = (i / 32) * Math.PI * 2, a1 = ((i + 1) / 32) * Math.PI * 2;
+        line(addS(c, sx, Math.cos(a0) * rr, sz, Math.sin(a0) * rr), addS(c, sx, Math.cos(a1) * rr, sz, Math.sin(a1) * rr), col, k);
+      }
+    };
     for (const pad of view.pads) {
       const flash = pad.flash;
-      const base = view.stem === 'perc' || !view.stem ? STEM.perc : C.teal;
+      const base = view.stem === 'perc' || !view.stem ? STEM.perc : C.cyan;
+      // A hit swaps the pad's cyan for amber rather than adding amber on top: cyan + amber at these
+      // strengths sums past 1 in every channel and the flash read as white (IWER shot 5, 12 Nov).
+      const padC = tmpC.copy(C.cyan).lerp(amber, flash);
       for (let i = 0; i < 24; i++) {
-        const a0 = (i / 24) * Math.PI * 2, a1 = ((i + 1) / 24) * Math.PI * 2, r = PADS.radius;
-        tris.v(pad.center, flash > 0 ? amber : C.teal, 0.5 + 1.5 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), C.teal, 0.12 + 0.3 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), C.teal, 0.12 + 0.3 * flash);
-        line(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), base, 0.7 + flash);
+        const a0 = (i / 24) * Math.PI * 2, a1 = ((i + 1) / 24) * Math.PI * 2;
+        tris.v(pad.center, padC, 0.45 + 0.45 * flash);
+        tris.v(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), padC, 0.18 + 0.2 * flash);
+        tris.v(addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), padC, 0.18 + 0.2 * flash);
       }
-      if (flash > 0) glowDisc(addS(pad.center, up, 0.01), eye, 0.05 + 0.04 * flash, amber, flash);
+      rim(pad.center, r, flash > 0 ? padC : base, flash > 0 ? 1.2 : 2);
+      rim(addS(pad.center, up, -0.006), r * 0.98, padC, 1); // a second rim just below: the pad reads as a solid disc
+      glowDisc(pad.center, eye, r * 1.5, padC, 0.5 + 0.2 * flash); // a soft eye-facing halo, so a flat pad seen at a shallow angle still reads
     }
     if (view.countIn && view.pads.length) {
-      // Count-in ring around the pads: fills clockwise over the bar, pulsing on each tick.
-      const mid = view.pads[Math.floor(view.pads.length / 2)].center;
-      const c = addS(mid, sz, -0.02, up, 0.004);
+      // Count-in: a ring around each pad fills clockwise over the bar, pulsing on each tick.
       const { fill, pulse } = view.countIn;
-      ring(c, sx, sz, 0.27, 0.28, Math.PI * 2, C.teal, 0.25, 64, 0.45);
-      ring(c, sx, sz, 0.265, 0.285, Math.PI * 2 * fill, C.cyan, 0.6 + 1.2 * pulse, 64, 0.45);
+      for (const pad of view.pads) {
+        const c = addS(pad.center, up, 0.004);
+        ring(c, sx, sz, r + 0.012, r + 0.02, Math.PI * 2, C.teal, 0.5, 48);
+        ring(c, sx, sz, r + 0.01, r + 0.024, Math.PI * 2 * fill, C.cyan, 0.8 + 1.2 * pulse, 48);
+      }
     }
 
-    // Reset shell beside the right knee, a ring around it filling while pinched, a bloom on reset.
+    // Reset shell at eye level on the right, a ring around it filling while pinched, a bloom on reset.
     const rc = view.reset.center;
     shell.position.set(rc[0], rc[1] - 0.01, rc[2]);
     shell.rotation.set(-0.5, S.yaw, 0);

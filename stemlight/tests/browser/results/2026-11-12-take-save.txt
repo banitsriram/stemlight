@@ -1,0 +1,12 @@
+PASS count-in events [4,3,2,1]
+PASS strikes at 8.04/8.55/9.21 (fired at 8.041/8.601/9.211) snapped to offsets [0,0.5,1.25]
+PASS looped (1 wrap(s))
+PASS guide at -18 dB on pass 0 (gain 0.1259, expected 0.1259)
+PASS guide silent on pass 1 (gain 0.0000)
+PASS take ended and playback went on past the region (t=10.30)
+stats: {"fps":144,"calls":29,"triangles":7148,"notes":6,"maxCalls":31,"maxTriangles":7952,"maxNotes":15} (headless emulator page, not a device number)
+PASS cut restored after reload [["take1",8,10]]
+PASS part restored after reload [0,0.5,1.25]
+PASS restoring does not start a new take
+PASS cleared storage gives a clean start
+PASS no page errors

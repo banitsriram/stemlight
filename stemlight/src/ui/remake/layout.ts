@@ -8,16 +8,20 @@ import type { Cut, Instrument, PieceManifest, StemId, Target, Vec3 } from '../..
 
 export interface Frame { eye: Vec3; yaw: number }
 
-/** The score ribbon: a band 56 cm wide, 42 cm ahead and 27 cm below the eye (31° down), showing ±8 s. */
-export const RIBBON = { ahead: 0.42, below: 0.27, halfWidth: 0.28, windowSec: 8, laneRadius: 0.035 } as const;
+/**
+ * The score ribbon: a band 56 cm wide, 42 cm ahead and 16 cm ABOVE the eye (`below` is negative), showing ±8 s.
+ * It floats over the summoned creature against the sky: lower, it sat inside the creature's 25 cm body at the
+ * reach spot (0.45 m ahead, 0.15 m below the eye) and couldn't be seen (IWER shots, 12 Nov).
+ */
+export const RIBBON = { ahead: 0.42, below: -0.16, halfWidth: 0.28, windowSec: 8, laneRadius: 0.035 } as const;
 /** Seconds of piece time per metre along the ribbon. */
 export const SEC_PER_M = RIBBON.windowSec / RIBBON.halfWidth;
 /**
- * The playhead bead: 7 cm above the lane and 11 cm nearer the user, so a pinch on the lane next to "now"
- * still takes the lane (the input engine tries the playhead first) and the bead stays clear of the
- * summoned creature's body.
+ * The playhead bead: 7 cm below the lane and 11 cm nearer the user, so a pinch on the lane next to "now"
+ * still takes the lane (the input engine tries the playhead first), the bead stays inside the 33° upper
+ * edge of the view, and it sits just outside the summoned creature's body.
  */
-export const PLAYHEAD = { up: 0.07, toward: 0.11, radius: 0.06 } as const;
+export const PLAYHEAD = { up: -0.07, toward: 0.11, radius: 0.06 } as const;
 /**
  * Two pads (the timpani pair: tonic and dominant), one each side of the summoned creature, so a strike can
  * never land inside its 25 cm fist sphere (reach spot 0.45 m ahead, 0.15 m below the eye), and both sit

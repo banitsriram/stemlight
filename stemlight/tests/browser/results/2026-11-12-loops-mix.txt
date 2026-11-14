@@ -1,0 +1,8 @@
+strike lateness vs the target time (ms of scheduler jitter): 1, 0, 1
+PASS off-grid strikes (±60 ms) snapped to the 1/8 grid: 50@0.5 55@0.75 53@1.25
+PASS 3 wraps, each exactly 2 s after the last (2.000000, 2.000000)
+PASS hits replayed on later passes at wrap + offset: 6/6, worst 0.00 µs (one sample = 20.8 µs)
+PASS lock restored after reload (vln locked, gain 0.0000)
+PASS EQ restored after reload (fl low 6.00 dB, high -6.00 dB)
+PASS cut and 3-hit part restored alongside (["loop3"], 3 hits)
+PASS no page errors
