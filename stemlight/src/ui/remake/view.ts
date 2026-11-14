@@ -8,7 +8,6 @@ import {
   LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, Vector2,
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
-import { ACCENT } from '../../world/creatures.ts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
 import type { RemakeView } from './state.ts';
@@ -21,7 +20,6 @@ const C = {
 };
 const AMBER_CB = new Color('#D55E00');
 const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
-const STEM = Object.fromEntries(Object.entries(ACCENT).map(([k, v]) => [k, new Color(v)])) as Record<StemId, Color>;
 
 class Buf {
   readonly pos: Float32Array; readonly col: Float32Array; n = 0;
@@ -76,7 +74,12 @@ function shellGeometry(): BufferGeometry {
   return g;
 }
 
-export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'default') {
+/**
+ * `accent` is each section's colour (banit's ACCENT, passed in by index.ts rather than imported here, so this
+ * file and its unit tests never load the world modules).
+ */
+export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'default', accent: Partial<Record<StemId, string>> = {}) {
+  const STEM = Object.fromEntries(Object.entries(accent).map(([k, v]) => [k, new Color(v)])) as Partial<Record<StemId, Color>>;
   const group = new Group();
   group.name = 'remake';
   const tris = new Buf(TRI_CAP), lines = new Buf(LINE_CAP);
@@ -134,7 +137,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   function drawAll(view: RemakeView, eye: Vec3) {
     const R = view.ribbon, hw = RIBBON.halfWidth, lr = RIBBON.laneRadius;
     const L = (x: number, y = 0): Vec3 => { const l = laneLocal(x); return toWorld(R, [l[0], l[1] + y, l[2]]); };
-    const stemC = view.stem ? STEM[view.stem] : C.cyan;
+    const stemC = (view.stem && STEM[view.stem]) || C.cyan;
 
     // Ribbon band: violet, fading out at both ends (12 slices).
     const N = 12;
@@ -213,7 +216,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     };
     for (const pad of view.pads) {
       const flash = pad.flash;
-      const base = view.stem === 'perc' || !view.stem ? STEM.perc : C.cyan;
+      const base = (view.stem === 'perc' || !view.stem ? STEM.perc : null) ?? C.cyan;
       // A hit swaps the pad's cyan for amber rather than adding amber on top: cyan + amber at these
       // strengths sums past 1 in every channel and the flash read as white (IWER shot 5, 12 Nov).
       const padC = tmpC.copy(C.cyan).lerp(amber, flash);
