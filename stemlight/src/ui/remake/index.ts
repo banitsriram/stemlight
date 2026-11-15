@@ -4,6 +4,7 @@
 import { createSystem, type World } from '@iwsdk/core';
 import type { Object3D } from 'three';
 import type { AppContext } from '../../contracts';
+import { textSprite } from '../../story/card';
 import { ACCENT } from '../../world/creatures';
 import { loadNoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { createRemakeState, type RemakeStateDeps } from './state.ts';
@@ -19,11 +20,22 @@ export function initRemake(ctx: AppContext, scene: Object3D, deps: RemakeDeps) {
   const view = createRemakeView(scene, ctx.save.load().palette, ACCENT);
   // Our own glyph instance (banit's class and atlas, unchanged): its begin/end can't clash with the notes layer's.
   loadNoteGlyphs().then((g) => view.attachGlyphs(g)).catch((e) => console.warn('[remake] note glyphs unavailable', e));
+  // The first-time "how to play" caption (banit's text sprite, unchanged): one line, about 30 cm wide.
+  const hint = textSprite(0.3, 1024, 7);
+  hint.sprite.visible = false;
+  scene.add(hint.sprite);
   let last = state.update(0);
   deps.world.registerSystem(class RemakeSystem extends createSystem() {
     update(delta: number) {
       last = state.update(delta);
       view.draw(last, deps.head().eye);
+      const h = last.hint;
+      hint.sprite.visible = !!h;
+      if (h) {
+        hint.set([h.text]);
+        hint.sprite.position.set(...h.at);
+        hint.sprite.material.opacity = h.alpha;
+      }
     }
   });
   const handle = { state, view: () => last };

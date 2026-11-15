@@ -5,12 +5,40 @@ import type {
 } from '../../contracts';
 import {
   IDS, countInLook, harpTargets, keyTargets, laneTarget, lerpFrame, melodicWanted, octaveFor, padPair, padPitches, padTargets,
-  padsWanted, playheadTarget, regionTarget, resetTarget, RIBBON, ribbonX, spanX, stemFor, toWorld, laneLocal, pitchY,
+  padsWanted, playheadTarget, regionTarget, resetTarget, RIBBON, ribbonX, spanX, stemFor, toWorld, laneLocal, pitchY, HARP, KEYS, PADS,
   type CountIn, type Frame,
 } from './layout.ts';
 import { warmVoices } from '../../audio/synth.ts';
 
 export const GLIDE_SEC = 0.6; // same glide as the creatures
+/** How long an instrument's first-time hint stays up if it isn't played. */
+export const HINT_SEC = 8;
+export const HINTS: Record<Instrument, string> = {
+  harp: 'Sweep a finger across the strings',
+  keys: 'Press each key down with one finger',
+  pads: 'Strike a drum head',
+};
+/** A fingertip starts to glow this far (m) from a string, key top or drum head. */
+export const TIP_NEAR = 0.06;
+/** Distance from p to a playable surface: a string's segment, a key's top, a drum's head disc. */
+export function playDist(t: Target, p: Vec3): number {
+  const e = t.extra ?? {}, d: Vec3 = [p[0] - t.center[0], p[1] - t.center[1], p[2] - t.center[2]];
+  if (t.kind === 'string') { // segment along y, halfLength either way
+    const h = e.halfLength ?? 0.05, along = Math.max(-h, Math.min(h, d[1]));
+    return Math.hypot(d[0], d[1] - along, d[2]);
+  }
+  if (t.kind === 'key') { // the top rectangle: across (nx, nz) by halfW, depth by halfD
+    const nx = e.nx ?? 1, nz = e.nz ?? 0;
+    const across = d[0] * nx + d[2] * nz, depth = -d[0] * nz + d[2] * nx;
+    return Math.hypot(Math.max(0, Math.abs(across) - (e.halfW ?? t.radius)), d[1], Math.max(0, Math.abs(depth) - (e.halfD ?? t.radius)));
+  }
+  return Math.hypot(Math.max(0, Math.hypot(d[0], d[2]) - t.radius), d[1]); // drum head
+}
+/** Where each hint floats (frame-local): just above its instrument, in front of the summoned creature. */
+const hintLocal = (inst: Instrument): Vec3 =>
+  inst === 'harp' ? [0, -HARP.below + HARP.longest / 2 + 0.04, HARP.ahead]
+    : inst === 'keys' ? [0, -KEYS.below + 0.08, KEYS.ahead]
+      : [0, -PADS.below + 0.09, PADS.ahead - 0.08];
 export const FLIGHT_SEC = 0.4; // an amber note's flight from the fingertip to its outline
 export const FLASH_SEC = 0.25;
 
@@ -38,6 +66,13 @@ export interface RemakeView {
   visible: boolean;
   ribbon: Frame;
   seat: Frame;
+  /**
+   * Where the pads, harp and keyboard stand: the summoned creature's frame (the ribbon's), so they always flank
+   * it. Fixed to the seat they collided with a creature summoned off to one side: the timpani, summoned from
+   * its seat on the right, landed on the right pad (IWER shot, 14 Nov). They move only on a summon, gliding
+   * with the ribbon, never as the head looks around.
+   */
+  play: Frame;
   now: number;
   clock: number;
   stem: StemId | null; // the lane's stem (the summoned creature)
@@ -51,8 +86,12 @@ export interface RemakeView {
   keys: { center: Vec3; pitch: number; flash: number }[]; // the keyboard's key tops; empty while hidden
   countIn: { fill: number; pulse: number } | null;
   countInOn: 'pads' | 'row' | null; // which surface the count-in belongs to: the running take's instrument
+  /** A one-line "how to play" caption over an instrument the first time it appears this session (null: none). */
+  hint: { text: string; at: Vec3; alpha: number } | null;
   reset: { center: Vec3; progress: number; flash: number };
   flights: Flight[];
+  /** Index fingertips near a string, key or drum head: k is 0 at TIP_NEAR away, 1 touching (beat pulse and tracking confidence included). */
+  tips: { at: Vec3; k: number }[];
 }
 
 const lowerBound = (xs: number[], t: number) => {
@@ -86,6 +125,9 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   let pitches: number[] = [];
   let harpPitches: number[] = [], keyPitches: number[] = [];
   const warmed = new Set<string>(); // harp/keys notes already rendered for this piece
+  const hintDone = new Set<Instrument>(), hintFrom = new Map<Instrument, number>(); // once per session each
+  const tipOf: Record<Hand, { tip: Vec3; confidence: number } | null> = { left: null, right: null };
+  let beatAt = -Infinity;
   let clock = 0;
   const registered = new Set<string>();
 
@@ -143,7 +185,10 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   bus.on('cut:remove', ({ id }) => { if (countIn?.cutId === id) countIn = null; });
   bus.on('reset:progress', ({ progress }) => { resetProgress = progress; });
   bus.on('app:reset', () => { preview = null; countIn = null; hits = []; resetFlashAt = clock; });
+  bus.on('hand:pose', ({ hand, tracked, confidence, tip }) => { tipOf[hand] = tracked ? { tip, confidence } : null; });
+  bus.on('beat', () => { beatAt = clock; });
   bus.on('part:hit', ({ cutId, instrument, pitch, t, from }) => {
+    hintDone.add(instrument); // the first hit ends that instrument's hint
     let flashPad = 0;
     pitches.forEach((p, i) => { if (Math.abs(p - pitch) < Math.abs(pitches[flashPad] - pitch)) flashPad = i; });
     hits.push({ at: clock, from, t, pitch, cutId, flashPad: instrument === 'pads' ? flashPad : -1, instrument });
@@ -191,10 +236,10 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       const targets: Target[] = [];
       const visible = manifest !== null;
       const view: RemakeView = {
-        visible, ribbon, seat: seatF, now, clock, stem: null, ticks: [], notes: [], regions: [], preview: null,
-        playheadHeld: holders.size > 0, pads: [], strings: [], keys: [], countIn: null, countInOn: null,
+        visible, ribbon, seat: seatF, play: ribbon, now, clock, stem: null, ticks: [], notes: [], regions: [], preview: null,
+        playheadHeld: holders.size > 0, pads: [], strings: [], keys: [], countIn: null, countInOn: null, hint: null,
         reset: { center: resetTarget(seatF).center, progress: resetProgress, flash: Math.max(0, 1 - (clock - resetFlashAt) / 0.8) },
-        flights: [],
+        flights: [], tips: [],
       };
       if (!visible) { sync(targets); return view; }
 
@@ -237,7 +282,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       }
 
       if (padsWanted(deps.parts, manifest)) {
-        const pads = padTargets(seatF, pitches);
+        const pads = padTargets(ribbon, pitches);
         targets.push(...pads);
         view.pads = pads.map((p, i) => {
           const last = [...hits].reverse().find((h) => h.flashPad === i);
@@ -256,20 +301,41 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
         return last ? Math.max(0, 1 - (clock - last.at) / FLASH_SEC) : 0;
       };
       if (melodic === 'harp') {
-        const strings = harpTargets(seatF, harpPitches);
+        const strings = harpTargets(ribbon, harpPitches);
         targets.push(...strings);
         view.strings = strings.map((t) => {
           const h = t.extra!.halfLength;
           return { a: [t.center[0], t.center[1] - h, t.center[2]], b: [t.center[0], t.center[1] + h, t.center[2]], pitch: t.extra!.pitch, flash: flashOf('harp', t.extra!.pitch) };
         });
       } else if (melodic === 'keys') {
-        const keys = keyTargets(seatF, keyPitches);
+        const keys = keyTargets(ribbon, keyPitches);
         targets.push(...keys);
         view.keys = keys.map((t) => ({ center: t.center, pitch: t.extra!.pitch, flash: flashOf('keys', t.extra!.pitch) }));
       }
       const takeInst = deps.parts.taking()?.instrument;
       const on = takeInst === 'pads' && view.pads.length ? 'pads' : takeInst && takeInst === melodic ? 'row' : null;
       if (on) { view.countIn = countInLook(countIn, clock); view.countInOn = on; }
+      // Fingertip glow: how near each tracked index tip is to the nearest playable surface showing.
+      const playable = targets.filter((t) => t.kind === 'string' || t.kind === 'key' || t.kind === 'pad');
+      if (playable.length) {
+        const pulse = Math.max(0, 1 - (clock - beatAt) / 0.25);
+        for (const h of ['left', 'right'] as const) {
+          const tp = tipOf[h];
+          if (!tp) continue;
+          const d = Math.min(...playable.map((t) => playDist(t, tp.tip)));
+          if (d >= TIP_NEAR) continue;
+          view.tips.push({ at: tp.tip, k: (1 - d / TIP_NEAR) * (0.85 + 0.15 * pulse) * Math.min(1, Math.max(0, tp.confidence) / 0.6) });
+        }
+      }
+      // First time an instrument shows: say how to play it, over it, until the first hit or HINT_SEC.
+      const shown: Instrument | null = takeInst && (takeInst === melodic || (takeInst === 'pads' && view.pads.length)) ? takeInst
+        : melodic ?? (view.pads.length ? 'pads' : null);
+      if (shown && !hintDone.has(shown)) {
+        if (!hintFrom.has(shown)) hintFrom.set(shown, clock);
+        const age = clock - hintFrom.get(shown)!;
+        if (age >= HINT_SEC) hintDone.add(shown);
+        else view.hint = { text: HINTS[shown], at: toWorld(ribbon, hintLocal(shown)), alpha: Math.min(1, age / 0.3, (HINT_SEC - age) / 0.5) };
+      }
 
       hits = hits.filter((h) => clock - h.at < 1);
       for (const h of hits) {

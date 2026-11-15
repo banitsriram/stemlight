@@ -232,13 +232,20 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       }
     }
     for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 0.7);
+    // Fingertips near something playable glow cyan, brighter and larger as they close in: with no controller
+    // to buzz, this is the cue that a finger is about to touch.
+    for (const t of view.tips ?? []) {
+      glowDisc(t.at, eye, 0.01 + 0.012 * t.k, C.cyan, 0.25 + 0.9 * t.k);
+      glowDisc(t.at, eye, 0.004, C.cyan, 0.6 + 0.8 * t.k, 8);
+    }
 
     // Pads: two kettle drums (models.ts) whose heads are the strike surfaces. A soft cyan ring round each head
     // says "strike here"; a hit turns the head amber in the model and adds a warm halo above it.
     const up: Vec3 = [0, 1, 0];
-    const S = view.seat, sx: Vec3 = [Math.cos(S.yaw), 0, -Math.sin(S.yaw)], sz: Vec3 = [-Math.sin(S.yaw), 0, -Math.cos(S.yaw)];
+    const S = view.seat, P = view.play ?? view.seat; // the reset shell keeps to the seat; pads, harp and keys flank the creature
+    const sx: Vec3 = [Math.cos(P.yaw), 0, -Math.sin(P.yaw)], sz: Vec3 = [-Math.sin(P.yaw), 0, -Math.cos(P.yaw)];
     const r = PADS.radius;
-    placeModel(models.drums, view.pads.length > 0, S, view.pads.map((p) => p.flash));
+    placeModel(models.drums, view.pads.length > 0, P, view.pads.map((p) => p.flash));
     for (const pad of view.pads) {
       const c = addS(pad.center, up, 0.002);
       const base = (view.stem === 'perc' || !view.stem ? STEM.perc : null) ?? C.cyan;
@@ -258,7 +265,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
 
     // Harp: the frame is a model; the strings are glowing lines, cream (the two tonic strings red, as a real
     // harp marks its Cs), with a soft cyan glow; a plucked string turns amber, glows wider and flares.
-    placeModel(models.harp, view.strings.length > 0, S);
+    placeModel(models.harp, view.strings.length > 0, P);
     view.strings.forEach((st, i) => {
       const tonic = i === 0 || i === view.strings.length - 1;
       const col = tmpC.copy(tonic ? C.red : C.gut).lerp(amber, st.flash);
@@ -283,7 +290,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     });
     // Keyboard: the keys are a model (a pressed key dips 6 mm and turns amber there); a soft cyan glow runs
     // along the front edge of the row, and a pressed key adds a warm halo.
-    placeModel(models.keys, view.keys.length > 0, S, view.keys.map((k) => k.flash));
+    placeModel(models.keys, view.keys.length > 0, P, view.keys.map((k) => k.flash));
     if (view.keys.length) {
       const hw = KEYS.width / 2, hd = KEYS.depth / 2;
       const f0 = addS(view.keys[0].center, sx, -hw, sz, -hd), f1 = addS(view.keys[view.keys.length - 1].center, sx, hw, sz, -hd);

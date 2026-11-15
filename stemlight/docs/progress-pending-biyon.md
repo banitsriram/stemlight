@@ -216,3 +216,18 @@
   - IWER `harp-keys.mjs` 25/25 (`tests/iwer/input/results/2026-11-15-harp-keys.txt` and shots).
   - Real browser `tests/browser/harp-keys-loop.mjs` all pass: replays of the new buffer voices land sample-exact, 6/6 per instrument (`tests/browser/results/2026-11-15-harp-keys-loop.txt`).
 - **Not verified:** how the new voices sound to a person. Two short scales were rendered for sir to listen to (local only, not committed). The shiver isn't caught in a screenshot, because it lasts a quarter of a second after a pluck; the unit test measures it.
+
+## 16 Nov 2026: biyon, redeploy; drums flank the creature; a harp that looks like one; first-time hints; fingertip glow; Devpost draft 4 (branch `biyon/final-polish`)
+
+- **Redeployed** main (PRs #1–#4) to https://stemlight.vercel.app on sir's go-ahead: bundle `assets/index-BXnk8qrq.js`. The fresh-browser release check against the live site passes 10/10 (`tests/browser/release-check.mjs ... --expect assets/index-BXnk8qrq.js`). Before this, the live link still ran the 11 Nov build.
+- **The drums no longer collide with the summoned instrument.** A summoned instrument comes to wherever the head points, so the timpani (seat on the right) landed on the right-hand drum (shot, 14 Nov). The drums, harp and keyboard now use the summoned instrument's frame, like the ribbon, so they always flank it. They move only on a summon, gliding with the ribbon, never as the head looks around. The reset shell keeps the seat. The unit test now covers this: looking around moves nothing, a summon glides the pads into place, the shell stays. IWER shot `2026-11-16-shot-4-region-pads-countin.png`: both drums clear either side of the timpani.
+- **A harp that looks like a harp.** Graded strings: bass 15 cm, treble 8 cm, all centred on one 8 cm band 14 cm below the eye (1 cm higher than before, so every string bottom stays inside the 33° lower edge of the view). The frame now has a gold column, a neck curving down to the treble shoulder and a soundbox sloping up. A unit test keeps every frame vertex out of the sweep band and checks the grading. Shot `2026-11-16-harp-pluck.png`.
+- **First-time hints.** The first time the drums, harp or keyboard appear in a session, a one-line caption floats above them ("Strike a drum head", "Sweep a finger across the strings", "Press each key down with one finger"). It goes on the first hit or after 8 s. It uses banit's text sprite, unchanged. Shot `2026-11-16-keys-hint.png`.
+- **Fingertip glow.** A soft cyan light on an index fingertip within 6 cm of a string, key top or drum head: brighter and larger as it closes in, a slight pulse on the beat, dimmer when tracking confidence is low, gone when the hand is lost. With no controller to buzz, this is the "about to touch" cue. Visible in the keyboard and harp shots.
+  - Not claimed as F30: that feature is whole glowing hands, owner B.
+- **Devpost draft 4** (sir approved the wording): sea creatures replaced by the nine modelled instruments, the drums, harp and keyboard in the gestures table, their code-made sounds, hints, roles, the perf line, and a warning that pre-13 Nov stills show the old creatures.
+- **Evidence:**
+  - `npm test` 129/129, `tsc` clean.
+  - IWER `harp-keys.mjs` 25/25 (`2026-11-16-harp-keys.txt`), `remake-shots.mjs` 6 shots (`2026-11-16-shot-*.png`).
+  - `perf-heaviest.mjs`: peak 66 draw calls, 101,632 triangles, 380 live notes (`2026-11-16-perf-heaviest.txt`; caps 100 / 150k / 1,500). Emulator only.
+- **Not verified:** how any of it looks or feels on a headset, and whether the 30 cm hint text is comfortable to read on a Quest.

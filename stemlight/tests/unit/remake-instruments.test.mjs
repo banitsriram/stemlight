@@ -97,7 +97,7 @@ test('state: a flute cut shows the harp (8 string targets), a reed cut swaps to 
   assert.equal(v.keys.length, 0);
   assert.equal(s.kinds().filter((k) => k === 'string').length, 8);
   assert.deepEqual(v.strings.map((x) => x.pitch), s.state.harpPitches());
-  assert.ok(v.strings.every((x) => x.b[1] - x.a[1] > 0.09), 'strings stand upright, 10 cm');
+  assert.ok(v.strings.every((x) => x.b[1] - x.a[1] > 0.075), 'strings stand upright, 8 to 15 cm (graded, bass longest)');
 
   s.bus.emit('part:hit', { cutId: 'h1', instrument: 'harp', pitch: 81, vel: 90, t: 10.5, from: [0, 1, -0.3] });
   v = s.state.update(1 / 72);
@@ -115,4 +115,52 @@ test('state: a flute cut shows the harp (8 string targets), a reed cut swaps to 
   s.bus.emit('countin', { cutId: 'k1', beatsLeft: 4 });
   v = s.state.update(0.1);
   assert.ok(v.countIn && v.countIn.fill > 0 && v.countInOn === 'row', 'the count-in shows on the keyboard (no pads)');
+});
+
+test('first-time hints: one per instrument per session, over it, gone on the first hit or after 8 s', async () => {
+  const s = await setup();
+  const { HINT_SEC } = await import('../../src/ui/remake/state.ts');
+  let v = s.state.update(1 / 72);
+  assert.equal(v.hint, null, 'no hint before an instrument shows');
+
+  s.bus.emit('cut:add', { cut: { id: 'h1', stem: 'fl', t0: 10, t1: 12 } });
+  v = s.state.update(1 / 72); // it appears here, fading in from 0
+  v = s.state.update(0.5);
+  assert.ok(v.hint && /strings/.test(v.hint.text), `harp hint: "${v.hint?.text}"`);
+  assert.ok(v.hint.alpha > 0.9, 'faded in');
+  const top = Math.max(...v.strings.map((x) => x.b[1]));
+  assert.ok(v.hint.at[1] > top, 'floats above the harp');
+  s.bus.emit('part:hit', { cutId: 'h1', instrument: 'harp', pitch: 81, vel: 90, t: 10.5, from: [0, 1, -0.3] });
+  v = s.state.update(1 / 72);
+  assert.equal(v.hint, null, 'the first pluck ends it');
+
+  s.bus.emit('cut:add', { cut: { id: 'k1', stem: 'reeds', t0: 20, t1: 22 } });
+  v = s.state.update(1 / 72);
+  assert.ok(v.hint && /key/.test(v.hint.text), `keys hint: "${v.hint?.text}"`);
+  v = s.state.update(HINT_SEC + 0.1);
+  assert.equal(v.hint, null, `unplayed, it goes after ${HINT_SEC} s`);
+
+  s.bus.emit('cut:add', { cut: { id: 'h2', stem: 'fl', t0: 30, t1: 32 } });
+  s.state.update(1 / 72);
+  v = s.state.update(0.5);
+  assert.equal(v.hint, null, 'the harp hint never comes back in the same session');
+});
+
+test('fingertip glow: only near a string, key or drum head, brighter closer, dimmer when tracking is weak', async () => {
+  const s = await setup();
+  const pose = (tip, confidence = 1) => s.bus.emit('hand:pose', { hand: 'right', tracked: true, confidence, palm: tip, tip, curl: 0, pinching: false });
+  pose([0, 1, -0.3]);
+  assert.deepEqual(s.state.update(1 / 72).tips, [], 'no instrument up: no glow');
+  s.bus.emit('cut:add', { cut: { id: 'h1', stem: 'fl', t0: 10, t1: 12 } });
+  let v = s.state.update(1 / 72);
+  const st = s.registry.all().filter((t) => t.kind === 'string')[3];
+  const off = (dz, conf) => { pose([st.center[0], st.center[1], st.center[2] + dz], conf); return s.state.update(1 / 72).tips; };
+  assert.deepEqual(off(0.2), [], '20 cm away: nothing');
+  const far = off(0.04)[0], near = off(0.01)[0];
+  assert.ok(far && near && near.k > far.k, `brighter closer (${far?.k.toFixed(2)} -> ${near?.k.toFixed(2)})`);
+  const weak = off(0.01, 0.2)[0];
+  assert.ok(weak.k < near.k * 0.5, `weak tracking dims it (${weak.k.toFixed(2)})`);
+  s.bus.emit('hand:pose', { hand: 'right', tracked: false, confidence: 0, palm: [0, 0, 0], tip: [0, 0, 0], curl: 0, pinching: false });
+  assert.deepEqual(s.state.update(1 / 72).tips, [], 'lost hand: no glow');
+  void v;
 });
