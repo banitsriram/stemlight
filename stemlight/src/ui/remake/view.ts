@@ -1,8 +1,9 @@
-// Draws the remake surfaces from a RemakeView. Additive glow only, no textures besides banit's note atlas:
-// one dynamic triangle mesh (ribbon band, lane, preview, pads, rings, glows), one dynamic LineSegments
-// (beat ticks, playhead, hollow region outlines, pad rims), the reset shell, and our own NoteGlyphs
-// instance (banit's class, reused unchanged) for the score, ghost outlines and amber notes.
-// About 6 draw calls in all; the glyph layers only draw when they have notes.
+// Draws the remake surfaces from a RemakeView: one dynamic additive triangle mesh (ribbon band, lane, preview,
+// rings, soft glows), one dynamic LineSegments (beat ticks, playhead, region outlines, strings), the reset
+// shell, our own NoteGlyphs instance (banit's class, reused unchanged) for the score, ghost outlines and amber
+// notes, and the playable instruments (models.ts: harp frame, keyboard, drums; each one draw call, drawn only
+// while shown). Every bright line has a soft camera-facing glow either side, so it reads like banit's glowing
+// notes and lit instruments rather than a one-pixel line. About 6 to 8 draw calls; empty layers draw nothing.
 import {
   AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Group, LatheGeometry,
   LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, Vector2,
@@ -10,6 +11,7 @@ import {
 import type { StemId, Vec3 } from '../../contracts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
+import { drums, harpFrame, instrumentMesh, keyboard, placeModel } from './models.ts';
 import type { RemakeView } from './state.ts';
 
 const TRI_CAP = 12000; // vertices
@@ -17,6 +19,7 @@ const LINE_CAP = 4000;
 
 const C = {
   violet: new Color('#2A1B4A'), teal: new Color('#0E5F6B'), cyan: new Color('#6FF3FF'), amber: new Color('#FFB547'),
+  gut: new Color('#F2E6C8'), red: new Color('#E0483A'),
 };
 const AMBER_CB = new Color('#D55E00');
 const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
@@ -89,9 +92,14 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   triMesh.frustumCulled = lineMesh.frustumCulled = false;
   const shellMat = new MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
   const shell = new Mesh(shellGeometry(), shellMat);
-  group.add(triMesh, lineMesh, shell);
-  scene.add(group);
   const amber = palette === 'cb' ? AMBER_CB : C.amber;
+  const models = {
+    harp: instrumentMesh(harpFrame(), amber, C.cyan),
+    keys: instrumentMesh(keyboard(), amber, C.cyan, 0.006),
+    drums: instrumentMesh(drums(), amber, C.cyan),
+  };
+  group.add(triMesh, lineMesh, shell, models.harp, models.keys, models.drums);
+  scene.add(group);
   let glyphs: NoteGlyphs | null = null;
 
   /** A camera-facing soft disc: a fan bright at the centre fading to black (additive) at the rim. */
@@ -121,15 +129,27 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     tris.v(a, col, ka); tris.v(c2, col, kb); tris.v(d, col, ka);
   }
   const line = (a: Vec3, b: Vec3, c: Color, k: number, kb = k) => { lines.v(a, c, k); lines.v(b, c, kb); };
+  /**
+   * A soft glow along a line: a strip `w` wide either side, facing the eye, bright on the line and fading to
+   * nothing at its edges (additive), so a thin line reads with a halo at arm's length.
+   */
+  function glowLine(a: Vec3, b: Vec3, eye: Vec3, c: Color, k: number, w: number) {
+    const mid: Vec3 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+    const side = norm(cross(norm(sub(b, a)), norm(sub(eye, mid))));
+    for (const s of [w, -w]) quad(a, addS(a, side, s), addS(b, side, s), b, c, k, 0); // a, b bright; the outer edge dark
+  }
+  const bright = (a: Vec3, b: Vec3, eye: Vec3, c: Color, k: number, w = 0.006) => { line(a, b, c, k); glowLine(a, b, eye, c, k * 0.35, w); };
 
   return {
     group,
+    models,
     attachGlyphs(g: NoteGlyphs) { glyphs = g; group.add(g.object); },
     draw(view: RemakeView, eye: Vec3) {
       tris.begin(); lines.begin(); glyphs?.begin();
       group.visible = view.visible;
       shell.visible = view.visible;
       if (view.visible) drawAll(view, eye);
+      else for (const m of Object.values(models)) m.visible = false;
       tris.end(); lines.end(); glyphs?.end();
     },
   };
@@ -146,38 +166,46 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       const k0 = 0.9 * Math.sin((Math.PI * i) / N), k1 = 0.9 * Math.sin((Math.PI * (i + 1)) / N);
       quad(L(x0, -lr - 0.008), L(x0, lr + 0.008), L(x1, lr + 0.008), L(x1, -lr - 0.008), C.violet, k0, k1);
     }
-    line(L(-hw, lr + 0.008), L(hw, lr + 0.008), C.teal, 0.35);
-    line(L(-hw, -lr - 0.008), L(hw, -lr - 0.008), C.teal, 0.35);
+    // Its two edges glow softly, brightest in the middle where "now" is.
+    for (const y of [lr + 0.008, -lr - 0.008]) {
+      for (let i = 0; i < N; i++) {
+        const x0 = -hw + (2 * hw * i) / N, x1 = -hw + (2 * hw * (i + 1)) / N;
+        const k = 0.5 * Math.sin((Math.PI * (i + 0.5)) / N);
+        bright(L(x0, y), L(x1, y), eye, C.teal, k, 0.008);
+      }
+    }
 
     // Lane fill in the stem colour, left open (hollow) where a region is cut.
     if (view.stem) {
       const gaps = view.regions.map((r) => [r.x0, r.x1]).sort((a, b) => a[0] - b[0]);
       let x = -hw;
-      const fill = (a: number, b: number) => { if (b > a) quad(L(a, -lr), L(a, lr), L(b, lr), L(b, -lr), stemC, 0.1); };
+      // Brighter along the middle, softer at the edges: two strips meeting at the centre line.
+      const fill = (a: number, b: number) => {
+        if (b <= a) return;
+        quad(L(a, 0), L(a, lr), L(b, lr), L(b, 0), stemC, 0.16, 0.05);
+        quad(L(a, 0), L(a, -lr), L(b, -lr), L(b, 0), stemC, 0.16, 0.05);
+      };
       for (const [a, b] of gaps) { fill(x, a); x = Math.max(x, b); }
       fill(x, hw);
     }
 
     for (const t of view.ticks) line(L(t.x, t.down ? -lr : -lr * 0.5), L(t.x, t.down ? lr : lr * 0.5), C.teal, t.down ? 0.9 : 0.45);
 
-    // Hollow regions: a bright outline with an inner second outline, nothing inside.
+    // Hollow regions: a bright glowing outline, nothing inside.
     for (const r of view.regions) {
-      for (const inset of [0, 0.004]) {
-        const a = L(r.x0 + inset, -lr + inset), b = L(r.x0 + inset, lr - inset), c2 = L(r.x1 - inset, lr - inset), d = L(r.x1 - inset, -lr + inset);
-        const k = inset ? 0.4 : 1;
-        line(a, b, stemC, k); line(b, c2, stemC, k); line(c2, d, stemC, k); line(d, a, stemC, k);
-      }
+      const a = L(r.x0, -lr), b = L(r.x0, lr), c2 = L(r.x1, lr), d = L(r.x1, -lr);
+      bright(a, b, eye, stemC, 1, 0.007); bright(b, c2, eye, stemC, 1, 0.007); bright(c2, d, eye, stemC, 1, 0.007); bright(d, a, eye, stemC, 1, 0.007);
     }
     if (view.preview) {
       const { x0, x1 } = view.preview;
       quad(L(x0, -lr), L(x0, lr), L(x1, lr), L(x1, -lr), C.cyan, 0.22);
-      line(L(x0, -lr - 0.01), L(x0, lr + 0.01), C.cyan, 1); line(L(x1, -lr - 0.01), L(x1, lr + 0.01), C.cyan, 1);
+      bright(L(x0, -lr - 0.01), L(x0, lr + 0.01), eye, C.cyan, 1); bright(L(x1, -lr - 0.01), L(x1, lr + 0.01), eye, C.cyan, 1);
     }
 
     // Playhead: a line across the band, a stalk to the bead, the bead (brighter and larger while held).
     const held = view.playheadHeld;
     const bead = toWorld(R, playheadLocal());
-    line(L(0, -lr - 0.012), L(0, lr + 0.012), C.cyan, held ? 1.4 : 0.9);
+    bright(L(0, -lr - 0.012), L(0, lr + 0.012), eye, C.cyan, held ? 1.4 : 0.9, held ? 0.009 : 0.006);
     line(L(0, lr + 0.012), bead, C.cyan, held ? 1 : 0.5, held ? 1.2 : 0.7);
     glowDisc(bead, eye, held ? 0.034 : 0.022, C.cyan, held ? 1.6 : 0.8);
     glowDisc(bead, eye, 0.008, C.cyan, 1.5, 8);
@@ -203,32 +231,18 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     }
     for (const f of view.flights) if (f.k < 0.3) glowDisc(f.from, eye, 0.03 * (1 - f.k / 0.3), amber, 0.7);
 
-    // Pads: glowing discs facing up with a bright rim; a hit flashes amber. Cyan, not the ocean's teal, so they
-    // read against the water from a seated eye (IWER shots, 12 Nov).
+    // Pads: two kettle drums (models.ts) whose heads are the strike surfaces. A soft cyan ring round each head
+    // says "strike here"; a hit turns the head amber in the model and adds a warm halo above it.
     const up: Vec3 = [0, 1, 0];
     const S = view.seat, sx: Vec3 = [Math.cos(S.yaw), 0, -Math.sin(S.yaw)], sz: Vec3 = [-Math.sin(S.yaw), 0, -Math.cos(S.yaw)];
     const r = PADS.radius;
-    const rim = (c: Vec3, rr: number, col: Color, k: number) => {
-      for (let i = 0; i < 32; i++) {
-        const a0 = (i / 32) * Math.PI * 2, a1 = ((i + 1) / 32) * Math.PI * 2;
-        line(addS(c, sx, Math.cos(a0) * rr, sz, Math.sin(a0) * rr), addS(c, sx, Math.cos(a1) * rr, sz, Math.sin(a1) * rr), col, k);
-      }
-    };
+    placeModel(models.drums, view.pads.length > 0, S, view.pads.map((p) => p.flash));
     for (const pad of view.pads) {
-      const flash = pad.flash;
+      const c = addS(pad.center, up, 0.002);
       const base = (view.stem === 'perc' || !view.stem ? STEM.perc : null) ?? C.cyan;
-      // A hit swaps the pad's cyan for amber rather than adding amber on top: cyan + amber at these
-      // strengths sums past 1 in every channel and the flash read as white (IWER shot 5, 12 Nov).
-      const padC = tmpC.copy(C.cyan).lerp(amber, flash);
-      for (let i = 0; i < 24; i++) {
-        const a0 = (i / 24) * Math.PI * 2, a1 = ((i + 1) / 24) * Math.PI * 2;
-        tris.v(pad.center, padC, 0.45 + 0.45 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a0) * r, sz, Math.sin(a0) * r), padC, 0.18 + 0.2 * flash);
-        tris.v(addS(pad.center, sx, Math.cos(a1) * r, sz, Math.sin(a1) * r), padC, 0.18 + 0.2 * flash);
-      }
-      rim(pad.center, r, flash > 0 ? padC : base, flash > 0 ? 1.2 : 2);
-      rim(addS(pad.center, up, -0.006), r * 0.98, padC, 1); // a second rim just below: the pad reads as a solid disc
-      glowDisc(pad.center, eye, r * 1.5, padC, 0.5 + 0.2 * flash); // a soft eye-facing halo, so a flat pad seen at a shallow angle still reads
+      ring(c, sx, sz, r + 0.003, r + 0.007, Math.PI * 2, tmpC.copy(base).lerp(C.cyan, 0.5), 0.55 * (1 - pad.flash), 40);
+      ring(c, sx, sz, r + 0.007, r + 0.016, Math.PI * 2, C.cyan, 0.16 * (1 - pad.flash), 40);
+      if (pad.flash > 0) glowDisc(addS(pad.center, up, 0.02), eye, r * 1.3, amber, 0.7 * pad.flash);
     }
     if (view.countIn && view.pads.length && view.countInOn !== 'row') {
       // Count-in: a ring around each pad fills clockwise over the bar, pulsing on each tick.
@@ -240,30 +254,28 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       }
     }
 
-    // Harp: glowing upright strings between two rails; a plucked string swaps cyan for amber and brightens.
-    if (view.strings.length) {
-      const first = view.strings[0], last = view.strings[view.strings.length - 1];
-      const rail = (k: 'a' | 'b', dy: number) => line(addS(first[k], sx, -0.02, up, dy), addS(last[k], sx, 0.02, up, dy), C.teal, 0.8);
-      rail('a', -0.006); rail('b', 0.006);
-      for (const st of view.strings) {
-        const col = tmpC.copy(C.cyan).lerp(amber, st.flash);
-        line(st.a, st.b, col, 1.2 + 1.2 * st.flash);
-        // A thin bright band behind the line so a 1-pixel string still reads at 0.4 m.
-        const w = 0.003 + 0.004 * st.flash;
-        quad(addS(st.a, sx, -w), addS(st.b, sx, -w), addS(st.b, sx, w), addS(st.a, sx, w), col, 0.35 + 0.5 * st.flash);
-        glowDisc(st.b, eye, 0.008, col, 0.9, 8);
-        if (st.flash > 0) glowDisc([(st.a[0] + st.b[0]) / 2, (st.a[1] + st.b[1]) / 2, (st.a[2] + st.b[2]) / 2], eye, 0.03, amber, 0.6 * st.flash);
+    // Harp: the frame is a model; the strings are glowing lines, cream (the two tonic strings red, as a real
+    // harp marks its Cs), with a soft cyan glow; a plucked string turns amber, glows wider and flares.
+    placeModel(models.harp, view.strings.length > 0, S);
+    view.strings.forEach((st, i) => {
+      const tonic = i === 0 || i === view.strings.length - 1;
+      const col = tmpC.copy(tonic ? C.red : C.gut).lerp(amber, st.flash);
+      line(st.a, st.b, col, 1 + 1.2 * st.flash);
+      glowLine(st.a, st.b, eye, C.cyan, 0.22 * (1 - st.flash), 0.005);
+      if (st.flash > 0) {
+        glowLine(st.a, st.b, eye, amber, 0.6 * st.flash, 0.004 + 0.008 * st.flash);
+        glowDisc([(st.a[0] + st.b[0]) / 2, (st.a[1] + st.b[1]) / 2, (st.a[2] + st.b[2]) / 2], eye, 0.03, amber, 0.6 * st.flash);
       }
+    });
+    // Keyboard: the keys are a model (a pressed key dips 6 mm and turns amber there); a soft cyan glow runs
+    // along the front edge of the row, and a pressed key adds a warm halo.
+    placeModel(models.keys, view.keys.length > 0, S, view.keys.map((k) => k.flash));
+    if (view.keys.length) {
+      const hw = KEYS.width / 2, hd = KEYS.depth / 2;
+      const f0 = addS(view.keys[0].center, sx, -hw, sz, -hd), f1 = addS(view.keys[view.keys.length - 1].center, sx, hw, sz, -hd);
+      glowLine(addS(f0, up, -0.004), addS(f1, up, -0.004), eye, C.cyan, 0.35, 0.006);
     }
-    // Keyboard: flat glowing key tops with rims; a pressed key swaps cyan for amber and dips 6 mm.
-    for (const k of view.keys) {
-      const col = tmpC.copy(C.cyan).lerp(amber, k.flash);
-      const c = addS(k.center, up, -0.006 * k.flash), hw = KEYS.width / 2, hd = KEYS.depth / 2;
-      const p = (u: number, v: number) => addS(c, sx, u * hw, sz, v * hd);
-      quad(p(-1, -1), p(-1, 1), p(1, 1), p(1, -1), col, 0.3 + 0.5 * k.flash);
-      line(p(-1, -1), p(-1, 1), col, 1.2); line(p(-1, 1), p(1, 1), col, 1.2); line(p(1, 1), p(1, -1), col, 1.2); line(p(1, -1), p(-1, -1), col, 1.6);
-      if (k.flash > 0) glowDisc(c, eye, 0.03, amber, 0.6 * k.flash);
-    }
+    for (const k of view.keys) if (k.flash > 0) glowDisc(addS(k.center, up, 0.015), eye, 0.03, amber, 0.6 * k.flash);
     // Count-in for the harp or keyboard: a bar under the row fills left to right over the bar, pulsing on each tick.
     const row = view.strings.length ? view.strings.map((x) => x.a) : view.keys.map((x) => addS(x.center, sz, -KEYS.depth / 2));
     if (view.countIn && row.length && view.countInOn !== 'pads') {
@@ -272,6 +284,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       const m: Vec3 = [a[0] + (b[0] - a[0]) * fill, a[1] + (b[1] - a[1]) * fill, a[2] + (b[2] - a[2]) * fill];
       line(a, b, C.teal, 0.5);
       quad(addS(a, up, -0.004), addS(a, up, 0.004), addS(m, up, 0.004), addS(m, up, -0.004), C.cyan, 0.8 + 1.2 * pulse);
+      glowLine(a, m, eye, C.cyan, 0.3 + 0.5 * pulse, 0.012);
     }
 
     // Reset shell at eye level on the right, a ring around it filling while pinched, a bloom on reset.
