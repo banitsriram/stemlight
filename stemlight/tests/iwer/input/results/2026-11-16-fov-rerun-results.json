@@ -1,0 +1,673 @@
+{
+ "fov": [
+  70,
+  66
+ ],
+ "reach": 0.61,
+ "eye": 1.2,
+ "results": [
+  {
+   "state": "1-look",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:brass",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:brass",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "2-summoned-fist",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "3-held-open",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "4-return-hold",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "5-locked-pinch-twice",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "6-solo-cut",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "7-pads-tap",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -21.8,
+      21.8
+     ],
+     "pitch": [
+      -4.4,
+      7
+     ],
+     "d": 0.45
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -23.5,
+      23.5
+     ],
+     "pitch": [
+      -13.6,
+      -6.5
+     ],
+     "d": 0.35
+    },
+    {
+     "what": "creature:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      -18.4,
+      -18.4
+     ],
+     "d": 0.47,
+     "target": true
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    },
+    {
+     "what": "pad:0",
+     "yaw": [
+      -32.7,
+      -32.7
+     ],
+     "pitch": [
+      -16.7,
+      -16.7
+     ],
+     "d": 0.52,
+     "target": true
+    },
+    {
+     "what": "pad:1",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -16.7,
+      -16.7
+     ],
+     "d": 0.52,
+     "target": true
+    }
+   ],
+   "outside": []
+  },
+  {
+   "state": "8-end-card",
+   "head": [
+    0,
+    1.6,
+    0
+   ],
+   "items": [
+    {
+     "what": "sprite",
+     "yaw": [
+      -19.9,
+      19.9
+     ],
+     "pitch": [
+      -8.9,
+      16.7
+     ],
+     "d": 2.21
+    },
+    {
+     "what": "sprite",
+     "yaw": [
+      -23.5,
+      23.5
+     ],
+     "pitch": [
+      -13.6,
+      -6.5
+     ],
+     "d": 0.35
+    },
+    {
+     "what": "playhead",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      16.2,
+      16.2
+     ],
+     "d": 0.32,
+     "target": true
+    },
+    {
+     "what": "reset",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -2.3,
+      -2.3
+     ],
+     "d": 0.5,
+     "target": true
+    },
+    {
+     "what": "lane:vln",
+     "yaw": [
+      0,
+      0
+     ],
+     "pitch": [
+      20.9,
+      20.9
+     ],
+     "d": 0.45,
+     "target": true
+    },
+    {
+     "what": "pad:0",
+     "yaw": [
+      -32.7,
+      -32.7
+     ],
+     "pitch": [
+      -16.7,
+      -16.7
+     ],
+     "d": 0.52,
+     "target": true
+    },
+    {
+     "what": "pad:1",
+     "yaw": [
+      32.7,
+      32.7
+     ],
+     "pitch": [
+      -16.7,
+      -16.7
+     ],
+     "d": 0.52,
+     "target": true
+    }
+   ],
+   "outside": []
+  }
+ ]
+}

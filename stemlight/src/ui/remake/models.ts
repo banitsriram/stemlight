@@ -143,6 +143,29 @@ export function drums(): BufferGeometry {
   return p.done();
 }
 
+/**
+ * The quiet-reset shell: a pearl scallop (a fluted dome with ribs pressed into its rim and two small ears at the
+ * hinge), lit like the instruments so its ribs shade. Part 0, so pinching it can glow it cyan. Until 17 Nov it
+ * was a flat additive cyan shape that read as an unexplained blob (scoring audit 3).
+ */
+export function resetShell(): BufferGeometry {
+  const p = new Parts();
+  const prof: Vector2[] = [];
+  for (let i = 0; i <= 12; i++) { const a = (i / 12) * (Math.PI / 2); prof.push(new Vector2(Math.sin(a) * 0.04, Math.cos(a) * 0.02)); }
+  const dome = new LatheGeometry(prof, 54);
+  const pos = dome.getAttribute('position');
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), zz = pos.getZ(i), r = Math.hypot(x, zz);
+    const rib = 1 + 0.1 * Math.cos(Math.atan2(zz, x) * 11) * (r / 0.04);
+    pos.setXYZ(i, x * rib, pos.getY(i) * (1 + 0.25 * (rib - 1)), zz * rib);
+  }
+  dome.computeVertexNormals();
+  const PEARL: Mat = ['#f1d6cb', 0.35];
+  p.add(dome, PEARL, [0, 0, 0], [0, 0, 0], 0);
+  for (const s of [-1, 1]) p.add(new BoxGeometry(0.016, 0.004, 0.012), PEARL, [s * 0.011, 0.001, 0.038], [0, s * 0.3, 0], 0); // hinge ears
+  return p.done();
+}
+
 // Lit like banit's instruments without scene lights: a key light fixed to the view, a fake sky reflection for
 // metal. On top: a cyan fresnel rim on the playable parts (keys, heads) so they read as touchable, and the amber
 // flash and dip of a struck one. uFlash[i] is 0..1 per key or pad.

@@ -98,6 +98,9 @@ const freshHand = (): HandState => ({
 });
 
 /** The reach spot for a head pose: 0.45 m ahead (level) and 0.15 m below the eye. Matches world/shell.ts reachSpot. */
+/** Things you look at to touch: looking at one of these never summons the creature behind it. */
+const LOOK_AT_KINDS: ReadonlySet<string> = new Set(['string', 'key', 'pad', 'reset', 'playhead', 'lane']);
+
 export function reachSpotFor(head: HeadFrame): Vec3 {
   const yaw = Math.atan2(-head.dir[0], -head.dir[2]);
   return [head.pos[0] - Math.sin(yaw) * SPEC.reachAhead, head.pos[1] - SPEC.reachBelow, head.pos[2] - Math.cos(yaw) * SPEC.reachAhead];
@@ -515,11 +518,12 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
       if (a < bestAngle) { best = target; bestAngle = a; }
     }
     if (!best || bestAngle > SPEC.summonAngleDeg) { dwell = null; return; }
-    // Looking at your own instrument is not looking at a creature: when a string, key or drum head is nearer
-    // the line of sight than the nearest creature, nothing is summoned (the cello sits right behind the harp
-    // and keyboard, and was summoned every time the player looked down to play; IWER log, 14 Nov).
+    // Looking at your own instrument, or at a control, is not looking at a creature: when a string, key, drum
+    // head, the reset shell, the playhead or the score lane is nearer the line of sight than the nearest
+    // creature, nothing is summoned (the cello sits behind the harp and keyboard, the timpani behind the reset
+    // shell; both were summoned by looking at what you meant to touch; IWER, 14 and 17 Nov).
     for (const target of targets) {
-      if ((target.kind === 'string' || target.kind === 'key' || target.kind === 'pad') && angleToDeg(head, target.center) < bestAngle) { dwell = null; return; }
+      if (LOOK_AT_KINDS.has(target.kind) && angleToDeg(head, target.center) < bestAngle) { dwell = null; return; }
     }
     if (!dwell || dwell.stem !== best.stem) { dwell = { stem: best.stem!, since: t }; return; }
     // A held fist or a running stretch keeps its creature close until the hands let go.

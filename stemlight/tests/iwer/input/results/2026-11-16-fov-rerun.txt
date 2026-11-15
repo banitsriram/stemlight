@@ -1,0 +1,14 @@
+# F18/F27 rerun of banit's tests/iwer/visual/fov.mjs on main (d5f1f88), 2026-11-16. Outputs to docs/tests/fov/ were restored afterwards (banit's folder); this is the console log.
+PASS F18 one Enter button ["Enter"]
+PASS F18 pitch line 
+PASS F18 no account + hand-tracking hint 
+PASS F18 one click: XR session + audio running + landing gone 
+PASS F27 1-look 5 items
+PASS F27 2-summoned-fist 5 items
+PASS F27 3-held-open 5 items
+PASS F27 4-return-hold 5 items
+PASS F27 5-locked-pinch-twice 5 items
+PASS F27 6-solo-cut 5 items
+PASS F27 7-pads-tap 8 items
+PASS F27 8-end-card 7 items
+PASS no console errors []

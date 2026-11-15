@@ -258,7 +258,7 @@ test('playhead brightens while held; reset ring follows reset:progress', async (
   assert.ok(e.tick().reset.flash > 0.9);
 });
 
-test('frames: a summon glides the ribbon and the pads to flank the creature; looking around moves nothing; the shell keeps the seat', async () => {
+test('frames: a summon glides the ribbon, pads and reset shell to flank the creature; looking around moves nothing', async () => {
   const bus = createBus();
   let head = { eye: [0, 1.2, 0], yaw: 0 };
   const registry = createMockRegistry();
@@ -287,7 +287,8 @@ test('frames: a summon glides the ribbon and the pads to flank the creature; loo
   const want = padTargets(head, [47, 52]).map((t) => t.center.map((x) => +x.toFixed(6)));
   assert.deepEqual([at('pad:0'), at('pad:1')].map((c) => c.map((x) => +x.toFixed(6))), want, 'pads now flank the summoned creature');
   assert.ok(padMid[0] !== pad0[0] && padMid[0] !== want[1][0], 'the pads glided with the ribbon');
-  assert.deepEqual(at('reset'), reset0, 'the reset shell keeps the seat');
+  assert.notDeepEqual(at('reset'), reset0, 'the reset shell moved too');
+  assert.deepEqual(at('reset').map((x) => +x.toFixed(6)), resetTarget(head).center.map((x) => +x.toFixed(6)), 'and sits beside the summoned creature');
 });
 
 test('F27 layout: pads and reset shell sit inside 70×66° of the forward view, within 0.61 m, and pads clear the creature sphere', () => {

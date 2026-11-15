@@ -128,3 +128,16 @@ test('a plucked string shivers: a lens widest at its middle, still at its ends; 
   assert.ok(plucked.end < 1e-6, 'its ends stay put');
   assert.ok(still.mid < 1e-6, 'an unplucked string stays straight');
 });
+
+test('the reset shell is a lit model (shaded ribs), glowing only while it is pinched', () => {
+  const v = createRemakeView(new Object3D());
+  const shell = v.group.children[2];
+  assert.equal(shell.material.type, 'ShaderMaterial', 'lit like the instruments, not a flat additive shape');
+  assert.ok(shell.geometry.getAttribute('normal') && shell.geometry.getAttribute('tint'), 'normals for the ribs, tint per vertex');
+  const draw = (progress) => v.draw(viewOf({ reset: { center: [0.27, 1.18, -0.42], progress, flash: 0 } }), [0, 1.2, 0]);
+  draw(0);
+  assert.equal(shell.material.uniforms.uFlash.value[0], 0, 'at rest: no glow');
+  draw(0.5);
+  assert.ok(shell.material.uniforms.uFlash.value[0] > 0.3, 'pinched: it glows');
+  assert.ok(shell.visible && Math.abs(shell.position.x - 0.27) < 1e-9, 'shown at the reset spot');
+});

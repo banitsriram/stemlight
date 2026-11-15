@@ -231,3 +231,29 @@
   - IWER `harp-keys.mjs` 25/25 (`2026-11-16-harp-keys.txt`), `remake-shots.mjs` 6 shots (`2026-11-16-shot-*.png`).
   - `perf-heaviest.mjs`: peak 66 draw calls, 101,632 triangles, 380 live notes (`2026-11-16-perf-heaviest.txt`; caps 100 / 150k / 1,500). Emulator only.
 - **Not verified:** how any of it looks or feels on a headset, and whether the 30 cm hint text is comfortable to read on a Quest.
+
+## 17 Nov 2026 (00:30–03:00 IST): biyon, re-runs, scoring audit 3 and its fixes, 31/41 (branch `biyon/audit3-fixes`)
+
+- **Re-runs on main after this week's changes, all pass:**
+  - pause/resume 36/36 (`tests/iwer/input/results/2026-11-16-pause-resume.txt`);
+  - onboarding 4/4: one Enter starts the music, first summon 0.4 s in, nudge at 11.7 s (`2026-11-16-f19-onboarding.txt` + shots);
+  - full play-through on the **live** build `index-D9PFYY4E.js`: Beethoven then Dvořák, 285 s, Resume, clean reload, 0 errors, 61 responses (`tests/browser/results/2026-11-16-release-check-stemlight.vercel.app-full.txt`, 11/11);
+  - banit's `tests/iwer/visual/fov.mjs`: F18 4/4 and F27 every state, drums included (`2026-11-16-fov-rerun.txt` + `-results.json`). His `docs/tests/fov/` outputs were restored, not committed.
+- **Scoring audit 3** by a fresh read-only reviewer: `docs/audits/2026-11-17-audit.md`. Its scores: Innovation 7.0, Experience 6.4, Technical 6.6, Polish 5.7. The video is the gate (2/4: the only cut shows the old sea creatures).
+- **Fixed from the audit (A side):**
+  - **DEVPOST draft 5:**
+    - "nine instruments" became **eight**, since each piece has eight parts and the harp appears only when you play it;
+    - the amber notes are now named as yours;
+    - the screenshot list points only at current-look shots;
+    - the internal header is marked "delete before pasting";
+    - the field-of-view line is backed by the rerun and the layout tests;
+    - the palette bracket is gone.
+    - Left for sir: the AI line, emails and roles, the final stills.
+  - **The reset shell reads as a shell.** It was a flat additive cyan shape: the audit called it an unexplained blob, and I had wrongly asked banit whether it was his leftover. It's now a lit pearl scallop with shaded ribs (`models.ts` `resetShell`) that glows cyan only while pinched. A first-time hint ("Pinch and hold to reset the mix") shows when a fingertip first comes within 10 cm, gone once a pinch starts or after 6 s.
+  - **The shell also follows the summoned instrument,** like the drums: looking towards it used to summon the timpani onto it (IWER, 17 Nov).
+  - **Gaze guard widened:** looking at the reset shell, the playhead or the score lane, as well as a string, key or drum head, never summons the creature behind it. Unit test included.
+  - **ASSETS.md:** rows for the code-made playable voices (`synth.ts`) and models (`models.ts`); the VCSL row no longer says the harp was cut.
+  - **features.json:** F14, F16, F17, F19, F21, F24 and F25 ticked on the evidence the audit lists (banit's runs plus tonight's reruns). **31/41.** Still false: F01/F02 (sir listens), F08 (sir decides on cutting task 43), F20 (re-scope), F28 (ticks at the freeze run), F29 (tester), F30/F31/F37 (cut), F41 (sir).
+- **Evidence:** `npm test` 132/132, `tsc` clean; IWER `harp-keys.mjs` 25/25 after the guard change; `remake-shots.mjs` (`2026-11-16-shot-*.png`, shot 6 shows the new shell); `2026-11-16-reset-shell.png`.
+- **Not shown in a screenshot:** the shell's hint. The emulator's default right-hand pose rests within 10 cm of the shell, so the hint fires at session start and has gone before a script can reach in. Its unit test covers it, and it renders through the same caption as the keyboard hint (`2026-11-16-keys-hint.png`).
+- **Not deployed yet:** the live link still runs `index-D9PFYY4E.js` (before these fixes). It needs sir's OK to redeploy, then the freeze run ticks F28.

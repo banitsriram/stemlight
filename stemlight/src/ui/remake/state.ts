@@ -18,6 +18,8 @@ export const HINTS: Record<Instrument, string> = {
   keys: 'Press each key down with one finger',
   pads: 'Strike a drum head',
 };
+export const RESET_HINT = 'Pinch and hold to reset the mix';
+export const RESET_HINT_NEAR = 0.1, RESET_HINT_SEC = 6;
 /** A fingertip starts to glow this far (m) from a string, key top or drum head. */
 export const TIP_NEAR = 0.06;
 /** Distance from p to a playable surface: a string's segment, a key's top, a drum's head disc. */
@@ -67,10 +69,10 @@ export interface RemakeView {
   ribbon: Frame;
   seat: Frame;
   /**
-   * Where the pads, harp and keyboard stand: the summoned creature's frame (the ribbon's), so they always flank
-   * it. Fixed to the seat they collided with a creature summoned off to one side: the timpani, summoned from
-   * its seat on the right, landed on the right pad (IWER shot, 14 Nov). They move only on a summon, gliding
-   * with the ribbon, never as the head looks around.
+   * Where the pads, harp, keyboard and reset shell stand: the summoned creature's frame (the ribbon's), so they
+   * always flank it. Fixed to the seat they collided with a creature summoned off to one side: the timpani,
+   * summoned from its seat on the right, landed on the right pad (14 Nov) and on the reset shell (17 Nov).
+   * They move only on a summon, gliding with the ribbon, never as the head looks around.
    */
   play: Frame;
   now: number;
@@ -128,6 +130,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   const hintDone = new Set<Instrument>(), hintFrom = new Map<Instrument, number>(); // once per session each
   const tipOf: Record<Hand, { tip: Vec3; confidence: number } | null> = { left: null, right: null };
   let beatAt = -Infinity;
+  let resetHintFrom: number | null = null, resetHintDone = false; // the shell's hint: shown on first approach
   let clock = 0;
   const registered = new Set<string>();
 
@@ -183,7 +186,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
     countIn = { cutId, total: fresh ? beatsLeft : countIn!.total, beatsLeft, at: clock, beatLen };
   });
   bus.on('cut:remove', ({ id }) => { if (countIn?.cutId === id) countIn = null; });
-  bus.on('reset:progress', ({ progress }) => { resetProgress = progress; });
+  bus.on('reset:progress', ({ progress }) => { resetProgress = progress; if (progress > 0) resetHintDone = true; });
   bus.on('app:reset', () => { preview = null; countIn = null; hits = []; resetFlashAt = clock; });
   bus.on('hand:pose', ({ hand, tracked, confidence, tip }) => { tipOf[hand] = tracked ? { tip, confidence } : null; });
   bus.on('beat', () => { beatAt = clock; });
@@ -238,13 +241,13 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       const view: RemakeView = {
         visible, ribbon, seat: seatF, play: ribbon, now, clock, stem: null, ticks: [], notes: [], regions: [], preview: null,
         playheadHeld: holders.size > 0, pads: [], strings: [], keys: [], countIn: null, countInOn: null, hint: null,
-        reset: { center: resetTarget(seatF).center, progress: resetProgress, flash: Math.max(0, 1 - (clock - resetFlashAt) / 0.8) },
+        reset: { center: resetTarget(ribbon).center, progress: resetProgress, flash: Math.max(0, 1 - (clock - resetFlashAt) / 0.8) },
         flights: [], tips: [],
       };
       if (!visible) { sync(targets); return view; }
 
       const lo = now - RIBBON.windowSec, hi = now + RIBBON.windowSec;
-      targets.push(playheadTarget(ribbon), resetTarget(seatF));
+      targets.push(playheadTarget(ribbon), resetTarget(ribbon));
 
       const b = deps.beats?.();
       if (b) {
@@ -335,6 +338,18 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
         const age = clock - hintFrom.get(shown)!;
         if (age >= HINT_SEC) hintDone.add(shown);
         else view.hint = { text: HINTS[shown], at: toWorld(ribbon, hintLocal(shown)), alpha: Math.min(1, age / 0.3, (HINT_SEC - age) / 0.5) };
+      }
+      // The reset shell's hint: the first time a fingertip comes within RESET_HINT_NEAR of it, unless an
+      // instrument's hint is up; gone once a pinch starts filling its ring, or after RESET_HINT_SEC.
+      if (!view.hint && !resetHintDone) {
+        const rc = view.reset.center;
+        const near = (['left', 'right'] as const).some((h) => { const t = tipOf[h]; return !!t && Math.hypot(t.tip[0] - rc[0], t.tip[1] - rc[1], t.tip[2] - rc[2]) < RESET_HINT_NEAR; });
+        if (resetHintFrom === null && near) resetHintFrom = clock;
+        if (resetHintFrom !== null) {
+          const age = clock - resetHintFrom;
+          if (age >= RESET_HINT_SEC) resetHintDone = true;
+          else view.hint = { text: RESET_HINT, at: [rc[0], rc[1] + 0.07, rc[2]], alpha: Math.min(1, age / 0.3, (RESET_HINT_SEC - age) / 0.5) };
+        }
       }
 
       hits = hits.filter((h) => clock - h.at < 1);
