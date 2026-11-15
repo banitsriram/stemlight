@@ -164,3 +164,27 @@ test('fingertip glow: only near a string, key or drum head, brighter closer, dim
   assert.deepEqual(s.state.update(1 / 72).tips, [], 'lost hand: no glow');
   void v;
 });
+
+test('reset shell hint: on the first approach only, above the shell, gone once a pinch starts the reset', async () => {
+  const s = await setup();
+  const { RESET_HINT } = await import('../../src/ui/remake/state.ts');
+  const pose = (tip) => s.bus.emit('hand:pose', { hand: 'right', tracked: true, confidence: 1, palm: tip, tip, curl: 0, pinching: false });
+  let v = s.state.update(1 / 72);
+  const rc = v.reset.center;
+  pose([rc[0] - 0.3, rc[1], rc[2]]);
+  v = s.state.update(1 / 72);
+  assert.equal(v.hint, null, 'a hand far from the shell: no hint');
+  pose([rc[0], rc[1], rc[2] + 0.05]);
+  s.state.update(1 / 72);
+  v = s.state.update(0.5);
+  assert.equal(v.hint?.text, RESET_HINT);
+  assert.ok(v.hint.at[1] > rc[1], 'above the shell');
+  s.bus.emit('reset:progress', { progress: 0.3 });
+  v = s.state.update(1 / 72);
+  assert.equal(v.hint, null, 'gone once the pinch starts the reset');
+  s.bus.emit('reset:progress', { progress: 0 });
+  pose([rc[0] - 0.3, rc[1], rc[2]]); s.state.update(0.5);
+  pose([rc[0], rc[1], rc[2] + 0.05]);
+  v = s.state.update(0.5);
+  assert.equal(v.hint, null, 'never again this session');
+});

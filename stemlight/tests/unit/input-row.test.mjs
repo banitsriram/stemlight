@@ -158,6 +158,34 @@ test('standing, looking down at the harp or keyboard never summons the instrumen
   assert.deepEqual(run([cello], at(strings[3].center)), ['vla_vc'], 'with no instrument up, the same look summons it as before');
 });
 
+test('looking at the reset shell (a control) never summons the timpani seated behind it', () => {
+  const eye = [0, 1.6, 0], seat = { eye, yaw: 0 };
+  const timpani = { id: 'creature:perc', kind: 'creature', stem: 'perc', center: [0.976, 1.7, -2.193], radius: 0.25 };
+  // The shell 27 cm right, 2 cm down, 42 cm ahead of the eye (layout RESET), and a head pointing at it.
+  const shell = { id: 'reset', kind: 'reset', center: [eye[0] + 0.27, eye[1] - 0.02, eye[2] - 0.42], radius: 0.05 };
+  const dirTo = (p) => { const d = [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], l = Math.hypot(...d); return d.map((x) => x / l); };
+  const head = { pos: eye, dir: dirTo(shell.center) };
+  const cone = Math.acos(dirTo(timpani.center).reduce((s, x, i) => s + x * head.dir[i], 0)) * 57.2958;
+  const run = (targets) => {
+    const bus = createBus(), summons = [];
+    bus.on('gaze:summon', (e) => summons.push(e.stem));
+    const engine = createGestureEngine(bus, {});
+    for (let i = 0; i < 2 * FPS; i++) engine.step({ t: i / FPS, hands: { left: null, right: null }, head }, targets);
+    return summons;
+  };
+  if (cone < SPEC.summonAngleDeg) assert.deepEqual(run([timpani, shell]), [], `the timpani is ${cone.toFixed(1)}° off the gaze, but the shell is nearer it`);
+  else assert.ok(true, `from this seat the timpani is outside the cone (${cone.toFixed(1)}°)`);
+  // The guard itself, whatever the seat: a control dead ahead with a creature 6° behind it.
+  const ahead = { id: 'reset', kind: 'reset', center: [0, 1.6, -0.42], radius: 0.05 };
+  const behind = { ...timpani, center: [0.2, 1.6, -2] };
+  const straight = { pos: eye, dir: [0, 0, -1] };
+  const bus = createBus(), summons = [];
+  bus.on('gaze:summon', (e) => summons.push(e.stem));
+  const engine = createGestureEngine(bus, {});
+  for (let i = 0; i < 2 * FPS; i++) engine.step({ t: i / FPS, hands: { left: null, right: null }, head: straight }, [behind, ahead]);
+  assert.deepEqual(summons, [], 'looking at the shell, nothing is summoned');
+});
+
 test('playing the harp with a pointing hand inside the summoned creature never silences it', () => {
   const bus = createBus();
   const mutes = [];

@@ -5,13 +5,13 @@
 // while shown). Every bright line has a soft camera-facing glow either side, so it reads like banit's glowing
 // notes and lit instruments rather than a one-pixel line. About 6 to 8 draw calls; empty layers draw nothing.
 import {
-  AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Group, LatheGeometry,
-  LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, Vector2,
+  AdditiveBlending, BufferAttribute, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, Group,
+  LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D,
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
-import { drums, harpFrame, instrumentMesh, keyboard, placeModel } from './models.ts';
+import { drums, harpFrame, instrumentMesh, keyboard, placeModel, resetShell } from './models.ts';
 import type { RemakeView } from './state.ts';
 
 const TRI_CAP = 12000; // vertices
@@ -64,21 +64,6 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0
 const addS = (p: Vec3, a: Vec3, s: number, b?: Vec3, t = 0): Vec3 =>
   [p[0] + a[0] * s + (b ? b[0] * t : 0), p[1] + a[1] * s + (b ? b[1] * t : 0), p[2] + a[2] * s + (b ? b[2] * t : 0)];
 
-function shellGeometry(): BufferGeometry {
-  // A scallop: a shallow fluted dome, lathed, with ribs pressed into the rim.
-  const prof: Vector2[] = [];
-  for (let i = 0; i <= 8; i++) { const a = (i / 8) * (Math.PI / 2); prof.push(new Vector2(Math.sin(a) * 0.04, Math.cos(a) * 0.022)); }
-  const g = new LatheGeometry(prof, 18);
-  const p = g.getAttribute('position');
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z);
-    const rib = 1 + 0.12 * Math.cos(Math.atan2(z, x) * 9) * (r / 0.04);
-    p.setXYZ(i, x * rib, p.getY(i), z * rib);
-  }
-  g.computeVertexNormals();
-  return g;
-}
-
 /**
  * `accent` is each section's colour (banit's ACCENT, passed in by index.ts rather than imported here, so this
  * file and its unit tests never load the world modules).
@@ -92,8 +77,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   const triMesh = new Mesh(tris.geometry, new MeshBasicMaterial({ ...glow, side: DoubleSide }));
   const lineMesh = new LineSegments(lines.geometry, new LineBasicMaterial(glow));
   triMesh.frustumCulled = lineMesh.frustumCulled = false;
-  const shellMat = new MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
-  const shell = new Mesh(shellGeometry(), shellMat);
+  const shell = instrumentMesh(resetShell(), C.cyan, C.cyan); // lit pearl; pinching glows it cyan (models.ts)
   const amber = palette === 'cb' ? AMBER_CB : C.amber;
   const models = {
     harp: instrumentMesh(harpFrame(), amber, C.cyan),
@@ -242,7 +226,7 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     // Pads: two kettle drums (models.ts) whose heads are the strike surfaces. A soft cyan ring round each head
     // says "strike here"; a hit turns the head amber in the model and adds a warm halo above it.
     const up: Vec3 = [0, 1, 0];
-    const S = view.seat, P = view.play ?? view.seat; // the reset shell keeps to the seat; pads, harp and keys flank the creature
+    const P = view.play ?? view.seat; // pads, harp, keys and the reset shell all flank the summoned creature
     const sx: Vec3 = [Math.cos(P.yaw), 0, -Math.sin(P.yaw)], sz: Vec3 = [-Math.sin(P.yaw), 0, -Math.cos(P.yaw)];
     const r = PADS.radius;
     placeModel(models.drums, view.pads.length > 0, P, view.pads.map((p) => p.flash));
@@ -311,9 +295,9 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
     // Reset shell at eye level on the right, a ring around it filling while pinched, a bloom on reset.
     const rc = view.reset.center;
     shell.position.set(rc[0], rc[1] - 0.01, rc[2]);
-    shell.rotation.set(-0.5, S.yaw, 0);
-    shellMat.color.copy(C.teal).lerp(C.cyan, Math.min(1, view.reset.progress + view.reset.flash)).multiplyScalar(0.8 + view.reset.progress);
-    glowDisc(rc, eye, 0.05 + 0.03 * view.reset.flash, C.teal, 0.6 + view.reset.progress + view.reset.flash);
+    shell.rotation.set(-0.5, P.yaw, 0);
+    (shell.material.uniforms.uFlash.value as number[])[0] = Math.min(1, 0.8 * view.reset.progress + view.reset.flash);
+    glowDisc(rc, eye, 0.05 + 0.03 * view.reset.flash, C.teal, 0.2 + view.reset.progress + view.reset.flash);
     if (view.reset.progress > 0) {
       const f = norm(sub(eye, rc)), u = norm(cross(f, [0, 1, 0])), v = cross(f, u);
       ring(rc, u, v, RESET.radius + 0.008, RESET.radius + 0.016, Math.PI * 2 * view.reset.progress, C.cyan, 1.2, 40);

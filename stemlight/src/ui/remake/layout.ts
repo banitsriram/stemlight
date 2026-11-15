@@ -1,10 +1,10 @@
 // Remake surfaces (biyon-45, 46, 47, 58 shell): pure placement and target maths, no three.js, so node tests load it.
 //
 // Everything is placed in a seated "frame": the eye position and a level yaw. Local axes: x to the right,
-// y up, z ahead (the way the head faces at that yaw). The score ribbon, its lane, the pads, the harp and the
-// keyboard all use the summoned creature's frame (taken at summon time, like world/shell.ts reachSpot), so
-// they flank the creature wherever it was summoned; only the reset shell stays where the seat faced when the
-// music started. Looking around never moves any of them; a summon glides them.
+// y up, z ahead (the way the head faces at that yaw). Everything here (the score ribbon, its lane, the pads,
+// harp, keyboard and reset shell) uses the summoned creature's frame (taken at summon time, like
+// world/shell.ts reachSpot), so it all flanks the creature wherever it was summoned. Looking around never moves
+// any of it; a summon glides it.
 import type { Cut, Instrument, PieceManifest, StemId, Target, Vec3 } from '../../contracts';
 import { scaleNote } from '../../audio/synth.ts';
 

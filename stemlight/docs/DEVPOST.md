@@ -1,6 +1,6 @@
-# Devpost submission text: DRAFT 4 (task 67)
+# Devpost submission text: DRAFT 5 (task 67)
 
-Updated 16 Nov 2026 by sir's account, for the instruments build (banit's nine modelled instruments, the playable drums, harp and keyboard, PRs #1 to #5). The live link was redeployed from main on 16 Nov; check that it serves the final build before submitting. Nothing is published without sir's approval. **[CHECK]** marks a line that depends on a decision or a number not yet final; resolve or delete each before submitting. No brand names except the tools we must disclose. Re-read against the build at the Sat 14 freeze.
+> **Internal note: delete this block before pasting into Devpost.** Draft 5, 17 Nov 2026, after scoring audit 3 (`docs/audits/2026-11-17-audit.md`). Describes main as deployed (check the live bundle name matches the final freeze run). Nothing is published without sir's approval. **[CHECK]** marks a decision still sir's; resolve each before submitting. No brand names except the tools we must disclose.
 
 ---
 
@@ -25,7 +25,7 @@ We love music but neither of us plays in an orchestra. Tools that split a song i
 
 ### What it is, and who it's for
 - **Entertainment, music visualisation.** For adults who love music but don't play, at home in the evening, seated, for about four minutes and then as long as they like. No score and no win state: the pleasure is listening and remaking.
-- Each instrument family is a real instrument floating around you, modelled in code (violin, cello, double bass, flute, clarinet, horn, trumpet, timpani, harp), and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Every note on screen is a real note from the score.
+- Each instrument family is a real instrument floating around you, eight of them modelled in code (violin, cello, double bass, flute, clarinet, horn, trumpet, timpani), and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Every floating note is a real note from the score; the amber ones are yours.
 - Two pieces: the opening of Beethoven’s 5th (about 1:24) and the finale of Dvořák’s *New World* Symphony (about 2:33), then free play.
 
 ### What your hands do
@@ -40,7 +40,7 @@ We love music but neither of us plays in an orchestra. Tools that split a song i
 | Pinch the glowing bead on the score ribbon | Hold to pause, drag to scrub through the music |
 | Pinch the lane with both hands | Cut that stretch of the part out, snapped to the beat. The hole shows the missing notes as outlines; pull it away to undo |
 | Play your own part | Cut the percussion and two kettle drums appear; cut the flutes for a harp, the clarinets for a keyboard. Strike a drum head, sweep a finger across the strings, press the keys down. A one-bar count-in, then what you play snaps to the beat and loops back in, and each note flies as an amber symbol from your fingertip into the outlines you cut |
-| Pinch and hold the small shell on your right | Quiet reset of this piece's mix |
+| Pinch and hold the pearl shell on your right | Quiet reset of this piece's mix (it says so the first time your hand comes near) |
 
 Seated, inside a small reach, hands only. No controller, no account, no menus. A ghost hand and one or two words show each move (12 words in the whole tutorial), each playable instrument says how to play it the first time it appears, and doing nothing for 10 s brings a gentle nudge.
 
@@ -55,13 +55,13 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 - **Gaze without eye tracking.** Quest 3 and 3S have no eye tracking, so "look to summon" uses head direction (within 12° for half a second).
 - **Your part, in time.** The drums, harp and keyboard you play are synthesised in code: a timpani-like drum, a physically modelled plucked string, and a piano-like tone with stretched overtones. The cut snaps to the beat, a one-bar count-in leads into a sample-exact loop, your hits snap to the eighth-note grid and replay on every pass, and the original part plays quietly (−18 dB) under your first pass as a guide.
 - **Saved on the device.** Your mix, cuts and recorded parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off, the system menu and ending the session all resume cleanly (all 36 scripted checks in the emulator).
-- **Within budget.** At the busiest moment (Dvořák's densest four seconds, with the nine instruments, the drums and the ribbon showing): 66 draw calls, 101.6k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
+- **Within budget.** At the busiest moment (Dvořák's densest four seconds, with the eight instruments, the drums and the ribbon showing): 66 draw calls, 101.6k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
 - **Testing without a headset.** Every interaction was scripted in the IWSDK emulator (IWER) with a dev-only hand-pose switch that never ships, plus unit tests and headless-browser checks of the audio clock, saving and memory.
 - **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it. **[CHECK, sir: live rules read 12 Nov. They don't ask for AI tools to be disclosed, and ban brand names, logos and slogans in the Project ("commercial or corporate advertising"). So this line discloses the help without naming the product. Keep it, name the tool, or drop the line.]**
 
 ### Accessibility and comfort
-- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m (checked in the emulator with a field-of-view mask). **[CHECK: banit reruns `tests/iwer/visual/fov.mjs` with the ribbon, lane, pads and shell showing and commits the results, or this sentence narrows to what's committed]**
-- Instruments are told apart by shape first (each looks like the real instrument), with colour second. **[CHECK: add "and a colour-blind palette" only if task 51 ships]**
+- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m: the tutorial, ghost hands, drums and end card were checked in the emulator with a field-of-view mask, and the ribbon, harp, keyboard and reset shell by layout tests.
+- Instruments are told apart by shape first (each looks like the real instrument), with colour second.
 - No failure state, and a quiet reset is always within reach.
 
 ### Credits
@@ -94,4 +94,11 @@ Use the "What your hands do" table and the fist-versus-pinch paragraph above. Wh
 **[CHECK: emails and roles as each person wants them shown]**
 
 ## Screenshots (at least 5, real build, same colour treatment)
-From banit's stills set (`video/`, `docs/tests/fov/`): the landing; the first fist freezing an instrument to glass; the Dvořák brass entry with a full field of notes; a cut lane with ghost outlines and amber notes; the end card (retake it after the 12 Nov credit fix, so Beethoven's credit shows). Remake candidates from sir's account (instruments build): `tests/iwer/input/results/2026-11-14-shot-{1..6}-*.png` (ribbon and lane, playhead held, cut preview, region with drums and count-in, drum hit in amber, reset ring) and the newest harp and keyboard shots in the same folder. The 12 Nov shots, and banit's stills from before 13 Nov, show the old sea creatures: retake or drop them. **[CHECK: final picks]**
+Current-look candidates (instruments build only):
+- `tests/iwer/input/results/2026-11-16-shot-4-region-pads-countin.png`: drums either side of the timpani, the cut region and the count-in.
+- `tests/iwer/input/results/2026-11-16-shot-5-pad-hit-amber.png`: a drum hit in amber.
+- `tests/iwer/input/results/2026-11-16-harp-pluck.png`: the harp.
+- `tests/iwer/input/results/2026-11-16-keys-hint.png`: the keyboard with its first-time hint.
+- `tests/iwer/input/results/2026-11-16-shot-1-ribbon-lane.png`: the score ribbon and lane.
+- banit's 13 Nov `tests/iwer/visual/results/{1-field-look,3-held-vln-glass-ghost-open,6-solo-vla_vc-ghost-cut}.jpg`: the field of instruments, a fist freezing notes to glass, solo. Crop the credit strip off the bottom.
+- Don't use anything from before 13 Nov (old sea creatures). **[CHECK: sir picks the final 5+; the 17 Nov reset-shell look needs a fresh shot if the shell shows]**
