@@ -181,3 +181,23 @@
 - **F12 and F13 pass: 24/41.**
 - **Not verified:** how plucking and pressing feel on a real hand, and the look on a headset. The visuals are plain lines and quads in `src/ui/remake/`; in the harp screenshot the strings stand in front of the summoned creature and overlap it.
 - **Why the emulator run took several tries.** The test moved the hand with one CLI call per position, seconds each on a loaded laptop, while the music kept playing: the piece ended and the next one loaded mid-test. The hand moves now run inside the page in real time, one call per sweep.
+
+## 14–15 Nov 2026: biyon, PR #1 and #2 merged; playable instruments as models; glow pass (branch `biyon/playable-instruments`)
+
+- **PR #1 and #2 merged into main** on sir's go-ahead (14 Nov 10:38 IST). banit had reviewed both (tsc, 115/115, build). Before merging: one fix on PR #2, because banit's `creatures.ts` now imports `../story/sequencer` without `.ts`, which the node test runner can't resolve. `view.ts` no longer imports `creatures.ts`; `index.ts` passes the section colours in. Then main plus both PRs: `npm test` 115/115, `tsc` clean, build OK, and `harp-keys.mjs` 25/25 in IWER with banit's new instruments. Main now has 24/41 features.
+- **Playable instruments as real objects (banit's ask, 13 Nov), in `src/ui/remake/models.ts`.** Same lit wood, brass and ivory look as banit's nine instruments, built in code, no assets:
+  - **harp:** gold column and crown, maple neck and soundbox, gold tuning pins, framing the 8 strings;
+  - **keyboard:** 8 ivory keys in a black lacquer case with cheek blocks, a red felt rail and a gold line;
+  - **pads:** two small copper kettle drums with skin heads, silver hoops, tension rods and tripods.
+  - Each is one merged mesh (one draw call), drawn only while its instrument is up. The key tops and drum heads sit exactly on their input targets. A strike turns the struck key or head amber, and a key dips 6 mm. Playable parts have a soft cyan rim.
+  - Input logic and targets are unchanged.
+- **Glow pass in `view.ts` (banit's ask).** Every bright line now has a soft glow either side, facing the eye: ribbon edges, region outlines, cut preview, playhead, strings, count-in bar. The lane is brighter along its middle. The strings are cream (the two tonic strings red, as a real harp marks its Cs) with a cyan glow; a pluck turns one amber, wider and flaring.
+- **Evidence:**
+  - `npm test` 120/120 (new `tests/unit/remake-models.test.mjs`: key tops and drum heads on their targets on a turned seat, the harp frame clear of the sweep zone, models shown only with their instrument, flash and dip on the struck part only). `tsc` clean.
+  - IWER `harp-keys.mjs` 25/25 with the new models; screenshots `tests/iwer/input/results/2026-11-14-harp-pluck.png` and `-keys-press.png`.
+  - IWER `remake-shots.mjs`: 6 shots, `2026-11-14-shot-*.png` (ribbon and lane, playhead held, cut preview, region with drums and count-in, drum hit in amber, reset ring).
+  - IWER `perf-heaviest.mjs` (`2026-11-15-perf-heaviest.txt`): peak 64 draw calls (cap 100), 101,780 triangles (cap 150k, was 34,492 on 12 Nov), 380 live notes. Of the rise, the drums add 2,760 triangles; banit's nine instruments are 35,260 in all. Emulator numbers only: no device frame rate claimed.
+- **Found, not fixed here (no behaviour change in this PR):**
+  - Looking down at the harp or keyboard re-summons the cello, whose seat sits right behind the row, so it glides in behind the instrument you're playing. This shows in the IWER input log on main before this change too. A fix belongs in the gaze summon (`src/input/engine.ts`).
+  - With the timpani summoned, banit's opaque timpani at the reach spot covers the right-hand pad drum (shot 4). Before, the creatures were see-through glow.
+- **Not verified:** how the models look and read on a headset.
