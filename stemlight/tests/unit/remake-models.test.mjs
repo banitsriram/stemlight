@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import { Box3, Object3D, Vector3 } from 'three';
 import { HARP, KEYS, PADS, harpTargets, keyTargets, padTargets } from '../../src/ui/remake/layout.ts';
 import { drums, harpFrame, keyboard } from '../../src/ui/remake/models.ts';
-import { createRemakeView } from '../../src/ui/remake/view.ts';
+import { STRING_SHIVER, createRemakeView } from '../../src/ui/remake/view.ts';
 
 const SEAT = { eye: [0.1, 1.15, -0.05], yaw: 0.6 }; // a turned, off-centre seat: the models must follow it
 const PITCH8 = [52, 54, 55, 57, 59, 60, 62, 64];
@@ -97,4 +97,29 @@ test('each model is one mesh of modest size, carrying tint and part per vertex',
     assert.ok(g.getAttribute('position').count < 20000, `${g.getAttribute('position').count} vertices`);
     assert.ok(g.getAttribute('tint') && g.getAttribute('part'));
   }
+});
+
+test('a plucked string shivers: a lens widest at its middle, still at its ends; an unplucked one stays straight', () => {
+  const frame = { eye: [0, 1.2, 0], yaw: 0 };
+  const t = harpTargets(frame, PITCH8);
+  const strings = t.map((s, i) => ({ a: [s.center[0], s.center[1] - 0.05, s.center[2]], b: [s.center[0], s.center[1] + 0.05, s.center[2]], pitch: s.extra.pitch, flash: i === 2 ? 1 : 0 }));
+  const v = createRemakeView(new Object3D());
+  v.draw(viewOf({ ribbon: frame, seat: frame, strings }), frame.eye);
+  const g = v.group.children[1].geometry, pos = g.getAttribute('position').array;
+  // Line vertices near each string's x, within its length: how far any strays sideways from the string.
+  const sway = (s) => {
+    let mid = 0, end = 0;
+    for (let i = 0; i < g.drawRange.count; i++) {
+      const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2];
+      if (Math.abs(z - s.a[2]) > 1e-6 || y < s.a[1] - 1e-6 || y > s.b[1] + 1e-6 || Math.abs(x - s.a[0]) > 0.02) continue;
+      const u = (y - s.a[1]) / (s.b[1] - s.a[1]), d = Math.abs(x - s.a[0]);
+      if (u > 0.4 && u < 0.6) mid = Math.max(mid, d);
+      if (u < 0.01 || u > 0.99) end = Math.max(end, d);
+    }
+    return { mid, end };
+  };
+  const plucked = sway(strings[2]), still = sway(strings[5]);
+  assert.ok(plucked.mid > STRING_SHIVER * 0.45, `plucked string swings ${(plucked.mid * 1000).toFixed(1)} mm at its middle (it flickers between half and full width)`);
+  assert.ok(plucked.end < 1e-6, 'its ends stay put');
+  assert.ok(still.mid < 1e-6, 'an unplucked string stays straight');
 });

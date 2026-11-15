@@ -8,6 +8,7 @@ import {
   padsWanted, playheadTarget, regionTarget, resetTarget, RIBBON, ribbonX, spanX, stemFor, toWorld, laneLocal, pitchY,
   type CountIn, type Frame,
 } from './layout.ts';
+import { warmVoices } from '../../audio/synth.ts';
 
 export const GLIDE_SEC = 0.6; // same glide as the creatures
 export const FLIGHT_SEC = 0.4; // an amber note's flight from the fingertip to its outline
@@ -69,7 +70,7 @@ export function beatLenAt(beats: number[], t: number): number {
 
 const defaultLoad = (id: PieceId) => fetch(`/pieces/${id}/notes.json`).then((r) => r.json() as Promise<NoteEvent[]>);
 
-export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'registry'>, deps: RemakeStateDeps) {
+export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'registry'> & Partial<Pick<AppContext, 'audio'>>, deps: RemakeStateDeps) {
   const { bus, transport, registry } = ctx;
   let manifest: PieceManifest | null = null;
   let notes = new Map<StemId, { list: NoteEvent[]; ts: number[] }>();
@@ -84,6 +85,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
   let hits: { at: number; from: Vec3; t: number; pitch: number; cutId: string; flashPad: number; instrument: Instrument }[] = [];
   let pitches: number[] = [];
   let harpPitches: number[] = [], keyPitches: number[] = [];
+  const warmed = new Set<string>(); // harp/keys notes already rendered for this piece
   let clock = 0;
   const registered = new Set<string>();
 
@@ -97,6 +99,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
     const range = (inst: Instrument) => { const st = stemFor(m, inst); return st ? m.stems.find((x) => x.id === st)?.pitchRange : undefined; };
     harpPitches = octaveFor(m.scale, range('harp'));
     keyPitches = octaveFor(m.scale, range('keys'));
+    warmed.clear();
     notes = new Map();
     const r = ++request;
     (deps.loadNotes ?? defaultLoad)(id).then((list) => {
@@ -243,6 +246,11 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       }
       // Harp or keyboard: whichever replaces the stem being remade; a struck string or key flashes amber.
       const melodic = melodicWanted(deps.parts, manifest);
+      // The first time a harp or keyboard comes up, render its 8 notes during the count-in.
+      if (melodic && !warmed.has(melodic) && ctx.audio) {
+        warmed.add(melodic);
+        try { warmVoices(ctx.audio.context(), melodic, melodic === 'harp' ? harpPitches : keyPitches); } catch { /* no audio yet: notes render on first strike */ }
+      }
       const flashOf = (inst: Instrument, pitch: number) => {
         const last = [...hits].reverse().find((h) => h.instrument === inst && h.pitch === pitch);
         return last ? Math.max(0, 1 - (clock - last.at) / FLASH_SEC) : 0;

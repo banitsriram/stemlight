@@ -515,6 +515,12 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
       if (a < bestAngle) { best = target; bestAngle = a; }
     }
     if (!best || bestAngle > SPEC.summonAngleDeg) { dwell = null; return; }
+    // Looking at your own instrument is not looking at a creature: when a string, key or drum head is nearer
+    // the line of sight than the nearest creature, nothing is summoned (the cello sits right behind the harp
+    // and keyboard, and was summoned every time the player looked down to play; IWER log, 14 Nov).
+    for (const target of targets) {
+      if ((target.kind === 'string' || target.kind === 'key' || target.kind === 'pad') && angleToDeg(head, target.center) < bestAngle) { dwell = null; return; }
+    }
     if (!dwell || dwell.stem !== best.stem) { dwell = { stem: best.stem!, since: t }; return; }
     // A held fist or a running stretch keeps its creature close until the hands let go.
     const busy = !!eq || HANDS.some((h) => hands[h].fist === 'held' || hands[h].fist === 'arming');

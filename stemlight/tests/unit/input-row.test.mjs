@@ -131,6 +131,33 @@ test('a tracking jump across the whole row plucks nothing; the next real sweep s
   assert.equal(f.strikes.length, 8, `${f.strikes.length} plucks from a 2 m/s strum at 30 Hz`);
 });
 
+test('standing, looking down at the harp or keyboard never summons the instrument seated behind it', () => {
+  // Seated (eye 1.2 m) nothing is behind the row; standing (eye 1.4 m and up, IWER's default is 1.6 m) the
+  // cello, flute, violin and clarinet seats all sit within the 12° summon cone behind it. Cello: its home seat.
+  const eye = [0, 1.6, 0];
+  const STAND = { eye, yaw: 0 };
+  const cello = { id: 'creature:vla_vc', kind: 'creature', stem: 'vla_vc', center: [-0.333, 1.0, -1.565], radius: 0.25 };
+  const at = (p) => { const d = [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], l = Math.hypot(...d); return { pos: eye, dir: d.map((x) => x / l) }; };
+  const run = (targets, head) => {
+    const bus = createBus();
+    const summons = [];
+    bus.on('gaze:summon', (e) => summons.push(e.stem));
+    const engine = createGestureEngine(bus, {});
+    for (let i = 0; i < 2 * FPS; i++) engine.step({ t: i / FPS, hands: { left: null, right: null }, head }, targets);
+    return summons;
+  };
+  const strings = harpTargets(STAND, PITCHES), keys = keyTargets(STAND, PITCHES);
+  const flute = { id: 'creature:fl', kind: 'creature', stem: 'fl', center: [0.333, 1.0, -1.565], radius: 0.25 };
+  const cone = (head, c) => { const d = at(c.center).dir; return Math.acos(head.dir[0] * d[0] + head.dir[1] * d[1] + head.dir[2] * d[2]) * 57.2958; };
+  for (const [what, row, look, behind] of [['harp', strings, strings[3], cello], ['keyboard', keys, keys[3], cello], ['harp, treble side', strings, strings[4], flute]]) {
+    const head = at(look.center);
+    assert.ok(cone(head, behind) < SPEC.summonAngleDeg, `${what}: the ${behind.stem} is inside the summon cone from here (${cone(head, behind).toFixed(1)}°), so this is the real case`);
+    assert.deepEqual(run([behind, ...row], head), [], `${what}: 2 s looking at it summons nothing`);
+  }
+  assert.deepEqual(run([cello, ...strings], at(cello.center)), ['vla_vc'], 'looking straight at the cello still summons it');
+  assert.deepEqual(run([cello], at(strings[3].center)), ['vla_vc'], 'with no instrument up, the same look summons it as before');
+});
+
 test('playing the harp with a pointing hand inside the summoned creature never silences it', () => {
   const bus = createBus();
   const mutes = [];

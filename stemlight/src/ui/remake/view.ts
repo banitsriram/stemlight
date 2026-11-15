@@ -22,6 +22,8 @@ const C = {
   gut: new Color('#F2E6C8'), red: new Color('#E0483A'),
 };
 const AMBER_CB = new Color('#D55E00');
+/** How far (m) a freshly plucked string swings either side at its middle. */
+export const STRING_SHIVER = 0.004;
 const tmpC = new Color(); // scratch colour: Buf.v copies the components at once, so one shared instance is safe
 
 class Buf {
@@ -263,6 +265,18 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       line(st.a, st.b, col, 1 + 1.2 * st.flash);
       glowLine(st.a, st.b, eye, C.cyan, 0.22 * (1 - st.flash), 0.005);
       if (st.flash > 0) {
+        // A plucked string blurs into a lens, widest in the middle and still at its ends, the way a vibrating
+        // string looks to the eye; it flickers and narrows as the flash fades.
+        const amp = STRING_SHIVER * st.flash * (0.75 + 0.25 * Math.sin(view.clock * 90 + i * 1.7));
+        for (const side of [1, -1]) {
+          let prev = st.a;
+          for (let k = 1; k <= 8; k++) {
+            const u = k / 8, off = side * amp * Math.sin(Math.PI * u);
+            const p = addS([st.a[0] + (st.b[0] - st.a[0]) * u, st.a[1] + (st.b[1] - st.a[1]) * u, st.a[2] + (st.b[2] - st.a[2]) * u], sx, off);
+            line(prev, p, col, 0.7 * st.flash);
+            prev = p;
+          }
+        }
         glowLine(st.a, st.b, eye, amber, 0.6 * st.flash, 0.004 + 0.008 * st.flash);
         glowDisc([(st.a[0] + st.b[0]) / 2, (st.a[1] + st.b[1]) / 2, (st.a[2] + st.b[2]) / 2], eye, 0.03, amber, 0.6 * st.flash);
       }
