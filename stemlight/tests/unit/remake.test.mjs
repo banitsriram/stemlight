@@ -258,7 +258,7 @@ test('playhead brightens while held; reset ring follows reset:progress', async (
   assert.ok(e.tick().reset.flash > 0.9);
 });
 
-test('frames: the ribbon glides to the summon pose; pads and shell keep the pose from the first play', async () => {
+test('frames: a summon glides the ribbon and the pads to flank the creature; looking around moves nothing; the shell keeps the seat', async () => {
   const bus = createBus();
   let head = { eye: [0, 1.2, 0], yaw: 0 };
   const registry = createMockRegistry();
@@ -269,16 +269,25 @@ test('frames: the ribbon glides to the summon pose; pads and shell keep the pose
   transport.play();
   bus.emit('cut:add', { cut: { id: 'p', stem: 'perc', t0: 1, t1: 2 } });
   s.update(0.01);
-  const pad0 = registry.all().find((t) => t.id === 'pad:1').center;
+  const at = (id) => registry.all().find((t) => t.id === id).center;
+  const pad0 = at('pad:1'), reset0 = at('reset');
+  // Looking around without a summon moves nothing.
+  head = { eye: [0, 1.2, 0], yaw: -0.5 };
+  s.update(0.5);
+  assert.deepEqual(at('pad:1'), pad0, 'looking around: pads stay');
+  // A summon off to one side (the timpani's seat is on the right): ribbon and pads glide there together.
   head = { eye: [0, 1.2, 0], yaw: 0.6 };
   bus.emit('gaze:summon', { stem: 'perc' });
   s.update(0.3);
-  const mid = registry.all().find((t) => t.id === 'lane:perc').center;
+  const mid = at('lane:perc'), padMid = at('pad:1');
   s.update(0.4);
-  const end = registry.all().find((t) => t.id === 'lane:perc').center;
-  assert.deepEqual(end.map((x) => +x.toFixed(6)), laneTarget(head, 'perc', 0).center.map((x) => +x.toFixed(6)), 'arrived after 0.6 s');
+  const end = at('lane:perc');
+  assert.deepEqual(end.map((x) => +x.toFixed(6)), laneTarget(head, 'perc', 0).center.map((x) => +x.toFixed(6)), 'ribbon arrived after 0.6 s');
   assert.ok(Math.abs(mid[0]) < Math.abs(end[0]) && Math.abs(mid[0]) > 0, 'mid-glide');
-  assert.deepEqual(registry.all().find((t) => t.id === 'pad:1').center, pad0, 'pads did not move');
+  const want = padTargets(head, [47, 52]).map((t) => t.center.map((x) => +x.toFixed(6)));
+  assert.deepEqual([at('pad:0'), at('pad:1')].map((c) => c.map((x) => +x.toFixed(6))), want, 'pads now flank the summoned creature');
+  assert.ok(padMid[0] !== pad0[0] && padMid[0] !== want[1][0], 'the pads glided with the ribbon');
+  assert.deepEqual(at('reset'), reset0, 'the reset shell keeps the seat');
 });
 
 test('F27 layout: pads and reset shell sit inside 70×66° of the forward view, within 0.61 m, and pads clear the creature sphere', () => {

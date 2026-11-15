@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Box3, Object3D, Vector3 } from 'three';
-import { HARP, KEYS, PADS, harpTargets, keyTargets, padTargets } from '../../src/ui/remake/layout.ts';
+import { HARP, KEYS, PADS, harpString, harpTargets, keyTargets, padTargets } from '../../src/ui/remake/layout.ts';
 import { drums, harpFrame, keyboard } from '../../src/ui/remake/models.ts';
 import { STRING_SHIVER, createRemakeView } from '../../src/ui/remake/view.ts';
 
@@ -53,7 +53,7 @@ test('the harp frame frames the strings and keeps clear of a sweep across them',
   const g = harpFrame();
   const pos = g.getAttribute('position');
   const z = -HARP.ahead, xs = harpTargets({ eye: [0, 0, 0], yaw: 0 }, PITCH8).map((t) => t.center[0]);
-  const lo = -HARP.below - HARP.halfLength, hi = -HARP.below + HARP.halfLength;
+  const lo = -HARP.below - HARP.halfLength, hi = -HARP.below + HARP.halfLength; // the band every string spans
   let inside = 0;
   for (let k = 0; k < pos.count; k++) {
     const x = pos.getX(k), y = pos.getY(k), dz = Math.abs(pos.getZ(k) - z);
@@ -63,7 +63,12 @@ test('the harp frame frames the strings and keeps clear of a sweep across them',
   assert.equal(inside, 0, `${inside} frame vertices in the sweep zone`);
   const b = new Box3().setFromBufferAttribute(pos);
   assert.ok(b.min.x < xs[0] - 0.03 && b.max.x > xs[7] + 0.03, 'posts outside both outer strings');
-  assert.ok(b.min.y < lo && b.max.y > hi, 'soundbox below and neck above the strings');
+  const ends = PITCH8.map((_, i) => harpString(i));
+  assert.ok(b.min.y < Math.min(...ends.map((e) => e.lo)) && b.max.y > Math.max(...ends.map((e) => e.hi)), 'soundbox below and neck above every string');
+  // A harp, not a railing: the bass string is the longest, the treble the shortest, all sharing the sweep band.
+  const len = ends.map((e) => e.hi - e.lo);
+  assert.ok(len.every((l, i) => !i || l < len[i - 1]) && len[0] > 0.14 && len[7] < 0.09, `graded lengths ${len.map((l) => (l * 100).toFixed(1)).join(', ')} cm`);
+  assert.ok(ends.every((e) => e.lo <= lo + 1e-9 && e.hi >= hi - 1e-9), 'every string spans the whole sweep band');
 });
 
 const viewOf = (over) => ({

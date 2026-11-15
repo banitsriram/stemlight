@@ -1,9 +1,10 @@
 // Remake surfaces (biyon-45, 46, 47, 58 shell): pure placement and target maths, no three.js, so node tests load it.
 //
 // Everything is placed in a seated "frame": the eye position and a level yaw. Local axes: x to the right,
-// y up, z ahead (the way the head faces at that yaw). The score ribbon and its lane sit under the summoned
-// creature (the frame taken at summon time, like world/shell.ts reachSpot); the pads and the reset shell
-// stay where the seat faced when the music started, so looking around never moves them.
+// y up, z ahead (the way the head faces at that yaw). The score ribbon, its lane, the pads, the harp and the
+// keyboard all use the summoned creature's frame (taken at summon time, like world/shell.ts reachSpot), so
+// they flank the creature wherever it was summoned; only the reset shell stays where the seat faced when the
+// music started. Looking around never moves any of them; a summon glides them.
 import type { Cut, Instrument, PieceManifest, StemId, Target, Vec3 } from '../../contracts';
 import { scaleNote } from '../../audio/synth.ts';
 
@@ -35,13 +36,23 @@ export const RESET = { right: 0.27, below: 0.02, ahead: 0.42, radius: 0.05 } as 
 export const PAD_RANGE: [number, number] = [40, 52];
 
 /**
- * The harp (biyon-26): 8 upright strings, 5 cm apart, 10 cm long, in a plane facing the seat 32 cm ahead and
- * 15 cm below the eye, so a sideways sweep of the index tip plucks them in turn. In front of the summoned
+ * The harp (biyon-26): 8 upright strings, 5 cm apart, in a plane facing the seat 32 cm ahead and 15 cm below
+ * the eye, so a sideways sweep of the index tip plucks them in turn. Graded like a real harp (15 Nov): the bass
+ * string 15 cm long, the treble 8 cm, their bottoms rising along a sloping soundbox and their tops falling
+ * under a curved neck. Every string spans the same 8 cm band (halfLength either side of 14 cm below the eye),
+ * so a sweep anywhere in that band plucks all 8. In front of the summoned
  * creature and lower: outermost string 29° to the side, the bottoms 32° down (inside 70×66°), all within 0.4 m.
  * The creature's 25 cm fist sphere overlaps them, so while a harp or keyboard is up the input engine only
  * arms a fist with the index finger curled too (a pointing hand playing them is not a fist).
  */
-export const HARP = { ahead: 0.32, below: 0.15, spacing: 0.05, halfLength: 0.05, radius: 0.03, depthTol: 0.03, count: 8 } as const;
+export const HARP = { ahead: 0.32, below: 0.14, spacing: 0.05, halfLength: 0.04, longest: 0.15, shortest: 0.08, radius: 0.03, depthTol: 0.03, count: 8 } as const;
+/** String i's ends in the frame (local y, metres): the bass (i = 0) longest and lowest, the treble shortest. */
+export function harpString(i: number, n: number = HARP.count): { lo: number; hi: number } {
+  const k = n > 1 ? i / (n - 1) : 0;
+  const len = HARP.longest - (HARP.longest - HARP.shortest) * k;
+  // Centred on the band: every string's middle is HARP.below under the eye, so the 8 cm band is shared.
+  return { lo: -HARP.below - len / 2, hi: -HARP.below + len / 2 };
+}
 /**
  * The keyboard (biyon-27): one key-locked octave of 8 big keys (5 cm wide, 8 cm deep, 4 mm gaps), flat, 34 cm
  * ahead and 17 cm below the eye: the outer front corners 33.4° to the side, the front edge 29.5° down.
@@ -195,7 +206,7 @@ export function harpTargets(f: Frame, pitches: number[]): Target[] {
   const r = rightOf(f);
   return pitches.map((pitch, i) => ({
     id: IDS.string(i), kind: 'string', center: toWorld(f, [spreadX(i, pitches.length, HARP.spacing), -HARP.below, HARP.ahead]), radius: HARP.radius,
-    extra: { pitch, dx: 0, dy: 1, dz: 0, nx: r[0], ny: r[1], nz: r[2], halfLength: HARP.halfLength, depthTol: HARP.depthTol },
+    extra: { pitch, dx: 0, dy: 1, dz: 0, nx: r[0], ny: r[1], nz: r[2], halfLength: (harpString(i, pitches.length).hi - harpString(i, pitches.length).lo) / 2, depthTol: HARP.depthTol },
   }));
 }
 

@@ -13,7 +13,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Vec3 } from '../../contracts';
-import { HARP, KEYS, PADS, padLocal } from './layout.ts';
+import { HARP, KEYS, PADS, harpString, padLocal } from './layout.ts';
 
 type Mat = [string, number]; // colour, metal 0..1 (banit's palette, so the two sets of instruments match)
 const MAPLE: Mat = ['#8a3d14', 0], PALE: Mat = ['#d9b98a', 0], GOLD: Mat = ['#e0b24e', 1], EBONY: Mat = ['#17120f', 0.15];
@@ -51,28 +51,46 @@ class Parts {
 
 const spread = (i: number, n: number, s: number) => (i - (n - 1) / 2) * s;
 
-/** The harp frame. String i runs from y = -HARP.below - halfLength (soundbox) to -HARP.below + halfLength (neck). */
+/**
+ * The harp frame, a real harp's outline around the graded strings (harpString): a tall fluted gold column on the
+ * bass side, a maple neck curving down over the string tops to the treble shoulder, and a maple soundbox
+ * sloping up under the string bottoms (a pale soundboard on top, an eyelet per string), meeting the neck at the
+ * shoulder. Nothing stands inside the band a sweep crosses.
+ */
 export function harpFrame(): BufferGeometry {
   const p = new Parts();
-  const z = -HARP.ahead, yLo = -HARP.below - HARP.halfLength, yHi = -HARP.below + HARP.halfLength;
-  const half = spread(HARP.count - 1, HARP.count, HARP.spacing) + 0.04; // posts 4 cm outside the outer strings
-  // Soundbox along the bottom: maple, a pale soundboard on top where the strings end, an eyelet per string.
-  p.add(new BoxGeometry(half * 2 + 0.02, 0.03, 0.036), MAPLE, [0, yLo - 0.017, z]);
-  p.add(new BoxGeometry(half * 2 - 0.01, 0.004, 0.022), PALE, [0, yLo - 0.0015, z]);
-  // Neck along the top, gently arched at the ends where it meets the posts, with a gold tuning pin per string.
-  const neck = new CatmullRomCurve3([[-half, yHi + 0.004], [-half + 0.05, yHi + 0.011], [0, yHi + 0.012], [half - 0.05, yHi + 0.011], [half, yHi + 0.004]]
-    .map(([x, y]) => new Vector3(x, y, z)), false, 'centripetal');
-  p.add(new TubeGeometry(neck, 32, 0.0085, 8, false), MAPLE);
-  for (let i = 0; i < HARP.count; i++) {
-    const x = spread(i, HARP.count, HARP.spacing);
-    p.add(new SphereGeometry(0.0032, 8, 6), GOLD, [x, yHi + 0.004, z + 0.006]);
-    p.add(new SphereGeometry(0.0026, 6, 4), EBONY, [x, yLo + 0.001, z + 0.004]);
+  const z = -HARP.ahead, n = HARP.count;
+  const xs = Array.from({ length: n }, (_, i) => spread(i, n, HARP.spacing));
+  const ends = xs.map((_, i) => harpString(i, n));
+  const xL = xs[0] - 0.04, xR = xs[n - 1] + 0.045; // column and shoulder, clear of a sweep 2.5 cm past either outer string
+  const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+  const at = (x: number, which: 'lo' | 'hi') => { // the string ends' line, extended past the outer strings
+    const k = (x - xs[0]) / (xs[n - 1] - xs[0]);
+    return lerp(ends[0][which], ends[n - 1][which], k);
+  };
+  const tube = (pts: [number, number][], r: number, mat: Mat, seg = 40) =>
+    p.add(new TubeGeometry(new CatmullRomCurve3(pts.map(([x, y]) => new Vector3(x, y, z)), false, 'centripetal'), seg, r, 8, false), mat);
+  // Soundbox under the string bottoms, rising to the treble and turning up into the shoulder.
+  // Near the treble the band's edges are the strings' own ends, so both curves are pinned point by point
+  // there: the soundbox stays under the band until it is past the sweep, then rises into the shoulder.
+  const bandLo = -HARP.below - HARP.halfLength, bandHi = -HARP.below + HARP.halfLength, xs7 = xs[n - 1];
+  const box: [number, number][] = [[xL, at(xL, 'lo') - 0.03], [xs[0], at(xs[0], 'lo') - 0.017], [0, at(0, 'lo') - 0.016],
+    [xs7, bandLo - 0.018], [xs7 + 0.025, bandLo - 0.017], [xR - 0.004, bandLo - 0.008], [xR, -HARP.below], [xR, bandHi + 0.004]];
+  tube(box, 0.013, MAPLE);
+  tube(box.slice(1, 4).map(([x, y]) => [x, y + 0.011] as [number, number]), 0.0045, PALE, 24); // soundboard
+  // Neck over the string tops, from the column's capital down to the shoulder, with a gentle S.
+  const neck: [number, number][] = [[xL, at(xL, 'hi') + 0.024], [xs[0], at(xs[0], 'hi') + 0.012], [xs[2], at(xs[2], 'hi') + 0.016], [xs[5], at(xs[5], 'hi') + 0.009],
+    [xs7, bandHi + 0.0095], [xs7 + 0.025, bandHi + 0.011], [xR, bandHi + 0.008]];
+  tube(neck, 0.0085, MAPLE);
+  for (let i = 0; i < n; i++) {
+    p.add(new SphereGeometry(0.0032, 8, 6), GOLD, [xs[i], ends[i].hi + 0.004, z + 0.006]); // tuning pin
+    p.add(new SphereGeometry(0.0026, 6, 4), EBONY, [xs[i], ends[i].lo - 0.001, z + 0.004]); // eyelet
   }
-  // Fluted gold column on the bass (left) side with a crown; a slimmer post on the treble side.
-  p.rod([-half, yLo - 0.03, z], [-half, yHi + 0.004, z], 0.0085, GOLD, 10);
-  p.add(new LatheGeometry([[0.0085, 0], [0.014, 0.008], [0.011, 0.016], [0.015, 0.022], [0.006, 0.03], [0.001, 0.034]].map(([r, y]) => new Vector2(r, y)), 12), GOLD, [-half, yHi + 0.004, z]);
-  p.rod([half, yLo - 0.03, z], [half, yHi + 0.004, z], 0.006, GOLD, 8);
-  for (const x of [-half, half]) p.add(new SphereGeometry(0.009, 8, 6), GOLD, [x, yLo - 0.034, z]);
+  // Fluted gold column on the bass side, from its foot to a crown above the neck.
+  const foot = at(xL, 'lo') - 0.045, top = at(xL, 'hi') + 0.024;
+  p.rod([xL, foot, z], [xL, top, z], 0.0085, GOLD, 10);
+  p.add(new LatheGeometry([[0.0085, 0], [0.014, 0.008], [0.011, 0.016], [0.015, 0.022], [0.006, 0.03], [0.001, 0.034]].map(([r, y]) => new Vector2(r, y)), 12), GOLD, [xL, top, z]);
+  p.add(new LatheGeometry([[0.001, -0.012], [0.016, -0.01], [0.014, 0], [0.0085, 0.01]].map(([r, y]) => new Vector2(r, y)), 12), GOLD, [xL, foot, z]);
   return p.done();
 }
 
