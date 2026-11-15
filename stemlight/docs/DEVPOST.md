@@ -1,6 +1,6 @@
 # Devpost submission text: DRAFT 5 (task 67)
 
-> **Internal note: delete this block before pasting into Devpost.** Draft 5, 17 Nov 2026, after scoring audit 3 (`docs/audits/2026-11-17-audit.md`). Describes main as deployed (check the live bundle name matches the final freeze run). Nothing is published without sir's approval. **[CHECK]** marks a decision still sir's; resolve each before submitting. No brand names except the tools we must disclose.
+> **Internal note: delete this block before pasting into Devpost.** Draft 5, 17 Nov 2026, after scoring audit 3 (`docs/audits/2026-11-17-audit.md`). Describes the frozen build: live since 17 Nov as `assets/index-P9Cub1t-.js` (freeze run 11/11, `tests/browser/results/2026-11-17-FREEZE-release-check-full.txt`). No deploys after the freeze unless sir lifts it. Nothing is published without sir's approval. **[CHECK]** marks a decision still sir's; resolve each before submitting. No brand names except the tools we must disclose.
 
 ---
 

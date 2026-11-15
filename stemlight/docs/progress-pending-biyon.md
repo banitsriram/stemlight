@@ -257,3 +257,17 @@
 - **Evidence:** `npm test` 132/132, `tsc` clean; IWER `harp-keys.mjs` 25/25 after the guard change; `remake-shots.mjs` (`2026-11-16-shot-*.png`, shot 6 shows the new shell); `2026-11-16-reset-shell.png`.
 - **Not shown in a screenshot:** the shell's hint. The emulator's default right-hand pose rests within 10 cm of the shell, so the hint fires at session start and has gone before a script can reach in. Its unit test covers it, and it renders through the same caption as the keyboard hint (`2026-11-16-keys-hint.png`).
 - **Not deployed yet:** the live link still runs `index-D9PFYY4E.js` (before these fixes). It needs sir's OK to redeploy, then the freeze run ticks F28.
+
+## 17 Nov 2026 (~03:30 IST): biyon, final redeploy and FREEZE (F28)
+
+- On sir's go-ahead, main (PRs #1–#6) was built and deployed: **https://stemlight.vercel.app now serves `assets/index-P9Cub1t-.js`**. This is the judge build.
+- **Freeze run, 11/11:** `node tests/browser/release-check.mjs https://stemlight.vercel.app/ --expect assets/index-P9Cub1t-.js --full`. A fresh Chromium profile with the emulated Quest 3 in hand mode:
+  - the pinned bundle is live and no dev code shipped;
+  - Enter starts XR and the music;
+  - both pieces play in order (Beethoven, then Dvořák), 286 s;
+  - leaving VR shows Resume, and Resume carries on;
+  - a reload comes back clean;
+  - 0 page errors, 0 console errors, 69 responses, none failed.
+  - Log: `tests/browser/results/2026-11-17-FREEZE-release-check-full.txt`.
+- **F28 passes: 32/41.**
+- **Freeze rule:** no deploy after this unless sir lifts it. Any change after the freeze means a new deploy, a new freeze run and an updated bundle name here and in DEVPOST.md.
