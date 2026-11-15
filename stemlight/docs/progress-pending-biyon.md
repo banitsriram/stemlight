@@ -201,3 +201,18 @@
   - Looking down at the harp or keyboard re-summons the cello, whose seat sits right behind the row, so it glides in behind the instrument you're playing. This shows in the IWER input log on main before this change too. A fix belongs in the gaze summon (`src/input/engine.ts`).
   - With the timpani summoned, banit's opaque timpani at the reach spot covers the right-hand pad drum (shot 4). Before, the creatures were see-through glow.
 - **Not verified:** how the models look and read on a headset.
+
+## 15 Nov 2026 (evening): biyon, no stray summon while playing; real harp and piano sounds; strings shiver (branch `biyon/play-polish`)
+
+- **Looking at your instrument no longer summons the one behind it.** Standing (eye 1.4 m and up; IWER uses 1.6 m), the cello, flute, violin and clarinet seats all sit within the 12° summon cone behind the harp and keyboard. Each time the player looked down to play, the cello glided in (IWER input log, 14 Nov). Seated at 1.2 m nothing lines up. Now, when a string, key or drum head is nearer the line of sight than any creature, nothing is summoned (`src/input/engine.ts`). A unit test reproduces the standing case for the cello and the flute, fails without the fix, and still summons the cello when looked at directly or with no instrument up. In the IWER rerun, no summon happens after either cut; before, `vla_vc` followed both.
+- **Harp and keyboard voices (`src/audio/synth.ts`).** Before, both were a few plain sine partials. Now:
+  - **harp:** a modelled plucked string (Karplus-Strong, tuned to the cent with an allpass), excited by soft noise as if by a fingertip and plucked 1/7 along; low strings ring longer and every note darkens as it rings;
+  - **keys:** piano-like: overtones stretched by string stiffness, two strings per note a fraction of a cent apart so the tone blooms, a quick first decay then a long tail, and a felt-hammer thump.
+  - Each note renders once per audio context and is cached. The remake state renders all 8 notes of the instrument during the count-in (`warmVoices`), so no strike waits on a render. A softer strike is darker (lowpass) as well as quieter.
+  - Still no sample files, so no new ASSETS rows.
+- **A plucked string shivers** (`view.ts`): it blurs into a lens 4 mm wide at its middle and still at its ends, flickering and narrowing as the 0.25 s flash fades.
+- **Evidence:**
+  - `npm test` 127/127, `tsc` clean. New `tests/unit/audio-voices.test.mjs`: every harp note of both pieces (72–88) and every key (52–72) within 3 cents, dying away, never clipping, no DC; low strings ring longer and darken; each note renders inside the per-note budget (harp under 25 ms, keys under 40 ms).
+  - IWER `harp-keys.mjs` 25/25 (`tests/iwer/input/results/2026-11-15-harp-keys.txt` and shots).
+  - Real browser `tests/browser/harp-keys-loop.mjs` all pass: replays of the new buffer voices land sample-exact, 6/6 per instrument (`tests/browser/results/2026-11-15-harp-keys-loop.txt`).
+- **Not verified:** how the new voices sound to a person. Two short scales were rendered for sir to listen to (local only, not committed). The shiver isn't caught in a screenshot, because it lasts a quarter of a second after a pluck; the unit test measures it.

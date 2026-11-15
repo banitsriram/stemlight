@@ -6,7 +6,7 @@
 //  - every recorded pitch is in E minor and in the surface's pitch set; the part has the right instrument;
 //  - every wrap is exactly one region length after the last (sample-exact loop);
 //  - on later passes every earlier hit is re-scheduled at wrap + tOffset within one sample (oscillator
-//    start times and fundamentals read by wrapping OscillatorNode.start).
+//    start times and fundamentals read by wrapping OscillatorNode.start and, for buffer-played notes, AudioBufferSourceNode.start).
 // Usage (from stemlight/): node tests/browser/harp-keys-loop.mjs
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -72,6 +72,13 @@ try {
     AudioParam.prototype.setValueAtTime = function (v, t) { this.__v = v; return setV.call(this, v, t); };
     const start = OscillatorNode.prototype.start;
     OscillatorNode.prototype.start = function (when = 0) { window.__oscStarts.push({ when, f: this.frequency.__v ?? this.frequency.value }); return start.call(this, when); };
+    // Since 15 Nov the harp and keys play pre-rendered notes from a buffer, tagged with their pitch.
+    const play = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (when = 0, ...rest) {
+      const p = this.buffer?.voicePitch;
+      if (p !== undefined) window.__oscStarts.push({ when, f: 440 * 2 ** ((p - 69) / 12) });
+      return play.call(this, when, ...rest);
+    };
   });
   const page = await context.newPage();
   const errors = [];
