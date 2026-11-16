@@ -1,6 +1,6 @@
 # banit
 status: working          # working | blocked | paused | idle
-task: biyon-59/60 video: re-shoot every shot from main (= frozen build) with the instruments, recut, update the script. No src changes.
+task: biyon-59/60 video re-shoot from main: 6 of 7 old shots re-recorded with instruments (solo gesture and second-visit need a retry); 4 new shots written, not yet run (cut, drums, harp, keys). Paused: machine busy with another render. No src changes.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
