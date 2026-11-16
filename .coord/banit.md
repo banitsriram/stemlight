@@ -1,6 +1,6 @@
 # banit
-status: paused          # working | blocked | paused | idle
-task: paused 13 Nov; instruments landed (b446c80). Next: playable harp/keys/pads models (needs biyon, src/ui/remake), fov.mjs rerun after PRs #1/#2 merge, text + video updates for the instrument concept.
+status: working          # working | blocked | paused | idle
+task: biyon-59/60 video: re-shoot every shot from main (= frozen build) with the instruments, recut, update the script. No src changes.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -24,8 +24,4 @@ done:
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
-- biyon-64 @biyon: audit 2 (1) landing now says about 4 minutes; (2) while the end card shows, the tutorial caption hides and the summoned creature glides home (f055ff9, run.mjs --shot 8-end-card.jpg). (3)-(4) noted; I'll say which to flip after I eyeball them on main.
-- biyon-45 @biyon: PR #1 and #2 reviewed: tsc clean, 115/115, vite build OK on #2's tip, source diff looks right (BufferAttribute, sequencer-before-load, late wrap). My merge was blocked by a permission rule, so banit merges by hand. fov.mjs rerun (with a flute cut, per biyon-26) follows once they're on main.
-- visual @biyon: banit asked for a visual quality pass; mine is in 44f16a9 (progress.md 13 Nov later). Notes now bloom and fade within 0.5 m of the eye; creatures have a fresnel/sheen shader, swim wave and soft glows (+1 draw call total). Two asks in your claims: (1) the ribbon, lane, pads and harp/keys are flat single-colour lines/quads next to this, so a fresnel or soft-edge glow pass in src/ui/remake/view.ts would match; (2) please rerun tests/iwer/input/perf-heaviest.mjs (and on a headset when one's available), since the halo quads are large at the reach spot.
-- instruments @biyon: heads-up, banit asked for this today: the 9 sea creatures become real instruments modelled in code (no downloaded assets, so no new ASSETS rows): violin, cello, double bass, flute, clarinet, French horn, trumpet, timpani, harp. I'm doing it in src/world/instruments.ts and src/world/creatures.ts only. Unchanged for you: registry ids creature:<stem>, kind 'creature', radius 0.25, live centres, glide, 2 draw calls each, contracts.ts. What changes: bodies are opaque and lit (wood/brass/silver) instead of additive glow, and they turn to face the viewer. Follow-ups for you once it lands: (1) banit also wants the playable harp, keyboard and pads to be proper instrument models, in your src/ui/remake/**: I can export the harp and a keyboard builder from instruments.ts for you to use, or you release the folder to me, your call; (2) PLAN, DEVPOST.md and the video script still say sea creatures, so the text needs sir's OK and an edit; (3) PRs #1 and #2 are still unmerged (my merge was blocked by a permission rule, banit merges by hand).
-- instruments @biyon: landed in b446c80 (progress.md 13 Nov evening; close-ups in tests/iwer/visual/results/close-<stem>.jpg). The harp builder is harp() in src/world/instruments.ts and the Builder there (parts with tint + metal, strings with a vib attribute) is reusable for the playable harp/keys/pads: tell me whether you want to use it or release src/ui/remake/** to me. Any test of yours that cuts or screenshots a 'creature' still works by id; only the look changed.
+- video @biyon: read all five notes, thanks for the merges, fov rerun and feature ticks (no disagreement). Freeze understood: I'm not touching src or deploying. Re-shooting every video shot from main today with the instruments, harp/keys/drums and reset shell, then the recut and script; VO is banit's to record. The .ts import fix in creatures.ts waits until after the freeze.
