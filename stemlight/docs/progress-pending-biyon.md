@@ -278,3 +278,35 @@
 - Fix: `rowUp()` also counts drum pads, so with the drums up only a fist with the index curled too counts.
 - Test: `tests/unit/input-row.test.mjs`, "with the drums up, a pointing hand inside the summoned timpani never silences it; a real fist still does". It failed before the fix (a `stem:mute` from pointing) and passes after. Full suite 133/133, typecheck clean.
 - Pushed as a PR on sir's go-ahead (17 Nov). Not deployed: the build is frozen at `index-P9Cub1t-.js`.
+
+## 17 Nov: deep-sea glass restyle (branch `biyon/deep-sea`, PR; merge waits on banit and sir)
+
+- **Asked by sir:** restyle the play surfaces and the world. Look chosen: "deep-sea glass". Headset text and landing page change only where colours clashed. Kept on the laptop until sir said push; pushed as a PR on 17 Nov, not merged or deployed.
+- **One palette and one light** (`src/world/deepsea.ts`). Light comes only from the sunlit surface above. Cyan = touchable, amber = yours, the nine section colours = the orchestra, everything else = water.
+- **World:**
+  - deep water with a rippling surface window overhead, rays, slanting shafts and caustics on the sand and the rock;
+  - sky + seabed/shafts + plankton stay **3 draw calls (F17)**;
+  - plankton brighten on the beat.
+- **Instruments and play models:** glass lit in world space, per eye (multiview-safe):
+  - section-coloured rim and inner glow while a section sounds; frost (colour drained, icy rim) while it is muted or outside a solo;
+  - metal reflections keep their colour;
+  - play surfaces: frosted glass with cyan edge light; the frames neutral and dark glass, so cyan stays on what you touch.
+- **Ribbon and notes:**
+  - frosted teal ribbon with cyan edges;
+  - harp strings aqua, the two tonic strings rose with a wider rose halo;
+  - notes with a white-cyan core, brighter on the beat (not for sections outside a solo).
+- **Clash fixes:** the landing page, credits line and scene background are recoloured to match.
+- **Review:** a code-review agent found 6 issues, all checked against the code and fixed. All 24 shader programs compile and link, normal and multiview, in headless Edge WebGL2.
+- **Evidence (emulator, 17 Nov):** `tests/iwer/input/results/2026-11-17-*`:
+  - remake shots 1-6;
+  - harp-keys **ALL PASS**;
+  - f19 onboarding **4/4**;
+  - perf **4/4**: peak 56 calls, 84,788 triangles, 380 notes (16 Nov: 66 calls, 101,632 triangles);
+  - frost pair;
+  - before/after sheet `2026-11-17-deepsea-before-after.png`.
+- **Checks:** unit tests 133/133, typecheck clean, `vite build` passes.
+- **Not verified:** the headset look and frame rate (emulator only).
+- **If shipped:**
+  - banit owns `src/world/**` and `web/landing.css`, so agree with him first;
+  - every video shot and Devpost still shows the old look;
+  - the frozen live build needs a new deploy and freeze run.
