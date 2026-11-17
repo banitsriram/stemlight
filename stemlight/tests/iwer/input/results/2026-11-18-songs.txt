@@ -1,0 +1,16 @@
+PASS first visit: Enter plays the tutorial song (beethoven5), no picker, no songs bubble yet
+PASS no song targets while the tutorial song plays (kinds: creature, playhead, reset, lane)
+PASS its end opens the picker and the music stays stopped (log open:end)
+PASS three song bubbles registered (Symphony No. 5 (83.625) | New World Symphony (152.9997) | Symphony No. 7 (160.8946))
+PASS the play surfaces hide while the picker is up (no reset shell or playhead targets)
+shot C:\Users\biyon\projects\stemlight-deepsea\stemlight\tests\iwer\input\results\2026-11-18-songs-1-picker-after-tutorial.png
+PASS touching the middle bubble plays Dvorak (log open:end, pick:dvorak9)
+PASS mid-song: the songs bubble shows beside the reset shell, and the play surfaces are back
+shot C:\Users\biyon\projects\stemlight-deepsea\stemlight\tests\iwer\input\results\2026-11-18-songs-2-dvorak-playing-songs-bubble.png
+shot C:\Users\biyon\projects\stemlight-deepsea\stemlight\tests\iwer\input\results\2026-11-18-songs-3-holding-songs-bubble.png
+PASS holding the songs bubble fades the song out and opens the picker (Dvorak stopped at 14.4 s, started from 6.5 s)
+PASS touching bubble 3 plays beethoven7 (log open:end, pick:dvorak9, open:shell, pick:beethoven7)
+shot C:\Users\biyon\projects\stemlight-deepsea\stemlight\tests\iwer\input\results\2026-11-18-songs-4-beethoven7-playing.png
+PASS returning player: Enter opens the picker, no music yet (log open:start)
+shot C:\Users\biyon\projects\stemlight-deepsea\stemlight\tests\iwer\input\results\2026-11-18-songs-5-returning-starts-at-picker.png
+console errors: []

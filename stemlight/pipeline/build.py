@@ -77,6 +77,7 @@ def read_midi(path):
             if tr.name in tracks:
                 sys.exit(f"duplicate track name {tr.name!r}")
             tracks[tr.name] = sorted(notes, key=lambda n: (n[0], n[2], n[1]))
+    tempos, metres = sorted(set(tempos)), sorted(set(metres))   # LilyPond 2.6 repeats both in every track
     if len(tempos) != 1 or len(metres) != 1 or tempos[0][0] or metres[0][0]:
         sys.exit(f"{path}: expected one tempo and one time signature at tick 0, got {tempos} {metres}")
     return mf.ticks_per_beat, tempos[0][1], metres[0][1:], tracks
@@ -150,6 +151,11 @@ def build_notes(cfg, tpb, tempo_us, metre, tracks):
     ex = cfg["excerpt"]
     start_tick = (ex["first_bar"] - 1) * bar_ticks
     end_tick = ex["last_bar"] * bar_ticks
+    # excerpt.notes_before_beat (opt-in): notes starting on or after this 1-based beat of last_bar are left out
+    # (e.g. a pickup into the next section); the bar itself keeps its full length
+    note_end = end_tick
+    if ex.get("notes_before_beat") is not None:
+        note_end = end_tick - bar_ticks + round((ex["notes_before_beat"] - 1) * tpb * 4 / den)
     tmap = TempoMap(tpb, tempo_us, bar_ticks, start_tick, end_tick, ex["first_bar"], cfg.get("fermatas"))
 
     track_to = {}
@@ -165,12 +171,15 @@ def build_notes(cfg, tpb, tempo_us, metre, tracks):
                 track_to[name] = (stem, pi)
 
     dyn = dynamics_fn(cfg.get("dynamics"))
-    source_count, unmapped = 0, {}
+    source_count, dropped, unmapped = 0, 0, {}
     rng = random.Random(cfg["seed"])
     notes = []
     for name, tnotes in tracks.items():                      # file order: deterministic RNG draws
         for (s, e, pitch, vel) in tnotes:
             if not (start_tick <= s < end_tick):
+                continue
+            if s >= note_end:
+                dropped += 1
                 continue
             source_count += 1
             if name not in track_to:
@@ -186,6 +195,7 @@ def build_notes(cfg, tpb, tempo_us, metre, tracks):
                 vel = dyn(1 + s / bar_ticks)
             v = 127 * (vel / 127) ** fam["gamma"] * fam["gain"] + rng.randint(-fam["jitter"], fam["jitter"])
             part = sc["parts"][pi]
+            pitch += int(part.get("transpose", 0))           # part.transpose (opt-in): semitones, for a mis-transposed track
             dur_beats = (e - s) / tpb
             notes.append({
                 "t": max(0.0, t0 + jitter), "dur": t1 - t0, "pitch": pitch, "vel": int(min(127, max(1, round(v)))),
@@ -222,7 +232,7 @@ def build_notes(cfg, tpb, tempo_us, metre, tracks):
             downbeats.append(beats[-1])
     beats_json = {"tempo": tmap.tempo_list(), "beats": beats, "downbeats": downbeats}
     info = {"bar_ticks": bar_ticks, "start_tick": start_tick, "end_tick": end_tick, "excerpt_sec": excerpt_sec,
-            "source_count": source_count, "base_bpm": tmap.base_bpm}
+            "source_count": source_count, "base_bpm": tmap.base_bpm, "dropped": dropped}
     return notes, beats_json, info
 
 
@@ -437,6 +447,8 @@ def main():
     log(f"{cfg['id']}: bars {ex['first_bar']}-{ex['last_bar']} ({metre[0]}/{metre[1]}, quarter = {info['base_bpm']:.1f}), "
         f"excerpt {info['excerpt_sec']:.3f} s + tail {ex['tail_sec']} s = {total_sec:.3f} s")
     log(f"source excerpt notes {info['source_count']}, stem notes {sum(counts.values())}: {counts}")
+    if info["dropped"]:
+        log(f"left out {info['dropped']} notes starting on or after beat {ex['notes_before_beat']} of bar {ex['last_bar']}")
     if sum(counts.values()) != info["source_count"]:
         sys.exit("note totals do not match the source excerpt")
     empty = [s for s in STEM_ORDER if counts[s] == 0]

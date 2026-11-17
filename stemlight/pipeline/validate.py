@@ -55,6 +55,9 @@ def source_counts(cfg):
     ts = [m for tr in mf.tracks for m in tr if m.type == "time_signature"][0]
     bar = mf.ticks_per_beat * 4 * ts.numerator // ts.denominator
     t0, t1 = (cfg["excerpt"]["first_bar"] - 1) * bar, cfg["excerpt"]["last_bar"] * bar
+    nb = cfg["excerpt"].get("notes_before_beat")       # opt-in: notes from this beat of the last bar on are left out
+    if nb is not None:
+        t1 += round((nb - 1) * mf.ticks_per_beat * 4 / ts.denominator) - bar
     stem_of = {name: stem for stem, sc in cfg["stems"].items() for part in sc["parts"] for name in part["tracks"]}
     per_stem, total = {}, 0
     for tr in mf.tracks:
