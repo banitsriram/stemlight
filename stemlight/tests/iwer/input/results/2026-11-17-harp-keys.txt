@@ -1,0 +1,29 @@
+fresh page: /?piece=dvorak9&hk=1794931016197
+PASS  two-hand cut on the flute lane -> cut:add (36.71-43.42 s, 6.71 s)
+PASS  a harp take starts
+PASS  8 string targets registered (8): pitches 76 78 79 81 83 84 86 88
+PASS  count-in over, loop inside the region (t = 38.04, re-armed 0x); sweep done by t = 40.18, 69 hand moves
+shot: results/2026-11-17-harp-pluck.png
+PASS  the jump from rest to the row plucks nothing (0)
+PASS  up and back at 0.5 m/s -> 16 plucks (16): 76 78 79 81 83 84 86 88 88 86 84 83 81 79 78 76
+PASS  in string order, low to high, then back
+PASS  every plucked note in E minor
+PASS  recorded into the harp part: 16 hits, 8 distinct pitches (same-pitch hits on one 1/8 slot merge)
+PASS  the hand jumping back to rest plucks nothing (0)
+PASS  the loop goes round (pass 2 -> 3), the take ends by itself and the part keeps its 16 hits
+PASS  two-hand cut on the reed lane -> cut:add (66.71-73.42 s)
+PASS  a keyboard take starts
+PASS  8 key targets, the harp gone (8 keys, 0 strings): pitches 52 54 55 57 59 60 62 64
+PASS  count-in over, loop inside the region (t = 66.77, re-armed 1x); presses done by t = 70.27, 123 hand moves
+shot: results/2026-11-17-keys-press.png
+PASS  the jump from rest to the keyboard plays nothing (0)
+PASS  8 presses, one per key, in order (8): 52 54 55 57 59 60 62 64
+PASS  every key in E minor
+PASS  recorded into the keyboard part: 8 hits
+PASS  the hand jumping back to rest plays nothing (0)
+PASS  the loop goes round (pass 0 -> 1), the take ends by itself and the part keeps its 8 hits
+events: 66.4s cut:add cut-mwkvmhgc-5sob4 @35.13 | 121.2s cut:add cut-mwkvnnrt-3nqm4 @65.13 | 142.8s cut:remove cut-mwkvnnrt-3nqm4 @73.21 | 142.8s cut:add cut-mwkvnnrt-3nqm4-r1 @65.13
+PASS  the piece never changed or ended during the run
+PASS  no console errors
+
+ALL PASS

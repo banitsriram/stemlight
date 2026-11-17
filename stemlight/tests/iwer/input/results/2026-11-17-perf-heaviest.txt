@@ -1,0 +1,21 @@
+t=65.08  calls 54  tris 84176  notes 202  pads 2  (fps 125, emulator)
+t=66.74  calls 54  tris 83440  notes 310  pads 2  (fps 133, emulator)
+t=67.12  calls 52  tris 83520  notes 330  pads 2  (fps 138, emulator)
+t=69.1  calls 54  tris 83676  notes 369  pads 2  (fps 144, emulator)
+t=71.74  calls 52  tris 82944  notes 217  pads 2  (fps 143, emulator)
+t=74.15  calls 54  tris 83024  notes 210  pads 2  (fps 142, emulator)
+t=76.41  calls 52  tris 82964  notes 229  pads 2  (fps 145, emulator)
+t=78.64  calls 52  tris 82844  notes 199  pads 2  (fps 140, emulator)
+t=81.01  calls 52  tris 82940  notes 194  pads 2  (fps 144, emulator)
+t=83.24  calls 52  tris 82924  notes 197  pads 2  (fps 143, emulator)
+t=85.51  calls 52  tris 82952  notes 213  pads 2  (fps 144, emulator)
+t=87.76  calls 48  tris 78788  notes 221  pads 2  (fps 144, emulator)
+t=89.99  calls 50  tris 78712  notes 210  pads 2  (fps 144, emulator)
+t=92.39  calls 50  tris 78620  notes 182  pads 2  (fps 144, emulator)
+screenshot: results/2026-11-17-perf-heaviest.png
+PASS  pads + lane shown during the run
+PASS  peak draw calls < 100  (max 56)
+PASS  peak triangles < 150k  (max 84788)
+PASS  peak live notes <= 1,500  (max 380)
+Frame rate on a Quest 3/3S: unverified (no headset). The fps above is the headless emulator page and means nothing for the device.
+4/4 passed

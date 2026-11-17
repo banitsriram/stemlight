@@ -1,9 +1,10 @@
-// The playable instruments as real objects (banit's request, 13 Nov), in the same lit wood, brass and ivory look
-// as his nine section instruments (src/world/instruments.ts), modelled in code with no downloaded assets:
-//   - the harp: a gold column, a maple neck and soundbox framing the 8 strings (the strings themselves stay
-//     glowing lines in view.ts, so a pluck can light them),
-//   - the keyboard: 8 ivory keys in a black lacquer case with a red felt rail,
-//   - the pads: two small copper kettle drums whose heads are the strike surfaces.
+// The playable instruments as real objects (banit's request, 13 Nov), modelled in code with no downloaded assets,
+// in the deep-sea glass look (17 Nov, src/world/deepsea.ts): what you touch is pale frosted glass with cyan edge
+// light, the frames around it dark teal glass, their fittings neutral pale glass:
+//   - the harp: a pale glass column, a dark glass neck and soundbox framing the 8 strings (the strings themselves
+//     stay glowing lines in view.ts, so a pluck can light them),
+//   - the keyboard: 8 frosted keys in a dark glass case,
+//   - the pads: two small kettle drums with frosted heads, the strike surfaces.
 // Each is one merged mesh (one draw call) built in the seat frame (x right, y up, -z ahead) and placed each frame
 // at the seat. The key tops and drum heads sit exactly on their input targets (layout.ts): what you see is
 // what you hit. A per-vertex `part` index lets one uniform array flash a struck key or head amber and dip a key.
@@ -13,12 +14,16 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Vec3 } from '../../contracts';
+import { SEA_GLSL } from '../../world/deepsea.ts';
 import { HARP, KEYS, PADS, harpString, padLocal } from './layout.ts';
 
-type Mat = [string, number]; // colour, metal 0..1 (banit's palette, so the two sets of instruments match)
-const MAPLE: Mat = ['#8a3d14', 0], PALE: Mat = ['#d9b98a', 0], GOLD: Mat = ['#e0b24e', 1], EBONY: Mat = ['#17120f', 0.15];
-const IVORY: Mat = ['#f2ead8', 0.12], LACQUER: Mat = ['#0d0b0a', 0.55], FELT: Mat = ['#7a1020', 0];
-const COPPER: Mat = ['#b9673a', 1], SKIN: Mat = ['#efe6d2', 0], SILVER: Mat = ['#cdd5de', 1];
+type Mat = [string, number]; // glass colour, gloss 0..1 (the tint and metal of banit's instruments)
+// What you touch is pale frosted glass (its cyan edge light comes from uGlow); the frames dark teal glass; the
+// fittings neutral pale glass, so cyan stays on what you can touch.
+const FROST: Mat = ['#cdeff2', 0.12], LIP: Mat = ['#a6dce2', 0.15], DEEP: Mat = ['#0b3a45', 0.7];
+const EDGE: Mat = ['#c8d4d6', 1], BOARD: Mat = ['#c8d4d6', 0.3], EYELET: Mat = ['#06222a', 0.3], RAIL: Mat = DEEP;
+const MAPLE = DEEP, PALE = BOARD, GOLD = EDGE, EBONY = EYELET, IVORY = FROST, LACQUER = DEEP, FELT = RAIL;
+const COPPER = DEEP, SKIN = FROST, SILVER = EDGE;
 
 /** Collects parts with a tint (rgb + metal) and a part index (-1 = frame, else the key or pad it belongs to). */
 class Parts {
@@ -102,7 +107,7 @@ export function keyboard(): BufferGeometry {
   for (let i = 0; i < KEYS.count; i++) {
     const x = spread(i, KEYS.count, KEYS.spacing);
     p.add(new BoxGeometry(w, 0.018, d), IVORY, [x, top - 0.009, zc], [0, 0, 0], i);
-    p.add(new BoxGeometry(w, 0.004, 0.003), ['#e3d7bd', 0.1], [x, top - 0.016, zc + d / 2 + 0.0015], [0, 0, 0], i); // front lip
+    p.add(new BoxGeometry(w, 0.004, 0.003), LIP, [x, top - 0.016, zc + d / 2 + 0.0015], [0, 0, 0], i); // front lip
   }
   // Keybed under the keys, cheek blocks at each end, a back rail with a red felt strip and a gold line.
   p.add(new BoxGeometry(outer * 2 + 0.03, 0.014, d + 0.03), LACQUER, [0, top - 0.025, zc - 0.005]);
@@ -160,50 +165,44 @@ export function resetShell(): BufferGeometry {
     pos.setXYZ(i, x * rib, pos.getY(i) * (1 + 0.25 * (rib - 1)), zz * rib);
   }
   dome.computeVertexNormals();
-  const PEARL: Mat = ['#f1d6cb', 0.35];
+  const PEARL: Mat = ['#f2e4ec', 0.5];
   p.add(dome, PEARL, [0, 0, 0], [0, 0, 0], 0);
   for (const s of [-1, 1]) p.add(new BoxGeometry(0.016, 0.004, 0.012), PEARL, [s * 0.011, 0.001, 0.038], [0, s * 0.3, 0], 0); // hinge ears
   return p.done();
 }
 
-// Lit like banit's instruments without scene lights: a key light fixed to the view, a fake sky reflection for
-// metal. On top: a cyan fresnel rim on the playable parts (keys, heads) so they read as touchable, and the amber
-// flash and dip of a struck one. uFlash[i] is 0..1 per key or pad.
+// Deep-sea glass, lit only by the surface far above, in world space (src/world/deepsea.ts), as banit's
+// instruments are. On top: a cyan fresnel rim on the touchable parts (keys, heads, the shell) and a trace of it on
+// the frames, and the amber flash and dip of a struck one. uFlash[i] is 0..1 per key or pad.
 const VERT = /* glsl */ `
 attribute vec4 tint; attribute float part;
 uniform float uFlash[8]; uniform float uDip;
-varying vec3 vN; varying vec3 vView; varying vec4 vTint; varying float vFlash; varying float vPlay;
+varying vec3 vN; varying vec3 vToEye; varying vec4 vTint; varying float vFlash; varying float vPlay;
 void main() {
   float f = 0.0;
   for (int i = 0; i < 8; i++) if (abs(part - float(i)) < 0.5) f = uFlash[i];
   vec3 p = position;
   p.y -= uDip * f;
-  vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  vN = normalize(normalMatrix * normal);
-  vView = normalize(-mv.xyz);
+  vec4 w = modelMatrix * vec4(p, 1.0);
+  vec3 eye = -(transpose(mat3(viewMatrix)) * viewMatrix[3].xyz); // this eye's position: under multiview cameraPosition is shared by both eyes
+  vToEye = eye - w.xyz;
+  vN = normalize(mat3(modelMatrix) * normal);
   vTint = tint; vFlash = f; vPlay = part >= 0.0 ? 1.0 : 0.0;
-  gl_Position = projectionMatrix * mv;
+  gl_Position = projectionMatrix * viewMatrix * w;
 }`;
-const FRAG = /* glsl */ `
+const FRAG = SEA_GLSL + /* glsl */ `
 uniform vec3 uAmber; uniform vec3 uGlow;
-varying vec3 vN; varying vec3 vView; varying vec4 vTint; varying float vFlash; varying float vPlay;
+varying vec3 vN; varying vec3 vToEye; varying vec4 vTint; varying float vFlash; varying float vPlay;
 void main() {
-  vec3 V = normalize(vView);
+  vec3 V = normalize(vToEye);
   vec3 N = normalize(vN);
   if (dot(N, V) < 0.0) N = -N;
-  vec3 L = normalize(vec3(-0.45, 0.7, 0.55));
-  float metal = vTint.a;
-  float diff = max(dot(N, L), 0.0);
-  float spec = pow(max(dot(N, normalize(L + V)), 0.0), mix(20.0, 80.0, metal));
-  vec3 R = reflect(-V, N);
-  vec3 sky = mix(vec3(0.03, 0.04, 0.08), vec3(0.42, 0.36, 0.7), smoothstep(-0.2, 0.9, R.y))
-    + vec3(0.15, 0.6, 0.65) * pow(1.0 - abs(R.y), 6.0) * 0.5;
-  vec3 wood = vTint.rgb * (0.3 + 0.8 * diff) + vec3(spec * 0.3);
-  vec3 shiny = vTint.rgb * (0.12 + 0.45 * diff) + vTint.rgb * sky * 1.7 + mix(vTint.rgb, vec3(1.0), 0.6) * spec * 1.3;
-  vec3 c = mix(wood, shiny, metal);
-  float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-  c += uGlow * rim * (0.08 + 0.5 * vPlay) * (1.0 - vFlash);
-  c = mix(c, uAmber * (0.55 + 0.6 * diff), vFlash * 0.85) + uAmber * vFlash * (0.25 + 0.5 * rim);
+  float fres;
+  vec3 c = seaGlass(N, V, vTint.rgb, vTint.a, fres);
+  float idle = 1.0 - vFlash;
+  c += uGlow * (fres * (0.12 + 0.85 * vPlay) + 0.08 * vPlay) * idle;
+  float wrap = 0.5 + 0.5 * dot(N, SEA_L);
+  c = mix(c, uAmber * (0.5 + 0.5 * wrap), vFlash * 0.85) + uAmber * vFlash * (0.25 + 0.6 * fres);
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;

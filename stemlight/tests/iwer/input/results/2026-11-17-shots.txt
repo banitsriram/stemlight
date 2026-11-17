@@ -1,0 +1,7 @@
+shot 1-ribbon-lane: results/2026-11-17-shot-1-ribbon-lane.png
+shot 2-playhead-held: results/2026-11-17-shot-2-playhead-held.png
+shot 3-cut-preview: results/2026-11-17-shot-3-cut-preview.png
+shot 4-region-pads-countin: results/2026-11-17-shot-4-region-pads-countin.png
+shot 5-pad-hit-amber: results/2026-11-17-shot-5-pad-hit-amber.png
+pad strikes: [{"count":2,"pad":"pad:0","pitch":47,"vel":45}]
+shot 6-reset-ring-half: results/2026-11-17-shot-6-reset-ring-half.png
