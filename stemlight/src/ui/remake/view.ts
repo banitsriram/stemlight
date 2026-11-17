@@ -20,11 +20,11 @@ const LINE_CAP = 4000;
 
 // Deep-sea glass (17 Nov, src/world/deepsea.ts): the ribbon is frosted teal glass with cyan edge light (cyan is
 // touchable), ticks and quiet guides are the water's shallows, amber stays yours. Harp strings glow pale aqua; the
-// two tonic strings are a deep rose, as a real harp marks its Cs (much darker than the aqua strings, so the
-// marks survive colour blindness: luminance contrast about 4.3, the old red on cream was 3.3).
+// two tonic strings glow rose with a wider rose halo, as a real harp marks its Cs. The lines add light, so a darker
+// colour would only fade them: they differ by hue and by halo width, which also reads for colour-blind players.
 const C = {
   glass: new Color('#0F4F5E'), teal: new Color(SEA.shallows), cyan: new Color(SEA.cyan), amber: new Color(SEA.amber),
-  foam: new Color(SEA.foam), gut: new Color('#D8F6FA'), tonic: new Color('#D0306A'),
+  foam: new Color(SEA.foam), gut: new Color('#D8F6FA'), tonic: new Color('#FF6FA8'),
 };
 const AMBER_CB = new Color('#D55E00');
 /** How far (m) a freshly plucked string swings either side at its middle. */
@@ -255,14 +255,14 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       }
     }
 
-    // Harp: the frame is a model; the strings are glowing lines, pale aqua (the two tonic strings deep rose, as a
-    // real harp marks its Cs), with a soft cyan glow; a plucked string turns amber, glows wider and flares.
+    // Harp: the frame is a model; the strings are glowing lines, pale aqua with a soft cyan glow (the two tonic
+    // strings rose with a wider rose glow, as a real harp marks its Cs); a plucked string turns amber and flares.
     placeModel(models.harp, view.strings.length > 0, P);
     view.strings.forEach((st, i) => {
       const tonic = i === 0 || i === view.strings.length - 1;
       const col = tmpC.copy(tonic ? C.tonic : C.gut).lerp(amber, st.flash);
-      line(st.a, st.b, col, 1 + 1.2 * st.flash);
-      glowLine(st.a, st.b, eye, C.cyan, 0.22 * (1 - st.flash), 0.005);
+      line(st.a, st.b, col, (tonic ? 1.3 : 1) + 1.2 * st.flash);
+      glowLine(st.a, st.b, eye, tonic ? C.tonic : C.cyan, (tonic ? 0.4 : 0.22) * (1 - st.flash), tonic ? 0.009 : 0.005);
       if (st.flash > 0) {
         // A plucked string blurs into a lens, widest in the middle and still at its ends, the way a vibrating
         // string looks to the eye; it flickers and narrows as the flash fades.
