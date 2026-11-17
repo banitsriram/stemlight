@@ -7,7 +7,10 @@
 //  - Enter (a real click) starts XR and the music on the audio clock, with no controllers;
 //  - leaving VR shows Resume, and Resume carries the music on;
 //  - a reload in the same profile comes back clean, with the save in IndexedDB;
-//  - with --full: the whole sequence plays, every piece in order (about 4 minutes).
+//  - with --full: the tutorial song plays to its end and the song picker waits (no song starts by itself); a
+//    fingertip touch on a bubble plays Dvorak, the songs bubble held mid-song brings the picker back, and a touch
+//    plays Beethoven 7 (about 2.5 minutes). The emulated right index tip is placed with the standard WebXR
+//    joint pose, the way a real hand reaches it.
 // Usage (from stemlight/):
 //   node tests/browser/release-check.mjs [url] [--expect assets/index-XXXX.js] [--full]
 // Default url: https://stemlight.vercel.app/
@@ -42,7 +45,7 @@ try {
     const device = new window.IWER.XRDevice(window.IWER.metaQuest3);
     device.primaryInputMode = 'hand';
     device.installRuntime({ forceInstall: true }); // Chromium's own navigator.xr has no headset behind it
-    window.__judge = { sessions: [], contexts: [], sources: 0 };
+    window.__judge = { sessions: [], contexts: [], sources: 0, device };
     const req = navigator.xr.requestSession.bind(navigator.xr);
     navigator.xr.requestSession = async (...a) => { const s = await req(...a); window.__judge.sessions.push(s); return s; };
     const AC = window.AudioContext;
@@ -81,6 +84,7 @@ try {
 
   // ---- Enter: XR + music, hands only ----
   await enterButton('Enter').click();
+  const t0Music = Date.now();
   // The unlock plays one silent source; the music starts one per stem.
   for (let i = 0; i < 120 && (await audio()).sources < 2; i++) await sleep(250);
   await watchEnd();
@@ -92,18 +96,73 @@ try {
   const firstPiece = requests.find((r) => /\/pieces\/[^/]+\/manifest\.json/.test(r.url));
   log(`first piece: ${firstPiece ? firstPiece.url.match(/pieces\/([^/]+)\//)[1] : 'none'}`);
 
-  // ---- full sequence ----
+  // ---- full sequence: the song picker (18 Nov) ----
   if (FULL) {
-    const order = () => [...new Set(requests.filter((r) => /\/pieces\/[^/]+\/manifest\.json/.test(r.url)).map((r) => r.url.match(/pieces\/([^/]+)\//)[1]))];
+    // A piece starts when its beats.json loads: the picker reads every song's manifest up front, so manifests no
+    // longer mark a start. Bubble positions come from the app's own layout (picker.ts, layout.ts), at the seat the
+    // app fixes on the first play: the headset's pose then (it doesn't move in this run).
+    const loaded = () => [...new Set(requests.filter((r) => /\/pieces\/[^/]+\/beats\.json/.test(r.url)).map((r) => r.url.match(/pieces\/([^/]+)\//)[1]))];
+    const { bubbleLocal, songsBubbleLocal } = await import('../../src/ui/remake/picker.ts');
+    const { toWorld } = await import('../../src/ui/remake/layout.ts');
+    const { SONGS } = await import('../../src/audio/sequence.ts');
+    const ids = SONGS.map((s) => s.id);
+    const eye = await page.evaluate(() => { const p = window.__judge.device.position; return [p.x, p.y, p.z]; });
+    const seat = { eye, yaw: 0 };
+    const bubble = (id) => toWorld(seat, bubbleLocal(ids.indexOf(id), ids.length));
+    // Moves the emulated right hand so its index fingertip (read back from the XR frame) lands on `at`, for `holdMs`.
+    const tipTo = (at, holdMs) => page.evaluate(async ({ at, holdMs }) => {
+      const dev = window.__judge.device, s = window.__judge.sessions.at(-1), hand = dev.hands.right;
+      const src = [...s.inputSources].find((i) => i.hand && i.handedness === 'right');
+      if (!src) return { ok: false, why: 'no tracked right hand' };
+      const space = await s.requestReferenceSpace('local-floor');
+      const tip = () => new Promise((res) => s.requestAnimationFrame((_, f) => {
+        const p = f.getJointPose(src.hand.get('index-finger-tip'), space);
+        res(p ? [p.transform.position.x, p.transform.position.y, p.transform.position.z] : null);
+      }));
+      let t = null;
+      for (let i = 0; i < 4; i++) {
+        t = await tip();
+        if (!t) return { ok: false, why: 'no index tip pose' };
+        const g = hand.position;
+        hand.position.set(g.x + at[0] - t[0], g.y + at[1] - t[1], g.z + at[2] - t[2]);
+      }
+      t = await tip();
+      await new Promise((r) => setTimeout(r, holdMs));
+      return { ok: true, tip: t, err: Math.hypot(t[0] - at[0], t[1] - at[1], t[2] - at[2]) };
+    }, { at, holdMs });
+    const towardEye = (p, m) => { const d = [eye[0] - p[0], eye[1] - p[1], eye[2] - p[2]], l = Math.hypot(...d); return p.map((x, i) => x + (d[i] / l) * m); };
+    // Touch a bubble: come in from 12 cm nearer the eye once the picker has armed, then back out.
+    const touchSong = async (id) => {
+      await tipTo(towardEye(bubble(id), 0.12), 1500);
+      const r = await tipTo(bubble(id), 600);
+      await tipTo(towardEye(bubble(id), 0.12), 300);
+      return r;
+    };
+    const waitFor = async (pred, ms) => { const t1 = Date.now(); while (Date.now() - t1 < ms) { if (await pred()) return true; await sleep(500); } return false; };
     const start = Date.now();
-    let last = order().length, quietSince = Date.now();
-    // Wait until no new piece has started for 200 s, or 8 minutes in all.
-    while (Date.now() - start < 480000 && Date.now() - quietSince < 200000) {
-      await sleep(5000);
-      if (order().length !== last) { last = order().length; quietSince = Date.now(); log(`  ${((Date.now() - start) / 1000).toFixed(0)} s: piece ${order().at(-1)} started`); }
-    }
-    const a = await audio();
-    check(order().length >= 2, `full run: pieces played in order ${order().join(' -> ')} (${((Date.now() - start) / 1000).toFixed(0)} s, audio ${a.state})`);
+    const first = loaded()[0];
+    const dur = await page.evaluate(async (id) => (await (await fetch(`/pieces/${id}/manifest.json`)).json()).durationSec, first);
+    await sleep(Math.max(0, (dur + 8) * 1000 - (Date.now() - t0Music)));
+    const quietSources = (await audio()).sources;
+    await sleep(4000);
+    check(loaded().length === 1 && (await audio()).sources === quietSources,
+      `full run: ${first} played to its end (${dur.toFixed(0)} s), then the picker waited: no song started by itself`);
+    // Touch Dvorak.
+    const s0 = (await audio()).sources;
+    const r1 = await touchSong('dvorak9');
+    const dv = await waitFor(async () => loaded().includes('dvorak9') && (await audio()).sources > s0, 20000);
+    check(dv, `touching the Dvorak bubble plays it (tip ${r1.ok ? `${(r1.err * 100).toFixed(1)} cm from the centre` : r1.why}; loaded ${loaded().join(' -> ')})`);
+    await sleep(5000);
+    // Hold the songs bubble (beside the reset shell), then touch Beethoven 7.
+    const songsAt = toWorld(seat, songsBubbleLocal());
+    const s1 = (await audio()).sources;
+    await tipTo(towardEye(songsAt, 0.1), 500);
+    const r2 = await tipTo(songsAt, 1600);
+    await tipTo(towardEye(songsAt, 0.12), 1200);
+    const r3 = await touchSong('beethoven7');
+    const b7 = await waitFor(async () => loaded().includes('beethoven7') && (await audio()).sources > s1, 20000);
+    check(b7, `holding the songs bubble brings the picker back; touching Beethoven 7 plays it (hold tip ${r2.ok ? `${(r2.err * 100).toFixed(1)} cm` : r2.why}, touch ${r3.ok ? `${(r3.err * 100).toFixed(1)} cm` : r3.why}; loaded ${loaded().join(' -> ')}; ${((Date.now() - start) / 1000).toFixed(0)} s)`);
+    await sleep(4000);
   }
 
   // ---- leave VR, Resume ----

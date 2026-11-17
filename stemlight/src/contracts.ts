@@ -1,4 +1,4 @@
-export type PieceId = 'beethoven5' | 'dvorak9' | 'trepak';
+export type PieceId = 'beethoven5' | 'dvorak9' | 'beethoven7' | 'trepak';
 export type StemId = 'vln'|'vla_vc'|'cb'|'fl'|'reeds'|'hn'|'brass'|'perc'|'harp';
 export type Glyph = 'whole'|'half'|'dotted_half'|'quarter'|'dotted_quarter'|'eighth'|'sixteenth'|'beamed_eighths'|'beamed_sixteenths';
 export type Hand = 'left'|'right';
@@ -23,7 +23,7 @@ export interface UserPart { cutId: string; instrument: Instrument; hits: UserHit
 export interface MixState { mute: Record<StemId, MuteState>; solo: StemId|null; eq: Record<StemId, { low: number; mid: number; high: number }>; cuts: Cut[]; parts: UserPart[] }
 export interface SaveState { version: 1; tutorialDone: boolean; perPiece: Partial<Record<PieceId, MixState>>; palette: 'default'|'cb' }
 
-export type TargetKind = 'creature'|'playhead'|'lane'|'region'|'pad'|'string'|'key'|'reset';
+export type TargetKind = 'creature'|'playhead'|'lane'|'region'|'pad'|'string'|'key'|'reset'|'song';
 export interface Target { id: string; kind: TargetKind; stem?: StemId; center: Vec3; radius: number; extra?: Record<string, number> } // B registers, A reads
 // Target.extra keys the gestures read (biyon-16 convention): dx, dy, dz = unit direction of increasing time (playhead, lane)
 // or the pad's face normal; secPerM = seconds per metre along that direction; tCenter = piece time at a lane's center;
@@ -52,6 +52,7 @@ export interface Events {
   'part:hit': { cutId: string; instrument: Instrument; pitch: number; vel: number; t: number; from: Vec3 };
   'reset:progress': { progress: number }; 'app:reset': { piece: PieceId };
   'app:pause': {}; 'app:resume': {};
+  'songs:open': { why: 'start' | 'end' | 'shell' }; 'songs:pick': { id: PieceId };   // the song picker (18 Nov): it opened, a song was chosen
   'tutorial:step': { step: TutorialStep };                                 // B emits; A may gate gestures
 }
 export interface Bus { on<K extends keyof Events>(k: K, f: (e: Events[K]) => void): () => void; emit<K extends keyof Events>(k: K, e: Events[K]): void }

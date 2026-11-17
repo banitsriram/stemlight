@@ -32,6 +32,8 @@ export interface Engine {
   update(): void;
   /** Head pose for the HRTF listener, in world space. */
   setListener(pos: Vec3, forward: Vec3, up: Vec3): void;
+  /** Fades the music out over `sec`, then pauses the transport and restores the level (the song picker, 18 Nov). */
+  fadeOut(sec?: number): Promise<void>;
   stems(): readonly StemChain[];
   mix(): Readonly<Mix>;
   log: AudioLogEntry[];
@@ -77,7 +79,10 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
   master.ratio.value = 3;
   master.attack.value = 0.01;
   master.release.value = 0.25;
-  master.connect(ctx.destination);
+  // A unity gain after the compressor, so the song picker can fade the music out without touching the mix.
+  const out = ctx.createGain();
+  master.connect(out);
+  out.connect(ctx.destination);
 
   const sfx = ctx.createGain();
   sfx.gain.value = 0.8;
@@ -217,6 +222,8 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
     play() {
       if (running || !stems.length) return;
       if (offset >= length) offset = 0;
+      out.gain.cancelScheduledValues(ctx.currentTime);
+      out.gain.setValueAtTime(1, ctx.currentTime); // full level, even straight after a fade
       ended = false;
       startSources(offset);
       running = true;
@@ -383,6 +390,19 @@ export function createEngine(bus: Bus, opts: EngineOptions = {}): Engine {
 
   return {
     audio, transport, load, update, setListener, stems: () => stems, mix: () => mix, log,
+    fadeOut(sec = 0.6) {
+      if (!running) return Promise.resolve();
+      const now = ctx.currentTime;
+      out.gain.cancelScheduledValues(now);
+      out.gain.setValueAtTime(out.gain.value, now);
+      out.gain.linearRampToValueAtTime(0, now + sec);
+      return new Promise<void>((resolve) => setTimeout(() => {
+        transport.pause();
+        out.gain.cancelScheduledValues(ctx.currentTime);
+        out.gain.setValueAtTime(1, ctx.currentTime);
+        resolve();
+      }, sec * 1000));
+    },
     setRegions(fn) {
       regionsFor = fn;
       // Re-plan the rest of the running segment so a new cut is heard straight away.

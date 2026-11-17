@@ -99,7 +99,7 @@ const freshHand = (): HandState => ({
 
 /** The reach spot for a head pose: 0.45 m ahead (level) and 0.15 m below the eye. Matches world/shell.ts reachSpot. */
 /** Things you look at to touch: looking at one of these never summons the creature behind it. */
-const LOOK_AT_KINDS: ReadonlySet<string> = new Set(['string', 'key', 'pad', 'reset', 'playhead', 'lane']);
+const LOOK_AT_KINDS: ReadonlySet<string> = new Set(['string', 'key', 'pad', 'reset', 'playhead', 'lane', 'song']);
 
 export function reachSpotFor(head: HeadFrame): Vec3 {
   const yaw = Math.atan2(-head.dir[0], -head.dir[2]);

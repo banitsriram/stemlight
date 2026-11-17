@@ -1,0 +1,18 @@
+url: https://stemlight.vercel.app/
+profile: brand-new, empty, deleted afterwards
+PASS page loads (HTTP 200)
+Enter visible after 3.1 s
+live bundle: assets/index-BL3uDj3p.js
+PASS pinned build is live (expected assets/index-BL3uDj3p.js)
+PASS no dev code shipped (window.__stemlight absent, DevHandPose not in bundle, bundle 0.23 MB)
+after Enter: XR session true, audio running, clock 2.44 -> 5.46 s, 10 sources started
+PASS Enter starts XR and the music (emulated Quest 3, hands only)
+first piece: beethoven5
+  85 s: piece dvorak9 started
+PASS full run: pieces played in order beethoven5 -> dvorak9 (285 s, audio running)
+PASS leaving VR shows Resume
+PASS Resume re-enters and the music carries on (session true, clock 292.22 -> 294.74 s)
+PASS reload comes back clean (button "Enter", IndexedDB ["stemlight"])
+PASS no page errors
+PASS no console errors
+PASS no failed requests (72 responses)

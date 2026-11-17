@@ -1,0 +1,91 @@
+// The song picker's look, in the deep-sea glass of the play surfaces: each song a frosted glass bubble with cyan
+// edge light (you can touch it), the song played last tinted amber (yours), its title and length above it, a
+// caption over the arc, and the small songs bubble with its label and a ring that fills while it's held.
+import { Color, Group, Mesh, MeshBasicMaterial, RingGeometry, type Object3D } from 'three';
+import type { Vec3 } from '../../contracts';
+import { textSprite } from '../../story/card.ts';
+import { SEA } from '../../world/deepsea.ts';
+import { instrumentMesh, songBubble } from './models.ts';
+import { PICKER, SONGS_BUBBLE, songLabel, type SongInfo } from './picker.ts';
+
+export interface PickerDraw {
+  bubbles: Vec3[]; // the open picker's bubbles; empty while closed
+  current: number; // the song played last (amber tint), -1 for none
+  loading: number; // the song just touched, pulsing amber while it loads, -1 for none
+  songsAt: Vec3 | null; // the songs bubble while a song plays
+  hold: number; // 0..1 while the songs bubble is held
+  eye: Vec3;
+  clock: number; // seconds
+}
+
+const RING_STEPS = 24;
+
+export function createPickerView(scene: Object3D, songs: readonly SongInfo[]) {
+  const group = new Group();
+  scene.add(group);
+  const cyan = new Color(SEA.cyan), amber = new Color(SEA.amber);
+  const geo = songBubble();
+  const bubbles = songs.map(() => {
+    const m = instrumentMesh(geo, amber, cyan);
+    m.scale.setScalar(PICKER.radius);
+    group.add(m);
+    return m;
+  });
+  const labels = songs.map((s) => {
+    const t = textSprite(0.17, 512, 2.4);
+    t.set(songLabel(s), 0.17);
+    t.sprite.visible = false;
+    group.add(t.sprite);
+    return t;
+  });
+  const caption = textSprite(0.3, 1024, 8);
+  caption.set(['Touch a song to play it']);
+  caption.sprite.visible = false;
+  group.add(caption.sprite);
+  const small = instrumentMesh(geo, amber, cyan);
+  small.scale.setScalar(SONGS_BUBBLE.radius);
+  group.add(small);
+  const smallLabel = textSprite(0.08, 256, 3);
+  smallLabel.set(['Songs']);
+  smallLabel.sprite.visible = false;
+  group.add(smallLabel.sprite);
+  const rings = Array.from({ length: RING_STEPS }, (_, k) =>
+    new RingGeometry(SONGS_BUBBLE.radius + 0.006, SONGS_BUBBLE.radius + 0.013, 40, 1, Math.PI / 2, -(Math.PI * 2 * (k + 1)) / RING_STEPS));
+  const ring = new Mesh(rings[0], new MeshBasicMaterial({ color: cyan, transparent: true, opacity: 0.9, depthWrite: false }));
+  ring.visible = false;
+  group.add(ring);
+
+  return {
+    /** Relabels song i (its length arrives with its manifest). */
+    label(i: number, s: SongInfo) { labels[i]?.set(songLabel(s), 0.17); },
+    draw(d: PickerDraw) {
+      let cx = 0, cy = 0, cz = 0;
+      bubbles.forEach((m, i) => {
+        const c = d.bubbles[i];
+        m.visible = labels[i].sprite.visible = !!c;
+        if (!c) return;
+        const bob = 0.003 * Math.sin(d.clock * 1.6 + i * 2.1); // a slow drift, like a bubble in water
+        m.position.set(c[0], c[1] + bob, c[2]);
+        (m.material.uniforms.uFlash.value as number[])[0] =
+          i === d.loading ? 0.55 + 0.45 * Math.sin(d.clock * 9) : i === d.current ? 0.3 : 0;
+        labels[i].sprite.position.set(c[0], c[1] + 0.1, c[2]);
+        cx += c[0]; cy += c[1]; cz += c[2];
+      });
+      const n = d.bubbles.length;
+      caption.sprite.visible = n > 0;
+      if (n) caption.sprite.position.set(cx / n, cy / n + 0.19, cz / n);
+      small.visible = smallLabel.sprite.visible = !!d.songsAt;
+      ring.visible = !!d.songsAt && d.hold > 0;
+      if (!d.songsAt) return;
+      const [x, y, z] = d.songsAt;
+      small.position.set(x, y, z);
+      (small.material.uniforms.uFlash.value as number[])[0] = 0.8 * d.hold;
+      smallLabel.sprite.position.set(x, y - 0.06, z);
+      if (ring.visible) {
+        ring.geometry = rings[Math.min(RING_STEPS - 1, Math.floor(d.hold * RING_STEPS))];
+        ring.position.set(x, y, z);
+        ring.lookAt(d.eye[0], d.eye[1], d.eye[2]);
+      }
+    },
+  };
+}

@@ -171,6 +171,17 @@ export function resetShell(): BufferGeometry {
   return p.done();
 }
 
+/**
+ * A song in the picker (18 Nov): a frosted glass bubble around a small pearl, one draw call. Part 0, so a touch
+ * can flash it amber; radius 1 (scale it to size).
+ */
+export function songBubble(): BufferGeometry {
+  const p = new Parts();
+  p.add(new SphereGeometry(1, 32, 16), FROST, [0, 0, 0], [0, 0, 0], 0);
+  p.add(new SphereGeometry(0.34, 16, 10), ['#f2e4ec', 0.5], [0.18, 0.22, 0.2], [0, 0, 0], 0);
+  return p.done();
+}
+
 // Deep-sea glass, lit only by the surface far above, in world space (src/world/deepsea.ts), as banit's
 // instruments are. On top: a cyan fresnel rim on the touchable parts (keys, heads, the shell) and a trace of it on
 // the frames, and the amber flash and dip of a struck one. uFlash[i] is 0..1 per key or pad.
