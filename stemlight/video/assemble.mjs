@@ -16,15 +16,19 @@ const EDIT = [
   ['clip', '02-fist-glass', 10.5, 2.4],
   ['card', { title: 'Stemlight', sub: PITCH }, 4],
   ['clip', '01-opening', 8, 0],
-  ['clip', '03-solo', 11, 2.6],
+  ['clip', '03-solo', 11, 3],
+  ['clip', '08-cut', 9, 6],
+  ['clip', '09-drums', 10, 15],
+  ['clip', '10-harp', 8, 9],
+  ['clip', '11-keys', 9, 14.5],
   ['clip', '04-field-pan', null, 1.6],
   ['clip', '05-dvorak-brass', 8, 2.5],
   ['clip', '07-second-visit', 6, 1],
   ['clip', '06-end-card', 9, 4],
-  ['card', { title: 'Stemlight', sub: 'Seated · hands only · about 5 minutes · no account', foot: 'Dvořák, Symphony No. 9, mvt 4: Mutopia #1793, CC BY-SA 3.0 (creativecommons.org/licenses/by-sa/3.0) · Beethoven, Symphony No. 5: Mutopia #941, public domain' }, 5],
+  ['card', { title: 'Stemlight', sub: 'Seated · hands only · about 4 minutes · no account', foot: 'Dvořák, Symphony No. 9, mvt 4: Mutopia #1793, CC BY-SA 3.0 (creativecommons.org/licenses/by-sa/3.0) · Beethoven, Symphony No. 5: Mutopia #941, public domain' }, 5],
 ];
 // Stills: [clip, second]
-const STILL_AT = [['02-fist-glass', 8.6], ['02-fist-glass', 12.5], ['03-solo', 8], ['04-field-pan', 5], ['05-dvorak-brass', 9], ['06-end-card', 9], ['07-second-visit', 4]];
+const STILL_AT = [['02-fist-glass', 8.6], ['02-fist-glass', 12.5], ['03-solo', 9], ['08-cut', 11], ['09-drums', 21], ['10-harp', 13], ['11-keys', 19], ['04-field-pan', 5], ['05-dvorak-brass', 9], ['06-end-card', 9], ['07-second-visit', 4]];
 
 const sh = (cmd) => execSync(cmd, { stdio: ['ignore', 'pipe', 'inherit'] }).toString();
 const browser = await chromium.launch();

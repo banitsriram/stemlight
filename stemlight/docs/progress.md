@@ -2,6 +2,14 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 17 Nov 2026: banit, video re-shot from the frozen build (instruments), four new play shots, script draft 2
+
+- All 11 shots in `video/shots.json` were recorded from main at 558419a (the frozen judge build, no `src` changes): the 7 old ones again with the instruments, plus `08-cut`, `09-drums`, `10-harp`, `11-keys`. `video/capture.mjs` gained `cut()` (two-hand pull on a lane), `play()` (fingertip path, waits for the take) and an in-page double pinch (the old one sent pinches 0.89 s apart; the window is 0.45 s).
+- Evidence, from the ledger events: `stem:solo vla_vc` on at 6.87 s and off at 12.71 s; `cut:add` for hn, perc, fl, reeds; `part:hit` 6 on pads, 23 on harp, 8 on keys (52 to 64). Contact sheets checked by eye for each clip.
+- `video/assemble.mjs` builds a 102 s rough cut (-15.0 LUFS integrated, no narration yet); the closing card now says about 4 minutes. 11 stills in `video/stills/`. `video/VOICEOVER.md` is draft 2: 13 lines, instruments not creatures, lines for cut, drums, harp and keys.
+- **Found, not fixed (frozen, biyon's file):** `src/input/engine.ts` `rowUp()` covers string and key targets but not pads, so a pointing hand inside the summoned timpani's sphere while drumming arms a fist and mutes the timpani (`stem:mute perc held`, then `locked`). The video drums with an open hand. Sent to biyon.
+- Limits: emulator only, labelled on every frame. The captures hold roughly 10 to 15 distinct frames a second on this machine, so motion in the cut is not smooth; that says nothing about Quest frame rate. Not done: narration (banit records it), captions, final mix.
+
 ## 13 Nov 2026 (evening): banit, the nine sections are now real instruments, modelled in code
 
 - banit asked for proper instruments in place of the sea creatures. `src/world/instruments.ts` builds all nine from code (no downloaded assets, so no new `ASSETS.md` rows): violin, cello (violas and cellos), double bass (sloped shoulders, endpin), flute (lip plate, 12 key cups on rods), clarinet (barrel, mouthpiece and reed, ring keys, bell), French horn (1.3-turn coil into a flared bell, 3 rotary valves with slides and levers), trumpet (lead pipe, tuning slide, 3 piston valves with pearl buttons, flared bell), timpani (copper bowl, head, hoop, 8 lugs, legs, pedal, two mallets) and concert harp (column, harmonic curve, soundbox, base, 26 strings with red Cs and dark Fs).

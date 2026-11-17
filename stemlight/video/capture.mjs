@@ -26,7 +26,7 @@ async function open(browser, { piece = 'beethoven5', tutorial = false, context }
       return connect.call(this, dest, ...rest);
     };
   });
-  await page.goto(`https://localhost:${PORT}/?piece=${piece}`);
+  await page.goto(`https://localhost:${PORT}/?piece=${piece}`, { timeout: 180000, waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__stemlight?.engine.stems().length > 0, null, { timeout: 120000 });
   if (!tutorial && !(await page.evaluate(() => window.__stemlight.ctx.save.load().tutorialDone))) {
     // The tutorial reads tutorialDone at load, so save it and load again.
@@ -62,16 +62,70 @@ async function open(browser, { piece = 'beethoven5', tutorial = false, context }
     },
     hand: (side, position, duration = 0.5) => rc('animate_to', { device: `hand-${side}`, position: { x: position[0], y: position[1], z: position[2] }, orientation: 'auto', anchor: 'grasp', duration }),
     pose: (side, poseId, duration = 0.15) => rc('set_hand_pose', { device: `hand-${side}`, poseId, duration }),
-    async pinch(side, times = 1) {
-      for (let i = 0; i < times; i++) {
-        await rc('set_select_value', { device: `hand-${side}`, value: 1, duration: 0.05 });
-        await page.waitForTimeout(110);
-        await rc('set_select_value', { device: `hand-${side}`, value: 0, duration: 0.05 });
-        await page.waitForTimeout(110);
-      }
-    },
+    /** Quick pinches, timed inside the page: a round trip per press is too slow for the 0.45 s double-pinch window. */
+    pinch: (side, times = 1) => page.evaluate(async ({ side, times }) => {
+      const set = (value) => window.IWER_DEVICE.remote.dispatch('set_select_value', { device: `hand-${side}`, value, duration: 0.04 });
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      for (let i = 0; i < times; i++) { await set(1); await wait(100); await set(0); await wait(100); }
+    }, { side, times }),
     /** Hands resting low and ahead, palms in, both in view. */
     async rest() { await api.hand('left', [-0.2, 1.08, -0.35], 0.01); await api.hand('right', [0.2, 1.08, -0.35], 0.01); await api.pose('left', 'default', 0); await api.pose('right', 'default', 0); },
+    targets: (kind) => page.evaluate((k) => window.__stemlight.ctx.registry.all().filter((t) => t.kind === k), kind),
+    /** Both hands pinch the summoned instrument's lane and pull apart: a cut. Returns the cut, or null. */
+    async cut(stem, half = 0.13) {
+      const lane = (await api.targets('lane'))[0];
+      if (!lane || lane.stem !== stem) return null;
+      const d = [lane.extra.dx, lane.extra.dy, lane.extra.dz];
+      const at = (k) => lane.center.map((x, i) => x + d[i] * k);
+      await Promise.all([api.hand('left', at(-0.04), 0.5), api.hand('right', at(0.04), 0.5)]);
+      await api.wait(0.7);
+      await Promise.all(['left', 'right'].map((h) => rc('set_select_value', { device: `hand-${h}`, value: 1, duration: 0.05 })));
+      await api.wait(0.3);
+      await Promise.all([api.hand('left', at(-half), 0.9), api.hand('right', at(half), 0.9)]);
+      await api.wait(1.2);
+      await Promise.all(['left', 'right'].map((h) => rc('set_select_value', { device: `hand-${h}`, value: 0, duration: 0.05 })));
+      await api.wait(0.3);
+      await api.hand('left', [-0.3, 0.95, -0.2], 0.5);
+      return page.evaluate((s) => window.__stemlight.parts.cuts().filter((c) => c.stem === s).at(-1) ?? null, stem);
+    },
+    /**
+     * In the page, in real time (the music does not wait for a round trip per move): waits until the take's
+     * loop is inside the cut with `need` seconds to spare, re-arming the cut if the take ran out first, then
+     * moves the right index tip along `path`: [{ p }, { p, ms, hold? }, ...], a jump then straight lines.
+     */
+    play: (cut, path, need, pose = 'point') => page.evaluate(async ({ cut, path, need, pose }) => {
+      const s = window.__stemlight, dev = window.IWER_DEVICE, tr = s.ctx.transport;
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      let cur = cut, rearmed = 0;
+      const began = performance.now();
+      for (;;) {
+        const take = s.parts.taking(), t = tr.time();
+        if (take && t >= cur.t0 + 0.05 && t < cur.t1 - need) break;
+        if (!take && rearmed < 2) {
+          rearmed++;
+          s.ctx.bus.emit('cut:remove', { id: cur.id });
+          cur = { ...cut, id: `${cut.id}-r${rearmed}` };
+          s.ctx.bus.emit('cut:add', { cut: cur });
+        }
+        if (performance.now() - began > 40000) return { error: `never inside the region (t = ${t.toFixed(2)})` };
+        await wait(20);
+      }
+      dev.hands.right.poseId = pose;
+      const put = (p) => dev.remote.dispatch('set_transform', { device: 'hand-right', position: { x: p[0], y: p[1], z: p[2] }, anchor: 'index-tip', orientation: 'auto' });
+      await put(path[0].p);
+      await wait(150);
+      for (let i = 1; i < path.length; i++) {
+        const a = path[i - 1].p, b = path[i].p, at = performance.now();
+        for (;;) {
+          const k = Math.min(1, (performance.now() - at) / path[i].ms);
+          await put(a.map((x, j) => x + (b[j] - x) * k));
+          if (k >= 1) break;
+          await wait(8);
+        }
+        if (path[i].hold) await wait(path[i].hold);
+      }
+      return { rearmed };
+    }, { cut, path, need, pose }),
     /** Look at a creature until the gaze summons it, then wait for the glide. */
     async summon(stem, sec = 1.2) { await api.look(await api.center(stem), sec); await api.wait(1.4); },
   };
@@ -89,7 +143,7 @@ async function record(api, fn) {
   const events = [];
   const t0 = Date.now();
   await api.page.exposeFunction('__note', (e) => events.push([+((Date.now() - t0) / 1000).toFixed(2), e])).catch(() => {});
-  await api.page.evaluate(() => { for (const k of ['gaze:summon', 'stem:mute', 'stem:solo', 'piece:end', 'piece:ready']) window.__stemlight.ctx.bus.on(k, (e) => window.__note(`${k} ${e.stem ?? e.id ?? ''} ${e.state ?? ''}`.trim())); });
+  await api.page.evaluate(() => { for (const k of ['gaze:summon', 'stem:mute', 'stem:solo', 'piece:end', 'piece:ready', 'cut:add', 'part:hit']) window.__stemlight.ctx.bus.on(k, (e) => window.__note(`${k} ${e.stem ?? e.id ?? e.cut?.stem ?? e.instrument ?? e.targetId ?? ''} ${e.state ?? e.pitch ?? e.down ?? ''}`.trim())); });
   await fn(api);
   const b64 = await api.page.evaluate(async () => {
     const rec = window.__rec; rec.stop(); await new Promise((r) => (rec.onstop = r));
@@ -105,7 +159,7 @@ async function record(api, fn) {
 // Positions are XR-origin metres; the seats come from the manifests.
 const SHOTS = {
   '01-opening': {
-    what: 'First visit as a judge sees it: Enter, the first creature comes to you, Look / Make a fist with ghost hands',
+    what: 'First visit as a judge sees it: Enter, the first instrument comes to you, Look / Make a fist with ghost hands',
     opts: { tutorial: true },
     run: async (a) => { await a.rest(); await a.wait(12); },
   },
@@ -135,9 +189,9 @@ const SHOTS = {
     },
   },
   '04-field-pan': {
-    what: 'Beethoven tutti: a slow head pan across the whole field of creatures and notes',
+    what: 'Beethoven tutti: a slow head pan across the whole field of instruments and notes',
     run: async (a) => {
-      // Gaze stays above the creatures (summon needs 12° for 0.5 s), so nothing flies in mid-pan.
+      // Gaze stays above the instruments (summon needs 12° for 0.5 s), so nothing flies in mid-pan.
       await a.rest(); await a.seek(66); await a.look([-2.2, 2.35, -1.6], 1); await a.wait(0.5);
       await a.look([0, 2.4, -2.4], 4); await a.look([2.2, 2.35, -1.6], 4); await a.wait(1);
     },
@@ -166,6 +220,71 @@ const SHOTS = {
       const c = await a.center('vln');
       await a.hand('right', [c[0], c[1], c[2] + 0.04], 0.4); await a.wait(0.6);
       await a.pose('right', 'fist'); await a.wait(2.2); await a.pose('right', 'default'); await a.wait(1.5);
+    },
+  },
+  '08-cut': {
+    what: 'Look at the horns, pinch their line with both hands and pull apart: that stretch of the horn part is cut out and stays hollow',
+    run: async (a) => {
+      await a.rest(); await a.seek(20); await a.wait(1);
+      await a.summon('hn');
+      const cut = await a.cut('hn');
+      console.log('  cut', JSON.stringify(cut));
+      await a.hand('right', [0.3, 0.95, -0.2], 0.6); await a.wait(6);
+    },
+  },
+  '09-drums': {
+    what: 'Cut the timpani and two kettle drums appear: after the count-in, play the part yourself with a fingertip',
+    run: async (a) => {
+      await a.rest(); await a.seek(30); await a.wait(1);
+      await a.summon('perc');
+      const cut = await a.cut('perc');
+      console.log('  cut', JSON.stringify(cut));
+      const pads = await a.targets('pad');
+      if (!cut || !pads.length) { console.log('  no drums'); await a.wait(2); return; }
+      const up = (p) => [p.center[0], p.center[1] + 0.05, p.center[2]], down = (p) => [p.center[0], p.center[1] - 0.03, p.center[2]];
+      const path = [{ p: up(pads[0]) }];
+      for (const i of [0, 1, 0, 0, 1, 0, 1, 1]) {
+        const p = pads[i % pads.length];
+        path.push({ p: up(p), ms: 140 }, { p: down(p), ms: 90 }, { p: up(p), ms: 90, hold: 120 });
+      }
+      console.log('  play', JSON.stringify(await a.play(cut, path, 3.5, 'relaxed')));
+      await a.wait(4);
+    },
+  },
+  '10-harp': {
+    what: 'Dvořák: cut the flutes and a harp stands in their place; sweep a fingertip across its strings, up and back',
+    opts: { piece: 'dvorak9' },
+    run: async (a) => {
+      await a.rest(); await a.seek(30); await a.wait(1);
+      await a.summon('fl');
+      const cut = await a.cut('fl');
+      console.log('  cut', JSON.stringify(cut));
+      const strings = (await a.targets('string')).sort((x, y) => x.extra.pitch - y.extra.pitch);
+      if (!cut || strings.length < 2) { console.log('  no harp'); await a.wait(2); return; }
+      await a.look(strings[Math.floor(strings.length / 2)].center, 0.8);
+      const r = [strings[0].extra.nx, strings[0].extra.ny, strings[0].extra.nz];
+      const at = (k) => strings[0].center.map((x, i) => x + r[i] * (-0.025 + 0.05 * k)); // between strings k-1 and k
+      const n = strings.length;
+      console.log('  play', JSON.stringify(await a.play(cut, [{ p: at(0) }, { p: at(n), ms: 900, hold: 250 }, { p: at(0), ms: 900, hold: 250 }, { p: at(n), ms: 700 }], 3.5)));
+      await a.wait(4);
+    },
+  },
+  '11-keys': {
+    what: 'Dvořák: cut the reeds and a keyboard appears; press its keys one after another',
+    opts: { piece: 'dvorak9' },
+    run: async (a) => {
+      await a.rest(); await a.seek(60); await a.wait(1);
+      await a.summon('reeds');
+      const cut = await a.cut('reeds');
+      console.log('  cut', JSON.stringify(cut));
+      const keys = (await a.targets('key')).sort((x, y) => x.extra.pitch - y.extra.pitch);
+      if (!cut || !keys.length) { console.log('  no keyboard'); await a.wait(2); return; }
+      await a.look(keys[Math.floor(keys.length / 2)].center, 0.8);
+      const up = (k) => [k.center[0], k.center[1] + 0.03, k.center[2]], down = (k) => [k.center[0], k.center[1] - 0.02, k.center[2]];
+      const path = [{ p: up(keys[0]) }];
+      for (const k of keys) path.push({ p: up(k), ms: 110 }, { p: down(k), ms: 100 }, { p: up(k), ms: 100, hold: 60 });
+      console.log('  play', JSON.stringify(await a.play(cut, path, 4)));
+      await a.wait(4);
     },
   },
 };
