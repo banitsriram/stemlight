@@ -2,42 +2,42 @@
  {
   "id": "01-opening",
   "file": "video/captures/01-opening.mp4",
-  "what": "First visit as a judge sees it: Enter, the first creature comes to you, Look / Make a fist with ghost hands",
-  "commit": "312d5de",
+  "what": "First visit as a judge sees it: Enter, the first instrument comes to you, Look / Make a fist with ghost hands",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 13.05,
-  "at": "2026-11-16T16:28:26.219Z",
+  "seconds": 12.72,
+  "at": "2026-11-17T17:17:17.755Z",
   "events": []
  },
  {
   "id": "02-fist-glass",
   "file": "video/captures/02-fist-glass.mp4",
   "what": "Hook: look at the violins, they glide in; a fist freezes them to glass (chime), open brings them back (bloom), a long fist locks (clink)",
-  "commit": "312d5de",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 18.13,
-  "at": "2026-11-16T16:30:31.625Z",
+  "seconds": 16.42,
+  "at": "2026-11-17T17:18:02.838Z",
   "events": [
    [
-    4.89,
+    3.54,
     "gaze:summon vln"
    ],
    [
-    7.71,
+    6.34,
     "stem:mute vln held"
    ],
    [
-    8.96,
+    7.41,
     "stem:mute vln on"
    ],
    [
-    11.29,
+    9.64,
     "stem:mute vln held"
    ],
    [
-    12.78,
+    11.14,
     "stem:mute vln locked"
    ]
   ]
@@ -46,22 +46,26 @@
   "id": "03-solo",
   "file": "video/captures/03-solo.mp4",
   "what": "Look at the cellos, pinch twice: everything else dims and only they play; pinch twice again to bring the orchestra back",
-  "commit": "558419a",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 16.21,
-  "at": "2026-11-17T06:02:35.801Z",
+  "seconds": 15.93,
+  "at": "2026-11-17T17:18:49.051Z",
   "events": [
    [
-    3.72,
+    3.29,
+    "gaze:summon brass"
+   ],
+   [
+    3.85,
     "gaze:summon vla_vc"
    ],
    [
-    6.87,
+    7.02,
     "stem:solo vla_vc"
    ],
    [
-    12.71,
+    12.64,
     "stem:solo"
    ]
   ]
@@ -69,37 +73,37 @@
  {
   "id": "04-field-pan",
   "file": "video/captures/04-field-pan.mp4",
-  "what": "Beethoven tutti: a slow head pan across the whole field of creatures and notes",
-  "commit": "312d5de",
+  "what": "Beethoven tutti: a slow head pan across the whole field of instruments and notes",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 12.24,
-  "at": "2026-11-16T16:34:11.415Z",
+  "seconds": 15.93,
+  "at": "2026-11-17T17:19:45.735Z",
   "events": []
  },
  {
   "id": "05-dvorak-brass",
   "file": "video/captures/05-dvorak-brass.mp4",
   "what": "Dvořák, the densest passage: look up to the brass with a full field of notes",
-  "commit": "312d5de",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 12.73,
-  "at": "2026-11-16T16:37:20.394Z",
+  "seconds": 11.68,
+  "at": "2026-11-17T17:20:22.732Z",
   "events": []
  },
  {
   "id": "06-end-card",
   "file": "video/captures/06-end-card.mp4",
   "what": "Dvořák ends naturally; the end card with every credit (CC BY-SA 3.0)",
-  "commit": "312d5de",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 15.24,
-  "at": "2026-11-16T16:41:27.892Z",
+  "seconds": 14.3,
+  "at": "2026-11-17T17:20:56.144Z",
   "events": [
    [
-    5.42,
+    4.3,
     "piece:end dvorak9"
    ]
   ]
@@ -108,29 +112,29 @@
   "id": "07-second-visit",
   "file": "video/captures/07-second-visit.mp4",
   "what": "Second visit: the violins locked last time come back dimmed, with \"Your mix is back\"",
-  "commit": "558419a",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 8.7,
-  "at": "2026-11-17T06:03:44.519Z",
+  "seconds": 8.12,
+  "at": "2026-11-17T17:21:36.077Z",
   "events": []
  },
  {
   "id": "08-cut",
   "file": "video/captures/08-cut.mp4",
   "what": "Look at the horns, pinch their line with both hands and pull apart: that stretch of the horn part is cut out and stays hollow",
-  "commit": "558419a",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 17.46,
-  "at": "2026-11-17T06:04:54.284Z",
+  "seconds": 16.53,
+  "at": "2026-11-17T17:22:16.605Z",
   "events": [
    [
-    3.16,
+    2.51,
     "gaze:summon hn"
    ],
    [
-    9.84,
+    8.99,
     "cut:add hn"
    ]
   ]
@@ -139,42 +143,42 @@
   "id": "09-drums",
   "file": "video/captures/09-drums.mp4",
   "what": "Cut the timpani and two kettle drums appear: after the count-in, play the part yourself with a fingertip",
-  "commit": "e1166f7",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 32.78,
-  "at": "2026-11-17T06:33:05.868Z",
+  "seconds": 18.1,
+  "at": "2026-11-17T17:22:59.109Z",
   "events": [
    [
-    10.6,
+    2.58,
     "gaze:summon perc"
    ],
    [
-    17.63,
+    9.12,
     "cut:add perc"
    ],
    [
-    19.35,
+    10.41,
     "part:hit pads 43"
    ],
    [
-    20.24,
+    10.89,
     "part:hit pads 48"
    ],
    [
-    21.11,
+    11.39,
     "part:hit pads 43"
    ],
    [
-    22.88,
+    12.36,
     "part:hit pads 48"
    ],
    [
-    23.71,
+    12.84,
     "part:hit pads 43"
    ],
    [
-    24.47,
+    13.33,
     "part:hit pads 48"
    ]
   ]
@@ -183,110 +187,106 @@
   "id": "10-harp",
   "file": "video/captures/10-harp.mp4",
   "what": "Dvořák: cut the flutes and a harp stands in their place; sweep a fingertip across its strings, up and back",
-  "commit": "558419a",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 19.83,
-  "at": "2026-11-17T06:08:36.597Z",
+  "seconds": 17.92,
+  "at": "2026-11-17T17:23:39.221Z",
   "events": [
    [
-    3.44,
+    2.54,
     "gaze:summon fl"
    ],
    [
-    10,
+    8.93,
     "cut:add fl"
    ],
    [
-    12.45,
+    10.93,
     "part:hit harp 76"
    ],
    [
-    12.6,
+    11.04,
     "part:hit harp 78"
    ],
    [
-    12.74,
+    11.14,
     "part:hit harp 79"
    ],
    [
-    12.75,
+    11.26,
     "part:hit harp 81"
    ],
    [
-    12.9,
+    11.37,
     "part:hit harp 83"
    ],
    [
-    13.04,
+    11.49,
     "part:hit harp 84"
    ],
    [
-    13.2,
+    11.59,
     "part:hit harp 86"
    ],
    [
-    13.2,
+    11.71,
     "part:hit harp 88"
    ],
    [
-    13.93,
+    12.21,
     "part:hit harp 86"
    ],
    [
-    14.02,
+    12.31,
     "part:hit harp 84"
    ],
    [
-    14.16,
+    12.42,
     "part:hit harp 83"
    ],
    [
-    14.28,
-    "part:hit harp 79"
-   ],
-   [
-    14.28,
+    12.54,
     "part:hit harp 81"
    ],
    [
-    14.55,
-    "part:hit harp 76"
-   ],
-   [
-    14.55,
-    "part:hit harp 78"
-   ],
-   [
-    15.13,
-    "part:hit harp 76"
-   ],
-   [
-    15.29,
-    "part:hit harp 78"
-   ],
-   [
-    15.29,
+    12.66,
     "part:hit harp 79"
    ],
    [
-    15.43,
+    12.76,
+    "part:hit harp 78"
+   ],
+   [
+    12.87,
+    "part:hit harp 76"
+   ],
+   [
+    13.32,
+    "part:hit harp 78"
+   ],
+   [
+    13.42,
+    "part:hit harp 79"
+   ],
+   [
+    13.51,
     "part:hit harp 81"
    ],
    [
-    15.57,
+    13.59,
     "part:hit harp 83"
    ],
    [
-    15.57,
+    13.67,
     "part:hit harp 84"
    ],
    [
-    15.72,
+    13.77,
     "part:hit harp 86"
    ],
    [
-    15.72,
+    13.86,
     "part:hit harp 88"
    ]
   ]
@@ -295,50 +295,50 @@
   "id": "11-keys",
   "file": "video/captures/11-keys.mp4",
   "what": "Dvořák: cut the reeds and a keyboard appears; press its keys one after another",
-  "commit": "558419a",
+  "commit": "7ee8434",
   "dirty": false,
   "emulator": true,
-  "seconds": 26.64,
-  "at": "2026-11-17T06:11:05.894Z",
+  "seconds": 18.21,
+  "at": "2026-11-17T17:24:20.850Z",
   "events": [
    [
-    3.64,
+    2.59,
     "gaze:summon reeds"
    ],
    [
-    11.05,
+    8.96,
     "cut:add reeds"
    ],
    [
-    16.49,
+    11.07,
     "part:hit keys 52"
    ],
    [
-    17.49,
+    11.49,
     "part:hit keys 54"
    ],
    [
-    18.4,
+    11.9,
     "part:hit keys 55"
    ],
    [
-    18.98,
+    12.32,
     "part:hit keys 57"
    ],
    [
-    19.68,
+    12.74,
     "part:hit keys 59"
    ],
    [
-    20.47,
+    13.15,
     "part:hit keys 60"
    ],
    [
-    21.28,
+    13.57,
     "part:hit keys 62"
    ],
    [
-    22.02,
+    13.99,
     "part:hit keys 64"
    ]
   ]

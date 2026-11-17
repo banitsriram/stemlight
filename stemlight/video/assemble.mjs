@@ -18,9 +18,9 @@ const EDIT = [
   ['clip', '01-opening', 8, 0],
   ['clip', '03-solo', 11, 3],
   ['clip', '08-cut', 9, 6],
-  ['clip', '09-drums', 10, 15],
+  ['clip', '09-drums', 9, 7.5],
   ['clip', '10-harp', 8, 9],
-  ['clip', '11-keys', 9, 14.5],
+  ['clip', '11-keys', 9, 7],
   ['clip', '04-field-pan', null, 1.6],
   ['clip', '05-dvorak-brass', 8, 2.5],
   ['clip', '07-second-visit', 6, 1],
@@ -28,7 +28,7 @@ const EDIT = [
   ['card', { title: 'Stemlight', sub: 'Seated · hands only · about 4 minutes · no account', foot: 'Dvořák, Symphony No. 9, mvt 4: Mutopia #1793, CC BY-SA 3.0 (creativecommons.org/licenses/by-sa/3.0) · Beethoven, Symphony No. 5: Mutopia #941, public domain' }, 5],
 ];
 // Stills: [clip, second]
-const STILL_AT = [['02-fist-glass', 8.6], ['02-fist-glass', 12.5], ['03-solo', 9], ['08-cut', 11], ['09-drums', 21], ['10-harp', 13], ['11-keys', 19], ['04-field-pan', 5], ['05-dvorak-brass', 9], ['06-end-card', 9], ['07-second-visit', 4]];
+const STILL_AT = [['02-fist-glass', 8.6], ['02-fist-glass', 12.5], ['03-solo', 9], ['08-cut', 11], ['09-drums', 12], ['10-harp', 13], ['11-keys', 13], ['04-field-pan', 5], ['05-dvorak-brass', 9], ['06-end-card', 9], ['07-second-visit', 4]];
 
 const sh = (cmd) => execSync(cmd, { stdio: ['ignore', 'pipe', 'inherit'] }).toString();
 const browser = await chromium.launch();
@@ -38,17 +38,18 @@ let n = 0;
 for (const [kind, what, keep, from] of EDIT) {
   const out = `${C}/.part${n++}.mp4`;
   if (kind === 'card') {
-    await page.setContent(`<body style="margin:0;width:1920px;height:1080px;background:radial-gradient(ellipse at 50% 40%,#2a1d4a 0%,#0b0a1a 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#EEF2FF">
-      <div style="font-size:120px;font-weight:600;letter-spacing:.04em;text-shadow:0 0 40px #5EE6FF88">${what.title}</div>
-      <div style="margin-top:28px;max-width:1300px;text-align:center;font-size:40px;line-height:1.35;color:#C9D6FF">${what.sub}</div>
-      ${what.foot ? `<div style="position:absolute;bottom:60px;max-width:1500px;text-align:center;font-size:22px;color:#9AA6C8">${what.foot}</div>` : ''}</body>`);
+    await page.setContent(`<body style="margin:0;width:1920px;height:1080px;background:radial-gradient(ellipse at 50% 0%,#1E7F8C 0%,#0B3D4A 45%,#03131A 80%);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#E4F6F8">
+      <div style="font-size:120px;font-weight:600;letter-spacing:.04em;text-shadow:0 0 40px #7FF6FF88">${what.title}</div>
+      <div style="margin-top:28px;max-width:1300px;text-align:center;font-size:40px;line-height:1.35;color:#B5D5DA">${what.sub}</div>
+      ${what.foot ? `<div style="position:absolute;bottom:60px;max-width:1500px;text-align:center;font-size:22px;color:#7FA3AB">${what.foot}</div>` : ''}</body>`);
     const png = `${C}/.card${n}.png`;
     await page.screenshot({ path: png });
     sh(`ffmpeg -v error -y -loop 1 -t ${keep} -i ${png} -f lavfi -t ${keep} -i anullsrc=r=48000:cl=stereo -vf fps=60,format=yuv420p -c:v libx264 -crf 16 -c:a aac -b:a 256k -shortest ${out}`);
     parts.push({ out, sec: keep });
   } else {
     const src = ledger[what].file, sec = keep ?? ledger[what].seconds - from;
-    sh(`ffmpeg -v error -y -ss ${from} -t ${sec} -i ${src} -vf fps=60,format=yuv420p -c:v libx264 -crf 16 -c:a aac -b:a 256k -ar 48000 -ac 2 ${out}`);
+    // Pad, then trim on output: a clip whose video ends a little before its audio would otherwise end the whole xfade chain early.
+    sh(`ffmpeg -v error -y -ss ${from} -i ${src} -t ${sec} -vf tpad=stop_mode=clone:stop_duration=2,fps=60,format=yuv420p -af apad -c:v libx264 -crf 16 -c:a aac -b:a 256k -ar 48000 -ac 2 ${out}`);
     parts.push({ out, sec });
   }
 }

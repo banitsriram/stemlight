@@ -2,6 +2,14 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 17 Nov 2026 (late): banit, video re-shot again on the deep-sea restyle (it ships)
+
+- banit decided the deep-sea glass restyle (PR #9) ships; PRs #8 (drum mute fix) and #9 were reviewed and merged (tsc clean, 133/133, visual world check 17/17 on #9). biyon is asked to redeploy main and rerun the freeze check.
+- All 11 shots re-recorded from main at 0c3fdd2. Ledger events: `stem:mute vln held/on/held/locked`, `stem:solo vla_vc` on 7.02 s / off 12.64 s, `cut:add` hn, perc, fl, reeds, `part:hit` 6 pads, 16 harp, 8 keys (52 to 64). No stray timpani mute with the drum fix in.
+- On a quiet machine the captures now hold about 60 distinct frames a second (earlier takes held 10 to 15).
+- `video/assemble.mjs`: clips are padded then trimmed on output, because a clip whose video ended 0.6 s before its audio cut the whole crossfade chain at 78 s. Title cards in the sea palette. Rough cut 105 s, -14.8 LUFS, no narration. `VOICEOVER.md` start times updated.
+- Emulator only. Not done: narration (banit records), captions, final mix, upload (needs banit's go-ahead).
+
 ## 17 Nov 2026: banit, video re-shot from the frozen build (instruments), four new play shots, script draft 2
 
 - All 11 shots in `video/shots.json` were recorded from main at 558419a (the frozen judge build, no `src` changes): the 7 old ones again with the instruments, plus `08-cut`, `09-drums`, `10-harp`, `11-keys`. `video/capture.mjs` gained `cut()` (two-hand pull on a lane), `play()` (fingertip path, waits for the take) and an in-page double pinch (the old one sent pinches 0.89 s apart; the window is 0.45 s).
