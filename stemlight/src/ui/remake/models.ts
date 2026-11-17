@@ -1,9 +1,9 @@
 // The playable instruments as real objects (banit's request, 13 Nov), modelled in code with no downloaded assets,
 // in the deep-sea glass look (17 Nov, src/world/deepsea.ts): what you touch is pale frosted glass with cyan edge
-// light, the frames around it dark teal glass, their fittings bright aqua glass:
-//   - the harp: an aqua column, a dark glass neck and soundbox framing the 8 strings (the strings themselves stay
-//     glowing lines in view.ts, so a pluck can light them),
-//   - the keyboard: 8 frosted keys in a dark glass case with a glowing cyan rail,
+// light, the frames around it dark teal glass, their fittings neutral pale glass:
+//   - the harp: a pale glass column, a dark glass neck and soundbox framing the 8 strings (the strings themselves
+//     stay glowing lines in view.ts, so a pluck can light them),
+//   - the keyboard: 8 frosted keys in a dark glass case,
 //   - the pads: two small kettle drums with frosted heads, the strike surfaces.
 // Each is one merged mesh (one draw call) built in the seat frame (x right, y up, -z ahead) and placed each frame
 // at the seat. The key tops and drum heads sit exactly on their input targets (layout.ts): what you see is
@@ -18,9 +18,10 @@ import { SEA_GLSL } from '../../world/deepsea.ts';
 import { HARP, KEYS, PADS, harpString, padLocal } from './layout.ts';
 
 type Mat = [string, number]; // glass colour, gloss 0..1 (the tint and metal of banit's instruments)
-// What you touch is pale frosted glass; the frames dark teal glass; fittings bright aqua glass; one glowing rail.
+// What you touch is pale frosted glass (its cyan edge light comes from uGlow); the frames dark teal glass; the
+// fittings neutral pale glass, so cyan stays on what you can touch.
 const FROST: Mat = ['#cdeff2', 0.12], LIP: Mat = ['#a6dce2', 0.15], DEEP: Mat = ['#0b3a45', 0.7];
-const EDGE: Mat = ['#a8f0f6', 1], BOARD: Mat = ['#7fd9e3', 0.3], EYELET: Mat = ['#06222a', 0.3], RAIL: Mat = ['#38e1ee', 0];
+const EDGE: Mat = ['#c8d4d6', 1], BOARD: Mat = ['#c8d4d6', 0.3], EYELET: Mat = ['#06222a', 0.3], RAIL: Mat = DEEP;
 const MAPLE = DEEP, PALE = BOARD, GOLD = EDGE, EBONY = EYELET, IVORY = FROST, LACQUER = DEEP, FELT = RAIL;
 const COPPER = DEEP, SKIN = FROST, SILVER = EDGE;
 
@@ -176,23 +177,24 @@ export function resetShell(): BufferGeometry {
 const VERT = /* glsl */ `
 attribute vec4 tint; attribute float part;
 uniform float uFlash[8]; uniform float uDip;
-varying vec3 vN; varying vec3 vWorld; varying vec4 vTint; varying float vFlash; varying float vPlay;
+varying vec3 vN; varying vec3 vToEye; varying vec4 vTint; varying float vFlash; varying float vPlay;
 void main() {
   float f = 0.0;
   for (int i = 0; i < 8; i++) if (abs(part - float(i)) < 0.5) f = uFlash[i];
   vec3 p = position;
   p.y -= uDip * f;
   vec4 w = modelMatrix * vec4(p, 1.0);
-  vWorld = w.xyz;
+  vec3 eye = -(transpose(mat3(viewMatrix)) * viewMatrix[3].xyz); // this eye's position: under multiview cameraPosition is shared by both eyes
+  vToEye = eye - w.xyz;
   vN = normalize(mat3(modelMatrix) * normal);
   vTint = tint; vFlash = f; vPlay = part >= 0.0 ? 1.0 : 0.0;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 const FRAG = SEA_GLSL + /* glsl */ `
 uniform vec3 uAmber; uniform vec3 uGlow;
-varying vec3 vN; varying vec3 vWorld; varying vec4 vTint; varying float vFlash; varying float vPlay;
+varying vec3 vN; varying vec3 vToEye; varying vec4 vTint; varying float vFlash; varying float vPlay;
 void main() {
-  vec3 V = normalize(cameraPosition - vWorld);
+  vec3 V = normalize(vToEye);
   vec3 N = normalize(vN);
   if (dot(N, V) < 0.0) N = -N;
   float fres;

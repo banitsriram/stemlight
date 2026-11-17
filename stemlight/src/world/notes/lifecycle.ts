@@ -126,7 +126,8 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (
             glyphs.push('glass', note.glyph, p.x, p.y, p.z, p.size, c.r, c.g, c.b, p.alpha * dim);
             continue;
           }
-          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell * popScale(age, note.dur), c.r * glow, c.g * glow, c.b * glow, p.alpha * dim);
+          const k = dim < 1 ? 1 : glow; // a section outside a solo doesn't flare on the beat
+          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell * popScale(age, note.dur), c.r * k, c.g * k, c.b * k, p.alpha * dim);
           if (note.dur >= TRAIL_MIN_DUR && age < note.dur) {
             const alpha = p.alpha;
             TRAIL.forEach((back, k) => {

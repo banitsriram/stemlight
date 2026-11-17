@@ -133,8 +133,9 @@ void main() {
   c += SEA_SHALLOWS * 0.035 * (1.0 - smoothstep(0.0, 6.0, r));
   c = mix(c, SEA_HAZE, seaFog(dist));
   float a = 1.0 - smoothstep(24.0, 40.0, r);
-  gl_FragColor = vec4(c * a, a);
+  gl_FragColor = vec4(c, a);
   #include <colorspace_fragment>
+  gl_FragColor.rgb *= a; // premultiply after the colour conversion, as three's own materials do
 }`,
   });
   const m = new Mesh(g, mat);

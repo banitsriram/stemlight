@@ -40,10 +40,12 @@ export const silhouette = instrument;
 // over, its colour and glow draining to pale ice. Far instruments fade into the deep haze. tint.a is metal 0..1.
 const BODY_VERT = /* glsl */ `
 attribute vec4 tint;
-varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying float vDist;
+varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying vec3 vToEye; varying float vDist;
 void main() {
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
+  vec3 eye = -(transpose(mat3(viewMatrix)) * viewMatrix[3].xyz); // this eye's position: under multiview cameraPosition is shared by both eyes
+  vToEye = eye - w.xyz;
   vN = normalize(mat3(modelMatrix) * normal);
   vTint = tint;
   vec4 mv = viewMatrix * w;
@@ -52,9 +54,9 @@ void main() {
 }`;
 const BODY_FRAG = SEA_GLSL + /* glsl */ `
 uniform vec3 uColor; uniform float uBright; uniform float uPulse; uniform float uTime;
-varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying float vDist;
+varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying vec3 vToEye; varying float vDist;
 void main() {
-  vec3 V = normalize(cameraPosition - vWorld);
+  vec3 V = normalize(vToEye);
   vec3 N = normalize(vN);
   if (dot(N, V) < 0.0) N = -N; // inside of a bell
   float metal = vTint.a, fres;
@@ -247,7 +249,9 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
           c.gliding = k < 1;
           ctx.registry.set({ id: `creature:${c.stem}`, kind: 'creature', stem: c.stem, center: c.pos, radius });
         }
-        const amp = env?.stems[c.stem]?.[frame] ?? 0;
+        // The envelopes ignore mute and solo, so a silenced section's score must not wake it: its loudness
+        // fades out with its brightness (1 when sounding, 0 at the muted 0.2 and outside-solo 0.25).
+        const amp = (env?.stems[c.stem]?.[frame] ?? 0) * Math.min(1, Math.max(0, (c.bright - 0.25) / 0.75));
         const bob = Math.sin(now * 0.8 + c.home[0] * 3) * 0.02;
         c.obj.position.set(c.pos[0], c.pos[1] + bob, c.pos[2]);
         c.obj.scale.setScalar(0.97 + 0.08 * amp);

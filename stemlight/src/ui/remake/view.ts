@@ -20,10 +20,11 @@ const LINE_CAP = 4000;
 
 // Deep-sea glass (17 Nov, src/world/deepsea.ts): the ribbon is frosted teal glass with cyan edge light (cyan is
 // touchable), ticks and quiet guides are the water's shallows, amber stays yours. Harp strings glow pale aqua; the
-// two tonic strings take the harp section's pink, as a real harp marks its Cs.
+// two tonic strings are a deep rose, as a real harp marks its Cs (much darker than the aqua strings, so the
+// marks survive colour blindness: luminance contrast about 4.3, the old red on cream was 3.3).
 const C = {
   glass: new Color('#0F4F5E'), teal: new Color(SEA.shallows), cyan: new Color(SEA.cyan), amber: new Color(SEA.amber),
-  foam: new Color(SEA.foam), gut: new Color('#D8F6FA'), tonic: new Color('#FF8FC8'),
+  foam: new Color(SEA.foam), gut: new Color('#D8F6FA'), tonic: new Color('#D0306A'),
 };
 const AMBER_CB = new Color('#D55E00');
 /** How far (m) a freshly plucked string swings either side at its middle. */
@@ -254,8 +255,8 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
       }
     }
 
-    // Harp: the frame is a model; the strings are glowing lines, pale aqua (the two tonic strings pink, as a real
-    // harp marks its Cs), with a soft cyan glow; a plucked string turns amber, glows wider and flares.
+    // Harp: the frame is a model; the strings are glowing lines, pale aqua (the two tonic strings deep rose, as a
+    // real harp marks its Cs), with a soft cyan glow; a plucked string turns amber, glows wider and flares.
     placeModel(models.harp, view.strings.length > 0, P);
     view.strings.forEach((st, i) => {
       const tonic = i === 0 || i === view.strings.length - 1;
