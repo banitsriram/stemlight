@@ -271,3 +271,10 @@
   - Log: `tests/browser/results/2026-11-17-FREEZE-release-check-full.txt`.
 - **F28 passes: 32/41.**
 - **Freeze rule:** no deploy after this unless sir lifts it. Any change after the freeze means a new deploy, a new freeze run and an updated bundle name here and in DEVPOST.md.
+
+## 17 Nov: drums up, a pointing hand no longer mutes the timpani (branch `biyon/pads-fist`, PR)
+
+- banit's find while filming: with the drums up, a pointing hand inside the summoned timpani's 0.25 m sphere armed a fist and muted it, because `rowUp()` in `src/input/engine.ts` counted only harp strings and keys.
+- Fix: `rowUp()` also counts drum pads, so with the drums up only a fist with the index curled too counts.
+- Test: `tests/unit/input-row.test.mjs`, "with the drums up, a pointing hand inside the summoned timpani never silences it; a real fist still does". It failed before the fix (a `stem:mute` from pointing) and passes after. Full suite 133/133, typecheck clean.
+- Pushed as a PR on sir's go-ahead (17 Nov). Not deployed: the build is frozen at `index-P9Cub1t-.js`.
