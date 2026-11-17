@@ -74,7 +74,7 @@ interface Piece {
  * Call update() every frame. Each frame is drawn from transport time alone.
  * seatOf gives a creature's live centre, so notes are born at its mouth wherever it has glided to.
  */
-export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (stem: StemId) => Vec3 | undefined): { update(): void } {
+export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (stem: StemId) => Vec3 | undefined): { update(): number } {
   let piece: Piece | null = null;
   let latest = 0;
   const p: Placed = { x: 0, y: 0, z: 0, size: 0, alpha: 0 };
@@ -102,13 +102,17 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (
   });
 
   return {
+    /** Draws this frame's notes; returns the beat swell (1 between beats) so the sea can pulse with it. */
     update() {
       glyphs.begin();
+      let pulse = 1;
       if (piece) {
         const now = ctx.transport.time();
         const end = lowerBound(piece.notes, now + 1e-9, onset);
         const start = Math.max(lowerBound(piece.notes, now - LIFE, onset), end - NOTE_CAP); // oldest culled first
         const swell = beatSwell(now, piece.beats, piece.downbeats);
+        pulse = swell;
+        const glow = 1 + (swell - 1) * 4; // brighter on the beat: about 1.3 on a beat, 1.6 on a downbeat
         for (let i = start; i < end; i++) {
           const note = piece.notes[i];
           const stem = piece.stems.get(note.stem)!;
@@ -122,7 +126,7 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (
             glyphs.push('glass', note.glyph, p.x, p.y, p.z, p.size, c.r, c.g, c.b, p.alpha * dim);
             continue;
           }
-          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell * popScale(age, note.dur), c.r, c.g, c.b, p.alpha * dim);
+          glyphs.push('normal', note.glyph, p.x, p.y, p.z, p.size * swell * popScale(age, note.dur), c.r * glow, c.g * glow, c.b * glow, p.alpha * dim);
           if (note.dur >= TRAIL_MIN_DUR && age < note.dur) {
             const alpha = p.alpha;
             TRAIL.forEach((back, k) => {
@@ -134,6 +138,7 @@ export function createNotesLayer(ctx: AppContext, glyphs: NoteGlyphs, seatOf?: (
         }
       }
       glyphs.end();
+      return pulse;
     },
   };
 }

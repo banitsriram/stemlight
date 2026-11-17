@@ -15,6 +15,7 @@ import { createMockRegistry, installKeyMap } from './mock';
 import { loadNoteGlyphs } from './world/notes/NoteGlyphs';
 import { createNotesLayer } from './world/notes/lifecycle';
 import { initShell, reachSpot } from './world/shell';
+import { SEA } from './world/deepsea';
 import { initSfx } from './ui/sfx';
 import { initStory } from './story';
 import { endCardSprite, initSequencer } from './story/sequencer';
@@ -22,7 +23,7 @@ import { initInput } from './input/system';
 import { initRemake } from './ui/remake';
 
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
-world.scene.background = new Color('#07060F');
+world.scene.background = new Color(SEA.abyss);
 
 const bus = createBus();
 const registry = createMockRegistry(); // the registry is a plain map; the mock is the real thing
@@ -106,7 +107,7 @@ world.scene.add(glyphs.object);
 const notes = createNotesLayer(ctx, glyphs, shell.creatures.position);
 world.registerSystem(class NotesSystem extends createSystem() {
   update() {
-    notes.update();
+    shell.pulse(notes.update() - 1); // the plankton brighten on the beat
   }
 });
 

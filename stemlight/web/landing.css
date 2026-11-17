@@ -1,6 +1,6 @@
 html, body {
   margin: 0;
-  background: #07060F;
+  background: #03131A;
 }
 
 .landing {
@@ -13,12 +13,12 @@ html, body {
   justify-content: center;
   gap: 28px;
   text-align: center;
-  color: #E9E6F5;
+  color: #E4F6F8;
   font-family: ui-serif, Georgia, 'Times New Roman', serif;
   background:
-    radial-gradient(60% 50% at 25% 15%, #2A1B4A 0%, transparent 70%),
-    radial-gradient(70% 55% at 80% 90%, #0E5F6B 0%, transparent 70%),
-    #07060F;
+    radial-gradient(60% 50% at 50% 0%, #1E7F8C 0%, transparent 70%),
+    radial-gradient(70% 55% at 80% 95%, #0B3D4A 0%, transparent 70%),
+    #03131A;
 }
 
 .landing h1 {
@@ -26,7 +26,7 @@ html, body {
   font-size: clamp(3rem, 10vw, 6.5rem);
   font-weight: 400;
   letter-spacing: 0.02em;
-  color: #6FF3FF;
+  color: #7FF6FF;
 }
 
 .landing-pitch {
@@ -41,7 +41,7 @@ html, body {
   min-width: min(100%, 360px);
   min-height: 112px;
   padding: 0 64px;
-  border: 2px solid #6FF3FF;
+  border: 2px solid #7FF6FF;
   border-radius: 999px;
   background: #0E5F6B;
   color: #fff;
@@ -60,7 +60,7 @@ html, body {
   max-width: 36em;
   font-size: 1.125rem;
   line-height: 1.5;
-  color: #BDB8D4;
+  color: #B5D5DA;
 }
 
 .landing-status {

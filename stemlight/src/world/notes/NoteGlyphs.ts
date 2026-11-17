@@ -21,6 +21,7 @@ void main() {
   vColor = iColor;
   vec4 mv = modelViewMatrix * vec4(iPos, 1.0);
   vColor.a *= smoothstep(0.18, 0.5, -mv.z); // a note right at the face fades instead of filling the view
+  vColor.a *= exp(-length(mv.xyz) * 0.06); // far notes dim into the deep haze (deep-sea look, 17 Nov)
   mv.xy += mix(iQuad.xy, iQuad.zw, position.xy) * iSize; // always faces the viewer
   gl_Position = projectionMatrix * mv;
 }`;
@@ -40,8 +41,8 @@ void main() {
   float halo = smoothstep(-0.5, 0.0, sd);
   halo *= halo;
 #if !defined(GLASS) && !defined(GHOST) && !defined(AMBER)
-  rgb = mix(rgb, vec3(1.0), 0.45 * smoothstep(0.02, 0.2, sd)); // hot core
-  a = max(fill, 0.5 * halo);
+  rgb = mix(rgb, vec3(0.92, 1.0, 1.0), 0.5 * smoothstep(0.02, 0.2, sd)); // hot white-cyan core, like plankton light
+  a = max(fill, 0.62 * halo);
 #endif
 #if defined(GLASS)
   rgb = mix(rgb, vec3(0.8, 0.92, 1.0), 0.6);

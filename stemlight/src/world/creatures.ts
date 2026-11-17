@@ -1,5 +1,5 @@
 // The nine sections as instruments (built in instruments.ts), their glide to the reach spot, and the
-// mute / solo / envelope look. Each is two draw calls: a lit body mesh and one LineSegments for its strings.
+// mute / solo / envelope look. Each is two draw calls: a glass body mesh and one LineSegments for its strings.
 // They keep the registry id creature:<stem> and kind 'creature'.
 import {
   AdditiveBlending, BufferGeometry, Color, DoubleSide, Float32BufferAttribute, Group, LineSegments, Mesh, MeshBasicMaterial,
@@ -7,6 +7,7 @@ import {
 } from 'three';
 import type { AppContext, Envelopes, MuteState, StemId, Vec3 } from '../contracts';
 import { endCardUp } from '../story/sequencer';
+import { SEA, SEA_GLSL } from './deepsea';
 import { instrument } from './instruments';
 
 export const GLIDE_SEC = 0.6;
@@ -33,41 +34,40 @@ export function dimFor(stem: StemId, mute: MuteState | undefined, solo: StemId |
 /** The section's instrument (kept under the old name: checks and tests import it). */
 export const silhouette = instrument;
 
-// Lit like studio objects without scene lights: a key light fixed to the view, a fake sky reflection for
-// metal, and a rim in the section's colour that brightens with its loudness. tint.a is metal 0..1.
+// Deep-sea glass (17 Nov): each instrument is glass in its own material (wood turns amber glass, brass gold,
+// silver pale aqua), lit only by the surface far above, in world space. Alive, it glows from within in the
+// section's colour, more as it plays, with a rim of that colour; silenced (muted, or outside a solo) it frosts
+// over, its colour and glow draining to pale ice. Far instruments fade into the deep haze. tint.a is metal 0..1.
 const BODY_VERT = /* glsl */ `
 attribute vec4 tint;
-varying vec3 vN; varying vec3 vView; varying vec4 vTint;
+varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying float vDist;
 void main() {
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  vN = normalize(normalMatrix * normal);
-  vView = normalize(-mv.xyz);
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vWorld = w.xyz;
+  vN = normalize(mat3(modelMatrix) * normal);
   vTint = tint;
+  vec4 mv = viewMatrix * w;
+  vDist = length(mv.xyz);
   gl_Position = projectionMatrix * mv;
 }`;
-const BODY_FRAG = /* glsl */ `
-uniform vec3 uColor; uniform float uBright; uniform float uPulse;
-varying vec3 vN; varying vec3 vView; varying vec4 vTint;
+const BODY_FRAG = SEA_GLSL + /* glsl */ `
+uniform vec3 uColor; uniform float uBright; uniform float uPulse; uniform float uTime;
+varying vec3 vN; varying vec4 vTint; varying vec3 vWorld; varying float vDist;
 void main() {
-  vec3 V = normalize(vView);
+  vec3 V = normalize(cameraPosition - vWorld);
   vec3 N = normalize(vN);
   if (dot(N, V) < 0.0) N = -N; // inside of a bell
-  vec3 L = normalize(vec3(-0.45, 0.7, 0.55));
-  float metal = vTint.a;
-  float diff = max(dot(N, L), 0.0);
-  float spec = pow(max(dot(N, normalize(L + V)), 0.0), mix(20.0, 80.0, metal));
-  vec3 R = reflect(-V, N);
-  vec3 sky = mix(vec3(0.03, 0.04, 0.08), vec3(0.42, 0.36, 0.7), smoothstep(-0.2, 0.9, R.y))
-    + vec3(0.15, 0.6, 0.65) * pow(1.0 - abs(R.y), 6.0) * 0.5;
-  vec3 wood = vTint.rgb * (0.3 + 0.8 * diff) + vec3(spec * 0.3);
-  vec3 shiny = vTint.rgb * (0.12 + 0.45 * diff) + vTint.rgb * sky * 1.7 + mix(vTint.rgb, vec3(1.0), 0.6) * spec * 1.3;
-  vec3 c = mix(wood, shiny, metal);
+  float metal = vTint.a, fres;
+  vec3 c = seaGlass(N, V, mix(vTint.rgb, vTint.rgb * vec3(0.78, 1.0, 1.1), 0.35), metal, fres);
   // uBright is 0.35 for a quiet section, more as it plays, about 0.07 when silenced.
-  float awake = clamp(uBright / 0.35, 0.0, 1.0);
-  c = mix(vec3(dot(c, vec3(0.3, 0.6, 0.1))), c, 0.25 + 0.75 * awake) * (0.3 + 0.7 * awake);
-  float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-  c += uColor * rim * (0.16 * awake + 1.1 * max(uBright - 0.35, 0.0));
-  c += vTint.rgb * uPulse * 0.12;
+  float awake = clamp(uBright / 0.35, 0.0, 1.0), loud = max(uBright - 0.35, 0.0);
+  float rim = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 2.0); // broader than fres, so thin parts show it
+  c += uColor * rim * (0.35 + 1.4 * loud) * awake;
+  c += uColor * (0.03 + 0.12 * loud + 0.06 * uPulse) * awake;
+  vec3 frost = vec3(dot(c, vec3(0.3, 0.6, 0.1))) * vec3(0.75, 0.9, 1.0) * 0.55 + SEA_FOAM * rim * 0.22;
+  c = mix(frost, c, awake);
+  c *= 1.0 + 0.18 * max(N.y, 0.0) * dapple(vWorld, uTime);
+  c = mix(c, SEA_HAZE, seaFog(vDist));
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -82,10 +82,11 @@ void main() {
   vTint = tint;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
+// Strings glow like filaments, tinted toward the section's colour.
 const LINE_FRAG = /* glsl */ `
-uniform float uOpacity; varying vec3 vTint;
+uniform float uOpacity; uniform vec3 uColor; varying vec3 vTint;
 void main() {
-  gl_FragColor = vec4(vTint * uOpacity, 1.0);
+  gl_FragColor = vec4(mix(vTint, uColor, 0.3) * 1.15 * uOpacity, 1.0);
   #include <colorspace_fragment>
 }`;
 // One billboarded glow per creature, all nine in one draw call: four corners share a centre attribute.
@@ -96,6 +97,7 @@ void main() {
   vUv = position.xy;
   vTint = tint; vGlow = glow;
   vec4 mv = modelViewMatrix * vec4(center, 1.0);
+  vGlow *= exp(-length(mv.xyz) * 0.05); // far glows fade into the haze
   mv.xyz *= 1.0 + 0.3 / max(0.3, -mv.z); // sits 0.3 m behind the instrument along the line of sight, so it never cuts through it
   mv.xy += position.xy * size;
   vGlow *= smoothstep(0.15, 0.45, -mv.z); // no glow fog right at the face
@@ -167,7 +169,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
   let request = 0;
 
   const ring = new Mesh(new RingGeometry(radius + 0.02, radius + 0.035, 64, 1),
-    new MeshBasicMaterial({ color: '#6FF3FF', transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
+    new MeshBasicMaterial({ color: SEA.cyan, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
   const ringCount = ring.geometry.index!.count;
   ring.visible = false;
   scene.add(ring);
@@ -187,7 +189,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       const color = new Color(ACCENT[stem]);
       const bodyMat = new ShaderMaterial({
         vertexShader: BODY_VERT, fragmentShader: BODY_FRAG, side: DoubleSide,
-        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uPulse: { value: 0 } },
+        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uPulse: { value: 0 }, uTime: { value: 0 } },
       });
       const lineGeo = new BufferGeometry();
       lineGeo.setAttribute('position', new Float32BufferAttribute(lines, 3));
@@ -195,7 +197,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       lineGeo.setAttribute('vib', new Float32BufferAttribute(vib, 1));
       const lineMat = new ShaderMaterial({
         vertexShader: LINE_VERT, fragmentShader: LINE_FRAG,
-        uniforms: { uOpacity: { value: 1 }, uTime: { value: 0 }, uPulse: { value: 0 } },
+        uniforms: { uOpacity: { value: 1 }, uTime: { value: 0 }, uPulse: { value: 0 }, uColor: { value: color } },
       });
       const obj = new Group();
       obj.add(new Mesh(body, bodyMat));
@@ -255,6 +257,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
         c.bright += (dimFor(c.stem, mute[c.stem], solo) - c.bright) * Math.min(1, dt * 6);
         c.body.uniforms.uBright.value = c.bright * (0.35 + 0.9 * amp);
         c.body.uniforms.uPulse.value = amp;
+        c.body.uniforms.uTime.value = now;
         c.lines.uniforms.uTime.value = now;
         c.lines.uniforms.uPulse.value = amp;
         c.lines.uniforms.uOpacity.value = Math.min(1, c.bright) * (0.75 + 0.5 * amp);
