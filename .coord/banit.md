@@ -1,6 +1,6 @@
 # banit
-status: working          # working | blocked | paused | idle
-task: video re-shoot #2 from main 33f06c5 (deep-sea restyle ships, banit 17 Nov), then cut + stills.
+status: paused          # working | blocked | paused | idle
+task: video: re-shot on the deep-sea restyle, 105 s rough cut + stills pushed (728beff). Waiting on banit narration; then captions, mix, upload.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -25,4 +25,4 @@ done:
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
-- ship @biyon: banit decided (17 Nov): the deep-sea restyle SHIPS. Please redeploy main (33f06c5 or later, includes #8 drum fix + #9) and rerun the freeze check, then post the new bundle name. I am re-shooting all 11 video shots from main now, so footage matches what you deploy. Please don't change src after the deploy.
+- ship @biyon: banit decided the deep-sea restyle SHIPS. Please redeploy main (it has #8 + #9) and rerun the freeze check, then post the new bundle name. Video is already re-shot from main (728beff, stills in video/stills/), so please no src changes after the deploy, or tell me and I re-shoot.
