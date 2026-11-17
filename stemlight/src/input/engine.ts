@@ -194,7 +194,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
   };
 
   const idle = (h: Hand) => !hands[h].pinching && hands[h].fist === 'idle';
-  const rowUp = (targets: readonly Target[]) => targets.some((t) => t.kind === 'string' || t.kind === 'key');
+  const rowUp = (targets: readonly Target[]) => targets.some((t) => t.kind === 'string' || t.kind === 'key' || t.kind === 'pad');
 
   // ---- release paths ----
 
@@ -251,7 +251,7 @@ export function createGestureEngine(bus: Pick<Bus, 'emit' | 'on'>, opts: Gesture
     const ownedByOther = hands[other(h)].fist !== 'idle';
     switch (s.fist) {
       case 'idle':
-        // While the harp or keyboard is up (it sits inside the summoned creature's sphere), a pointing hand
+        // While the harp, keyboard or drums are up (they sit inside the summoned creature's sphere), a pointing hand
         // playing it curls the other three fingers like a fist: only a fist with the index curled too counts.
         if (rowUp(targets) && f.curls[0] < SPEC.fistCurl) break;
         if (curl >= SPEC.fistCurl && summoned && !ownedByOther && !s.pinching && !eq && insideSummoned(targets, f.palm)) {

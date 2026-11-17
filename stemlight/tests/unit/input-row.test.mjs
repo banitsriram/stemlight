@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createBus } from '../../src/bus.ts';
 import { SPEC, createGestureEngine, rowVelocity } from '../../src/input/engine.ts';
-import { harpTargets, keyTargets } from '../../src/ui/remake/layout.ts';
+import { harpTargets, keyTargets, padTargets } from '../../src/ui/remake/layout.ts';
 import { reachSpotFor } from '../../src/input/engine.ts';
 
 const FPS = 72;
@@ -210,4 +210,30 @@ test('playing the harp with a pointing hand inside the summoned creature never s
   }
   assert.ok(strikes.length >= 16, `${strikes.length} plucks`);
   assert.deepEqual(mutes, [], 'no stem:mute at all');
+});
+
+test('with the drums up, a pointing hand inside the summoned timpani never silences it; a real fist still does', () => {
+  const bus = createBus();
+  const mutes = [];
+  bus.on('stem:mute', (e) => mutes.push(e));
+  let t = 0;
+  const engine = createGestureEngine(bus, { parts: { strike: () => {} } });
+  const creature = { id: 'creature:perc', kind: 'creature', stem: 'perc', center: [0, 1.2, -1.6], radius: 0.25 };
+  const head = { pos: [0, 1.2, 0], dir: [0, 0, -1] };
+  const targets = [creature];
+  const step = (right) => { engine.step({ t, hands: { left: null, right }, head }, targets); t += 1 / FPS; };
+  for (let i = 0; i < Math.round((SPEC.summonDwell + 0.1) * FPS); i++) step(null);
+  creature.center = reachSpotFor(head);
+  targets.push(...padTargets(FRAME, [47, 52]));
+  // A pointing hand (index straight, the other three curled) with its palm at the timpani's centre, held 3 s.
+  const hand = (curls) => {
+    const c = creature.center;
+    return { tracked: true, confidence: 1, palm: c, tip: add(c, [0, -0.03, -0.08]), thumbTip: add(c, [0.06, 0, 0]), curls, pinchDist: 0.06 };
+  };
+  for (let i = 0; i < 3 * FPS; i++) step(hand([0.05, 0.85, 0.85, 0.85]));
+  assert.deepEqual(mutes, [], 'pointing: no stem:mute at all');
+  // A real fist, index curled too, still silences it while the drums are up.
+  for (let i = 0; i < Math.round((SPEC.fistDebounce + 0.2) * FPS); i++) step(hand([0.9, 0.9, 0.9, 0.9]));
+  assert.equal(mutes[0]?.stem, 'perc');
+  assert.equal(mutes[0]?.state, 'held', 'a fist holds the timpani silent');
 });
