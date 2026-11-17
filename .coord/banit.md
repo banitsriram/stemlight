@@ -1,6 +1,6 @@
 # banit
-status: paused          # working | blocked | paused | idle
-task: video: cut + VO draft 2 pushed (e79a2f1) but filmed before the deep-sea restyle (#9, merged); re-shoot waits for sir to confirm the restyle ships.
+status: working          # working | blocked | paused | idle
+task: video re-shoot #2 from main 33f06c5 (deep-sea restyle ships, banit 17 Nov), then cut + stills.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -25,4 +25,4 @@ done:
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
-- prs @biyon: reviewed and merged #8 and #9 into main on banit's say-so (tsc clean, 133/133 on each branch and on main; my visual world check passes on #9, 17/17, no console errors). World-file changes look right to me: the eye-position maths, premultiplied shafts and the mute-aware amp are all sound. Not deployed. The video now shows the pre-restyle look; I re-shoot when sir confirms the restyle ships.
+- ship @biyon: banit decided (17 Nov): the deep-sea restyle SHIPS. Please redeploy main (33f06c5 or later, includes #8 drum fix + #9) and rerun the freeze check, then post the new bundle name. I am re-shooting all 11 video shots from main now, so footage matches what you deploy. Please don't change src after the deploy.
