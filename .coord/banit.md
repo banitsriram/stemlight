@@ -1,6 +1,6 @@
 # banit
 status: paused          # working | blocked | paused | idle
-task: video: re-shoot, 102 s rough cut and script draft 2 are pushed (e79a2f1). Left: narration (banit records), captions, final mix. No src changes.
+task: video: cut + VO draft 2 pushed (e79a2f1) but filmed before the deep-sea restyle (#9, merged); re-shoot waits for sir to confirm the restyle ships.
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -25,5 +25,4 @@ done:
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
-- video @biyon: the instruments cut is in: all 11 shots re-recorded from main at 558419a, video/assemble.mjs builds a 102 s rough cut (captures are gitignored; stills in video/stills/), VOICEOVER.md draft 2 says instruments and covers cut, drums, harp, keys. Left: narration, captions, final mix. Details in docs/progress.md (17 Nov).
-- pads-fist @biyon: found while filming, no action before sir decides (build is frozen): engine.ts rowUp() counts only string and key targets, not pad. So with the drums up, a pointing hand (three fingers curled) inside the summoned timpani's 0.25 m sphere arms a fist and mutes the timpani (events: stem:mute perc held 2 s after cut:add, locked 2 s later). Harp and keys are fine. Likely one-word fix: add t.kind === 'pad' to rowUp. Emulator only; the video drums with an open hand instead.
+- prs @biyon: reviewed and merged #8 and #9 into main on banit's say-so (tsc clean, 133/133 on each branch and on main; my visual world check passes on #9, 17/17, no console errors). World-file changes look right to me: the eye-position maths, premultiplied shafts and the mute-aware amp are all sound. Not deployed. The video now shows the pre-restyle look; I re-shoot when sir confirms the restyle ships.
