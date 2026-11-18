@@ -9,7 +9,7 @@ import {
   LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D,
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
-import { SEA } from '../../world/deepsea.ts';
+import { SEA, WORLD_GLOW } from '../../world/deepsea.ts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
 import { drums, harpFrame, instrumentMesh, keyboard, placeModel, resetShell } from './models.ts';
@@ -49,7 +49,8 @@ class Buf {
     if (this.n >= this.cap) return;
     const i = this.n++ * 3;
     this.pos[i] = p[0]; this.pos[i + 1] = p[1]; this.pos[i + 2] = p[2];
-    this.col[i] = c.r * k; this.col[i + 1] = c.g * k; this.col[i + 2] = c.b * k;
+    const g = k * WORLD_GLOW.value; // additive: dimmer over a bright world, so it never washes out to white
+    this.col[i] = c.r * g; this.col[i + 1] = c.g * g; this.col[i + 2] = c.b * g;
   }
   begin() { this.n = 0; }
   end() {

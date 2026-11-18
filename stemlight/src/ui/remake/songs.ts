@@ -8,7 +8,7 @@ import type { Object3D, Sprite } from 'three';
 import type { AppContext, Hand, PieceId, PieceManifest, Target, Vec3 } from '../../contracts';
 import { toWorld, type Frame } from './layout.ts';
 import { createPicker, songsBubbleLocal, type SongInfo, type Tip } from './picker.ts';
-import { createPickerView } from './pickerView.ts';
+import { createPickerView, type WorldLook } from './pickerView.ts';
 
 export interface SongsDeps {
   world: World;
@@ -23,6 +23,8 @@ export interface SongsDeps {
   creditLines: (credits: PieceManifest['credits']) => string[];
   /** Each song's manifest (title, length, credits), read before it is played. */
   manifestUrl?: (id: PieceId) => string;
+  /** The worlds to choose from with the orbs under the songs (shell.ts worlds), if any. */
+  worlds?: { list: readonly WorldLook[]; current(): string; set(id: string): void };
 }
 
 /** The credits card under the arc: 1 m ahead and 72 cm below the eye (36° down, clear of the bubbles), half size. */
@@ -32,8 +34,9 @@ const FADE_SEC = 0.6;
 
 export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   const songs: SongInfo[] = deps.songs.map((s) => ({ ...s }));
-  const picker = createPicker(songs);
-  const view = createPickerView(scene, songs);
+  const worldList = deps.worlds?.list ?? [];
+  const picker = createPicker(songs, worldList);
+  const view = createPickerView(scene, songs, worldList);
   const credits = new Map<PieceId, PieceManifest['credits']>();
   const tips = new Map<Hand, Tip>();
   const registered = new Set<string>();
@@ -97,6 +100,8 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       if (picker.isOpen()) {
         const id = picker.touch(t, list);
         if (id && !loading) void choose(id);
+        const w = picker.touchWorld(t, list);
+        if (w && deps.worlds) deps.worlds.set(w);
       } else if (passed && !fading && ctx.transport.playing()) {
         songsAt = toWorld(deps.frames().play, songsBubbleLocal());
         const h = picker.hold(delta, songsAt, list);
@@ -110,7 +115,8 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       }
       sync(picker.targets(songsAt));
       const at = (id: PieceId | null) => songs.findIndex((s) => s.id === id);
-      view.draw({ bubbles: picker.bubbles(), current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
+      const world = deps.worlds ? worldList.findIndex((w) => w.id === deps.worlds!.current()) : -1;
+      view.draw({ bubbles: picker.bubbles(), orbs: picker.orbs(), world, current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
     }
   });
 
@@ -118,7 +124,7 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
     isOpen: () => picker.isOpen(),
     open,
     /** Dev and IWER checks read this. */
-    state: () => ({ open: picker.isOpen(), current, last, loading, passed, hold, songsAt, bubbles: picker.bubbles(), songs }),
+    state: () => ({ open: picker.isOpen(), current, last, loading, passed, hold, songsAt, bubbles: picker.bubbles(), orbs: picker.orbs(), world: deps.worlds?.current() ?? null, songs }),
   };
   return api;
 }

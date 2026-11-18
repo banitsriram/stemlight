@@ -23,6 +23,9 @@ import { initInput } from './input/system';
 import { initRemake } from './ui/remake';
 import { initSongs } from './ui/remake/songs';
 
+/** The Starry Night world's credit, shown with the others under the song picker. */
+const WORLD_CREDIT = 'Starry Night world: after Vincent van Gogh, The Starry Night (1889), public domain; painted in code.';
+
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
 world.scene.background = new Color(SEA.abyss);
 
@@ -123,7 +126,8 @@ const songs = initSongs(ctx, world.scene, {
   load: (id) => loadPiece(engine, bus, id),
   fadeOut: (sec) => engine.fadeOut(sec),
   card: endCard,
-  creditLines: (c) => ['Credits', ...endCardLines(c).slice(3)],
+  creditLines: (c) => ['Credits', ...endCardLines(c).slice(3), WORLD_CREDIT],
+  worlds: shell.worlds,
 });
 pickerUp = songs.isOpen;
 // ?piece=<id> plays that piece first (dev only: the fixture if it's missing); otherwise the tutorial song, or the
@@ -144,5 +148,5 @@ if (import.meta.env.DEV) {
   world.registerSystem(class DevStatsSystem extends createSystem() {
     update() { stats.update(); }
   });
-  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, songs, stats: stats.sample, statsReset: stats.resetMax } });
+  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, songs, worlds: shell.worlds, stats: stats.sample, statsReset: stats.resetMax } });
 }

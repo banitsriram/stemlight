@@ -17,7 +17,7 @@ export function iw(group, action, params = {}) {
   for (let attempt = 1; ; attempt++) {
     try {
       const out = execFileSync(process.execPath, [CLI, group, action, '--input-json', JSON.stringify(params), '--raw'], {
-        cwd: APP, encoding: 'utf8', timeout: 60000,
+        cwd: APP, encoding: 'utf8', timeout: 60000, maxBuffer: 64 * 1024 * 1024, // detailed screenshots run past 1 MB
       });
       return JSON.parse(out);
     } catch (e) {

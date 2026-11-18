@@ -14,7 +14,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Vec3 } from '../../contracts';
-import { SEA_GLSL } from '../../world/deepsea.ts';
+import { SEA_GLSL, SEA_UNIFORMS } from '../../world/deepsea.ts';
 import { HARP, KEYS, PADS, harpString, padLocal } from './layout.ts';
 
 type Mat = [string, number]; // glass colour, gloss 0..1 (the tint and metal of banit's instruments)
@@ -182,6 +182,17 @@ export function songBubble(): BufferGeometry {
   return p.done();
 }
 
+/**
+ * A world orb in the picker (18 Nov): a small glass sphere tinted like its world, with that world's light inside
+ * as a pearl (deep sea: pale surface light; Starry Night: the yellow moon; Aurora: aurora green). Radius 1.
+ */
+export function worldOrb(glass: string, pearl: string): BufferGeometry {
+  const p = new Parts();
+  p.add(new SphereGeometry(1, 28, 14), [glass, 0.35], [0, 0, 0], [0, 0, 0], 0);
+  p.add(new SphereGeometry(0.42, 16, 10), [pearl, 0.6], [0.12, 0.18, 0.25], [0, 0, 0], 0);
+  return p.done();
+}
+
 // Deep-sea glass, lit only by the surface far above, in world space (src/world/deepsea.ts), as banit's
 // instruments are. On top: a cyan fresnel rim on the touchable parts (keys, heads, the shell) and a trace of it on
 // the frames, and the amber flash and dip of a struck one. uFlash[i] is 0..1 per key or pad.
@@ -223,7 +234,7 @@ export type InstrumentModel = Mesh<BufferGeometry, ShaderMaterial>;
 export function instrumentMesh(geometry: BufferGeometry, amber: Color, glow: Color, dip = 0): InstrumentModel {
   const mat = new ShaderMaterial({
     vertexShader: VERT, fragmentShader: FRAG, side: DoubleSide,
-    uniforms: { uFlash: { value: new Array(8).fill(0) }, uDip: { value: dip }, uAmber: { value: amber.clone() }, uGlow: { value: glow.clone() } },
+    uniforms: { ...SEA_UNIFORMS, uFlash: { value: new Array(8).fill(0) }, uDip: { value: dip }, uAmber: { value: amber.clone() }, uGlow: { value: glow.clone() } },
   });
   const m = new Mesh(geometry, mat);
   m.visible = false;
