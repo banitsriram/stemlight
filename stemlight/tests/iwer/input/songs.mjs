@@ -85,7 +85,7 @@ s = await waitFor((x) => x.open, 15000);
 await sleep(1500);
 s = await state();
 check(s.open && !s.playing && s.log.includes('open:end'), `its end opens the picker and the music stays stopped (log ${s.log.join(', ')})`);
-check(s.bubbles.length === 3 && s.kinds.filter((k) => k === 'song').length === 6, `three song bubbles (and the three world orbs) registered (${s.labels.join(' | ')})`);
+check(s.bubbles.length === 3 && s.kinds.filter((k) => k === 'song').length === 7, `three song bubbles (and the four world orbs) registered (${s.labels.join(' | ')})`);
 check(!s.kinds.includes('reset') && !s.kinds.includes('playhead'), 'the play surfaces hide while the picker is up (no reset shell or playhead targets)');
 iw('xr', 'look-at', { device: 'headset', target: { x: s.bubbles[1][0], y: s.bubbles[1][1] + 0.05, z: s.bubbles[1][2] } });
 await sleep(900);

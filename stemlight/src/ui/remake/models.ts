@@ -20,8 +20,8 @@ import { HARP, KEYS, PADS, harpString, padLocal } from './layout.ts';
 type Mat = [string, number]; // glass colour, gloss 0..1 (the tint and metal of banit's instruments)
 // What you touch is pale frosted glass (its cyan edge light comes from uGlow); the frames dark teal glass; the
 // fittings neutral pale glass, so cyan stays on what you can touch.
-const FROST: Mat = ['#cdeff2', 0.12], LIP: Mat = ['#a6dce2', 0.15], DEEP: Mat = ['#0b3a45', 0.7];
-const EDGE: Mat = ['#c8d4d6', 1], BOARD: Mat = ['#c8d4d6', 0.3], EYELET: Mat = ['#06222a', 0.3], RAIL: Mat = DEEP;
+const FROST: Mat = ['#e3e5e7', 0.12], LIP: Mat = ['#c4c8cc', 0.15], DEEP: Mat = ['#1f2328', 0.7]; // black-and-grey look (src/ui/theme.ts)
+const EDGE: Mat = ['#cdd0d3', 1], BOARD: Mat = ['#cdd0d3', 0.3], EYELET: Mat = ['#141619', 0.3], RAIL: Mat = DEEP;
 const MAPLE = DEEP, PALE = BOARD, GOLD = EDGE, EBONY = EYELET, IVORY = FROST, LACQUER = DEEP, FELT = RAIL;
 const COPPER = DEEP, SKIN = FROST, SILVER = EDGE;
 

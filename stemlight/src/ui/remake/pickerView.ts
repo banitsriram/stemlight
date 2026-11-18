@@ -5,6 +5,8 @@ import { BackSide, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial
 import type { Vec3 } from '../../contracts';
 import { textSprite } from '../../story/card.ts';
 import { SEA } from '../../world/deepsea.ts';
+import { createWaveFloor } from '../../world/waveGrid.ts';
+import { UI } from '../theme.ts';
 import { instrumentMesh, songBubble, worldOrb } from './models.ts';
 import { ORBS, PICKER, SONGS_BUBBLE, songLabel, type SongInfo } from './picker.ts';
 
@@ -29,11 +31,11 @@ const RING_STEPS = 24;
 export function createPickerView(scene: Object3D, songs: readonly SongInfo[], worlds: readonly WorldLook[] = []) {
   const group = new Group();
   scene.add(group);
-  const cyan = new Color(SEA.cyan), amber = new Color(SEA.amber);
+  const cyan = new Color(UI.touch), amber = new Color(SEA.amber);
   const geo = songBubble();
-  // The lobby (sir, 18 Nov): choosing happens in a blank space, deep slate-teal overhead to near-black below.
+  // The lobby: choosing happens in a dark grey space over a slowly rippling floor of cubes, as on the start page.
   const lobbyGeo = new SphereGeometry(6, 24, 12);
-  const top = new Color('#123A4A'), bottom = new Color('#060E16'), col: number[] = [], pos = lobbyGeo.getAttribute('position');
+  const top = new Color(UI.lobbyTop), bottom = new Color(UI.lobbyBottom), col: number[] = [], pos = lobbyGeo.getAttribute('position');
   for (let i = 0; i < pos.count; i++) { const c = bottom.clone().lerp(top, (pos.getY(i) / 6 + 1) / 2); col.push(c.r, c.g, c.b); }
   lobbyGeo.setAttribute('color', new Float32BufferAttribute(col, 3));
   const lobby = new Mesh(lobbyGeo, new MeshBasicMaterial({ vertexColors: true, side: BackSide }));
@@ -41,6 +43,11 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
   lobby.frustumCulled = false;
   lobby.visible = false;
   group.add(lobby);
+  const floor = createWaveFloor({ grid: 36, cube: 0.3, base: UI.glass, high: UI.quiet, fade: UI.lobbyBottom, fadeFrom: 2.5, fadeTo: 5.2 });
+  floor.mesh.renderOrder = -19;
+  floor.mesh.visible = false;
+  group.add(floor.mesh);
+  let lastClock = 0;
   const bubbles = songs.map(() => {
     const m = instrumentMesh(geo, amber, cyan);
     m.scale.setScalar(PICKER.radius);
@@ -91,6 +98,12 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
       let cx = 0, cy = 0, cz = 0;
       lobby.visible = d.bubbles.length > 0;
       lobby.position.set(...d.eye);
+      floor.mesh.visible = lobby.visible;
+      if (lobby.visible) {
+        floor.mesh.position.set(d.eye[0], d.eye[1] - 1.15, d.eye[2]); // about the floor under a seated player
+        floor.update(Math.min(Math.max(d.clock - lastClock, 0), 0.05));
+      }
+      lastClock = d.clock;
       bubbles.forEach((m, i) => {
         const c = d.bubbles[i];
         m.visible = labels[i].sprite.visible = !!c;

@@ -10,6 +10,7 @@ import {
 } from 'three';
 import type { StemId, Vec3 } from '../../contracts';
 import { SEA, WORLD_GLOW } from '../../world/deepsea.ts';
+import { UI } from '../theme.ts';
 import type { NoteGlyphs } from '../../world/notes/NoteGlyphs';
 import { KEYS, laneLocal, PADS, playheadLocal, RESET, RIBBON, toWorld, type Frame } from './layout.ts';
 import { drums, harpFrame, instrumentMesh, keyboard, placeModel, resetShell } from './models.ts';
@@ -18,13 +19,13 @@ import type { RemakeView } from './state.ts';
 const TRI_CAP = 12000; // vertices
 const LINE_CAP = 4000;
 
-// Deep-sea glass (17 Nov, src/world/deepsea.ts): the ribbon is frosted teal glass with cyan edge light (cyan is
-// touchable), ticks and quiet guides are the water's shallows, amber stays yours. Harp strings glow pale aqua; the
+// Black-and-grey glass (src/ui/theme.ts): the ribbon is dark grey glass with pale edge light (pale is
+// touchable), ticks and quiet guides are mid grey, amber stays yours. Harp strings glow pale grey; the
 // two tonic strings glow rose with a wider rose halo, as a real harp marks its Cs. The lines add light, so a darker
 // colour would only fade them: they differ by hue and by halo width, which also reads for colour-blind players.
 const C = {
-  glass: new Color('#0F4F5E'), teal: new Color(SEA.shallows), cyan: new Color(SEA.cyan), amber: new Color(SEA.amber),
-  foam: new Color(SEA.foam), gut: new Color('#D8F6FA'), tonic: new Color('#FF6FA8'),
+  glass: new Color(UI.glass), teal: new Color(UI.quiet), cyan: new Color(UI.touch), amber: new Color(SEA.amber),
+  foam: new Color(UI.light), gut: new Color(UI.string), tonic: new Color('#FF6FA8'),
 };
 const AMBER_CB = new Color('#D55E00');
 /** How far (m) a freshly plucked string swings either side at its middle. */
@@ -149,9 +150,9 @@ export function createRemakeView(scene: Object3D, palette: 'default' | 'cb' = 'd
   function drawAll(view: RemakeView, eye: Vec3) {
     const R = view.ribbon, hw = RIBBON.halfWidth, lr = RIBBON.laneRadius;
     const L = (x: number, y = 0): Vec3 => { const l = laneLocal(x); return toWorld(R, [l[0], l[1] + y, l[2]]); };
-    const stemC = (view.stem && STEM[view.stem]) || C.cyan;
+    const stemC = C.cyan; // black-and-grey look: the ribbon no longer takes the section's colour
 
-    // Ribbon band: frosted teal glass fading out at both ends (12 slices), a slow shimmer moving through it
+    // Ribbon band: frosted grey glass fading out at both ends (12 slices), a slow shimmer moving through it
     // like light through water, and a faint glint along its top edge.
     const N = 12;
     const kAt = (j: number) => 0.55 * Math.sin((Math.PI * j) / N) * (0.85 + 0.15 * Math.sin(view.clock * 0.8 + j * 0.9));
