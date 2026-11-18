@@ -1,0 +1,22 @@
+t=62.92  calls 62  tris 99764  notes 171  pads 2  (fps 144, emulator)
+t=64.44  calls 62  tris 100744  notes 204  pads 2  (fps 144, emulator)
+t=65.92  calls 62  tris 100052  notes 241  pads 2  (fps 144, emulator)
+t=67.39  calls 62  tris 100228  notes 319  pads 2  (fps 144, emulator)
+t=66.91  calls 62  tris 100104  notes 303  pads 2  (fps 144, emulator)
+t=66.42  calls 60  tris 100212  notes 283  pads 2  (fps 144, emulator)
+t=67.92  calls 60  tris 100460  notes 377  pads 2  (fps 144, emulator)
+t=69.38  calls 62  tris 100424  notes 332  pads 2  (fps 144, emulator)
+t=70.87  calls 60  tris 100068  notes 279  pads 2  (fps 144, emulator)
+t=72.35  calls 60  tris 99896  notes 203  pads 2  (fps 144, emulator)
+t=73.85  calls 62  tris 99848  notes 222  pads 2  (fps 144, emulator)
+t=75.35  calls 60  tris 99872  notes 205  pads 2  (fps 144, emulator)
+t=76.89  calls 60  tris 99864  notes 231  pads 2  (fps 143, emulator)
+t=78.37  calls 60  tris 99864  notes 207  pads 2  (fps 144, emulator)
+screenshot: results/2026-11-18-perf-heaviest-aurora.png (world aurora)
+PASS  pads + lane shown during the run
+PASS  the songs bubble shown during the run
+PASS  peak draw calls < 100  (max 64)
+PASS  peak triangles < 150k  (max 101520)
+PASS  peak live notes <= 1,500  (max 380)
+Frame rate on a Quest 3/3S: unverified (no headset). The fps above is the headless emulator page and means nothing for the device.
+5/5 passed

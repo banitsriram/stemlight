@@ -1,0 +1,8 @@
+starry: current starry -> {"world":"starry","changing":false,"t":47.016666666666666}
+shot tests/iwer/input/results/2026-11-18-world-starry-ahead.png
+shot tests/iwer/input/results/2026-11-18-world-starry-moon.png
+shot tests/iwer/input/results/2026-11-18-world-starry-cypress.png
+shot tests/iwer/input/results/2026-11-18-world-starry-village.png
+shot tests/iwer/input/results/2026-11-18-world-starry-up.png
+shot tests/iwer/input/results/2026-11-18-world-starry-behind.png
+console errors: []

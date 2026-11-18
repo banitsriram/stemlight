@@ -93,7 +93,8 @@ try {
   const a2 = await audio();
   log(`after Enter: XR session ${a1.session}, audio ${a2.state}, clock ${a1.time.toFixed(2)} -> ${a2.time.toFixed(2)} s, ${a2.sources} sources started`);
   check(a1.session && a2.state === 'running' && a2.time > a1.time + 2 && a2.sources > 0, 'Enter starts XR and the music (emulated Quest 3, hands only)');
-  const firstPiece = requests.find((r) => /\/pieces\/[^/]+\/manifest\.json/.test(r.url));
+  // The first piece loaded (beats.json: the song picker reads every manifest up front, so manifests don't tell).
+  const firstPiece = requests.find((r) => /\/pieces\/[^/]+\/beats\.json/.test(r.url));
   log(`first piece: ${firstPiece ? firstPiece.url.match(/pieces\/([^/]+)\//)[1] : 'none'}`);
 
   // ---- full sequence: the song picker (18 Nov) ----

@@ -1,0 +1,12 @@
+PASS a fresh device starts in the deep sea (world sea)
+PASS the picker shows 3 song bubbles and 3 world orbs (6 song-kind targets)
+shot tests/iwer/input/results/2026-11-18-orbs-1-picker-deep-sea.png
+PASS touching orb 2 changes the world to starry and keeps the picker up (world starry, picker up)
+shot tests/iwer/input/results/2026-11-18-orbs-3-picker-starry.png
+PASS touching orb 3 changes the world to aurora and keeps the picker up (world aurora, picker up)
+shot tests/iwer/input/results/2026-11-18-orbs-4-picker-aurora.png
+PASS touching orb 1 changes the world to sea and keeps the picker up (world sea, picker up)
+PASS touching orb 2 changes the world to starry and keeps the picker up (world starry, picker up)
+shot tests/iwer/input/results/2026-11-18-orbs-3-picker-starry.png
+PASS after a reload the device keeps its world (starry)
+console errors: []

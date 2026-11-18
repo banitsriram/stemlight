@@ -382,3 +382,26 @@
   - Starry Night perf 5/5: peak 64 calls, 106,704 triangles, 380 notes;
   - shader compile and link 32/32 (normal + multiview, SwiftShader WebGL2).
 - **Not verified:** frame rate and the look on a real headset.
+
+## 18 Nov 2026 (14:00-15:30 IST): biyon, review fixes; Starry Night rebuilt in the cartoon style sir chose
+- **Code review** (a review agent): no critical issues; five important issues, all fixed:
+  - song and orb cross-touch: a 0.6 s lockout, and no orb touches while a song loads;
+  - world changes part way: a pure `createSwitch` carries on from the current brightness and palette (no flash);
+  - the shader warm-up runs again when XR starts (multiview variants), with colour and depth writes off;
+  - no `pow()` of a negative base;
+  - Starry seams.
+  
+  Minor items fixed: orb pearls now show, orb names sit in view, and the test scripts reset the saved world and use a clean address.
+- **Starry Night rebuilt.** Sir disliked the first look (the village read as boxes). From three 3D references he chose **B, stylised and cartoon-shaded**, for the sky and the land:
+  - **Sky:** near-black, comma-shaped brush strokes along the swirl flow, a navy depth layer, a cream river above the hills, stars and moon as warm glows ringed with strokes. The painting's layout is kept.
+  - **Land:** one opaque toon mesh: pale grey-teal cottages with dark-teal shadow sides, inverted-hull outlines and warm windows, **9-16 m round you and open straight ahead**; the church and spire beyond; teal hill layers with drawn ridges; a dark-teal cypress; speckled bushes and meadow; a paper grain.
+  - **Fireflies** replace the motes. Still 3 draw calls.
+- **Evidence (emulator):**
+  - unit tests 159/159;
+  - shaders 36/36 compile and link (normal + multiview);
+  - song picker 10/10;
+  - world orbs 7/7;
+  - Starry perf 5/5: peak 64 calls, 115,384 triangles, 380 notes.
+  
+  Stills: `tests/iwer/input/results/2026-11-18-world-*`.
+- **Not verified:** the headset look and frame rate.
