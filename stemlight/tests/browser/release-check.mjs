@@ -104,7 +104,7 @@ try {
     // app fixes on the first play: the headset's pose then (it doesn't move in this run).
     const loaded = () => [...new Set(requests.filter((r) => /\/pieces\/[^/]+\/beats\.json/.test(r.url)).map((r) => r.url.match(/pieces\/([^/]+)\//)[1]))];
     const { bubbleLocal, songsBubbleLocal, orbLocal } = await import('../../src/ui/remake/picker.ts');
-    const { WORLDS } = await import('../../src/world/worldList.ts');
+    const { availableWorlds } = await import('../../src/world/worldList.ts');
     const { toWorld } = await import('../../src/ui/remake/layout.ts');
     const { SONGS } = await import('../../src/audio/sequence.ts');
     const ids = SONGS.map((s) => s.id);
@@ -162,7 +162,8 @@ try {
     const r2 = await tipTo(songsAt, 1600);
     await tipTo(towardEye(songsAt, 0.12), 1200);
     // With the picker up, touch the Starry Night orb: the world changes (the device remembers it) and the picker stays.
-    const orb = toWorld(seat, orbLocal(WORLDS.findIndex((w) => w.id === 'starry'), WORLDS.length));
+    const vrWorlds = availableWorlds(false); // a VR session offers 3 orbs (Passthrough only in a passthrough session)
+    const orb = toWorld(seat, orbLocal(vrWorlds.indexOf('starry'), vrWorlds.length));
     await tipTo(towardEye(orb, 0.12), 400);
     const r4 = await tipTo(orb, 600);
     await tipTo(towardEye(orb, 0.12), 1200);
