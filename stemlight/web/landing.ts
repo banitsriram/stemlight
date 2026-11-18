@@ -8,6 +8,7 @@ export interface LandingDeps {
   enter(): Promise<void>;
 }
 
+const NOTES = 14;
 const PITCH = 'The music you can reach into: silence it, reshape it, play your own part, while every real note floats around you.';
 
 /** The first visit's words, or the resume screen's after the headset session ends (biyon-58). */
@@ -17,13 +18,19 @@ export const COPY = {
 };
 
 export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, copy = COPY.first): void {
+  const note = '<svg class="landing-note" viewBox="0 0 20 40" aria-hidden="true"><ellipse cx="7" cy="33" rx="7" ry="5" transform="rotate(-20 7 33)"/><rect x="12" y="4" width="2" height="29"/><path d="M14 4c0 6 7 8 6 16 3-8-4-10-6-12z"/></svg>';
   root.innerHTML = `
     <main class="landing">
-      <h1 class="landing-in">${copy.title}</h1>
-      <p class="landing-pitch landing-in">${copy.pitch}</p>
-      <button class="landing-enter landing-in" type="button">${copy.button}</button>
-      <p class="landing-hint landing-in">No account. Seated, hands only, about 4 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
-      <p class="landing-status" role="status"></p>
+      <div class="landing-shafts" aria-hidden="true"></div>
+      <div class="landing-notes" aria-hidden="true">${note.repeat(NOTES)}</div>
+      <div class="landing-copy">
+        <h1 class="landing-in">${copy.title}</h1>
+        <p class="landing-pitch landing-in">${copy.pitch}</p>
+        <button class="landing-enter landing-in" type="button">${copy.button}</button>
+        <p class="landing-gestures landing-in">Close a fist to silence an instrument. Pinch twice to hear it alone. Tap the harp, drums and keys to play along.</p>
+        <p class="landing-hint landing-in">No account. Seated, hands only, about 4 minutes.<br>If your hands don't appear, turn on hand tracking in your headset settings.</p>
+        <p class="landing-status" role="status"></p>
+      </div>
     </main>`;
 
   const page = root.querySelector<HTMLElement>('.landing')!;
@@ -34,6 +41,16 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, 
   const motion = gsap.matchMedia();
   motion.add('(prefers-reduced-motion: no-preference)', () => {
     gsap.from('.landing-in', { y: 18, autoAlpha: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 });
+    gsap.to('.landing-shafts', { skewX: 4, opacity: 0.6, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    // Notes rise like bubbles through the light, each at its own pace and sway.
+    gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => {
+      gsap.set(el, { left: `${gsap.utils.random(4, 96)}%`, scale: gsap.utils.random(0.5, 1.3) });
+      gsap.fromTo(el, { y: 0 }, { y: () => -innerHeight - 120, duration: gsap.utils.random(14, 26), ease: 'none', repeat: -1, delay: -gsap.utils.random(0, 26) });
+      gsap.to(el, { x: gsap.utils.random(-30, 30), rotation: gsap.utils.random(-15, 15), duration: gsap.utils.random(2.5, 4.5), ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    });
+  });
+  motion.add('(prefers-reduced-motion: reduce)', () => {
+    gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => gsap.set(el, { left: `${gsap.utils.random(4, 96)}%`, bottom: `${gsap.utils.random(5, 90)}%` }));
   });
 
   button.addEventListener('click', async () => {

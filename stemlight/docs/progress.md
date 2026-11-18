@@ -2,6 +2,12 @@
 
 Newest entry first. Each session reads this, then `PLAN.md`, then `features.json`. Strata's history is in `docs/archive/`.
 
+## 18 Nov 2026: banit, landing page redesign (asked by sir via biyon)
+
+- `web/landing.css` + `web/landing.ts` only. Light shafts from the surface, note glyphs rising like bubbles (GSAP; static when reduced motion is on), title in Bodoni Moda lit from above (ASSETS.md row: biyon adds it, they hold that file), glass Enter button kept at the 112 px pinch size, one new line naming the gestures (fist, double pinch, tap).
+- Evidence: `tests/iwer/visual/results/2026-11-18-landing-desktop.png` and `-phone.png` (vite preview build, 1440 and 390 wide). Unit tests 142/142. Not tried in a headset browser.
+- Needs biyon's redeploy + freeze check before it is live.
+
 ## 17 Nov 2026 (late): banit, video re-shot again on the deep-sea restyle (it ships)
 
 - banit decided the deep-sea glass restyle (PR #9) ships; PRs #8 (drum mute fix) and #9 were reviewed and merged (tsc clean, 133/133, visual world check 17/17 on #9). biyon is asked to redeploy main and rerun the freeze check.
