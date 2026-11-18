@@ -1,0 +1,12 @@
+{"blend":"alpha-blend","world":"room","shown":"room","orbs":0,"open":false,"bg":null,"alpha":0,"rock":false,"mode":"immersive-ar"}
+PASS the passthrough entry starts an immersive-ar session (immersive-ar)
+PASS it opens on the room: no background, clear alpha 0
+PASS the seat rock is hidden
+PASS the picker offers 4 world orbs (4)
+shot tests/iwer/input/results/2026-11-18-passthrough-room-picker.png
+PASS the deep-sea orb covers the room (world sea, rock true)
+shot tests/iwer/input/results/2026-11-18-passthrough-sea-in-ar.png
+PASS the Passthrough orb clears back to the room
+PASS Passthrough is not kept as the device's world (kept sea)
+PASS a normal Enter: VR, world starry, 3 orbs
+ALL PASS (0 failed)

@@ -1,4 +1,4 @@
-import { Color, createSystem, World } from '@iwsdk/core';
+import { Color, createSystem, SessionMode, World } from '@iwsdk/core';
 import { Quaternion, Vector3 } from 'three';
 import projectOptions from 'virtual:iwsdk-project';
 import { COPY, mountLanding } from '../web/landing';
@@ -64,7 +64,7 @@ const head = () => {
   world.camera.getWorldDirection(camFwd);
   return { eye: [camEye.x, camEye.y, camEye.z] as [number, number, number], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
 };
-const shell = initShell(ctx, world.scene, head);
+const shell = initShell(ctx, world.scene, head, world.renderer);
 const story = initStory(ctx, world.scene, head, reachSpot, shell.creatures.position);
 const endCard = endCardSprite();
 world.scene.add(endCard.sprite);
@@ -81,8 +81,9 @@ if (import.meta.env.DEV) (await import('./dev/devInput')).initDevInput(world, ct
 let markReady: () => void = () => {};
 const pieceReady = new Promise<void>((resolve) => { markReady = resolve; });
 // launchXR reports failure only to the console, so the outcome is read back from the world.
-const enterXR = () => new Promise<void>((resolve, reject) => {
-  world.launchXR();
+// 'ar' is a passthrough session (immersive-ar): the room shows wherever no world is drawn.
+const enterXR = (mode: 'vr' | 'ar') => new Promise<void>((resolve, reject) => {
+  world.launchXR({ sessionMode: mode === 'ar' ? SessionMode.ImmersiveAR : SessionMode.ImmersiveVR });
   const poll = setInterval(() => {
     if (world.sessionRequestPending) return;
     clearInterval(poll);
@@ -91,12 +92,17 @@ const enterXR = () => new Promise<void>((resolve, reject) => {
   }, 50);
 });
 const landingRoot = document.getElementById('landing') as HTMLElement;
+let lastMode: 'vr' | 'ar' = 'vr'; // Resume re-enters the mode the player chose
 const landing = {
   unlock: () => ctx.audio.unlock(),
+  /** Whether this browser can start a passthrough session (the landing page's second button). */
+  canPassthrough: async () => { try { return (await navigator.xr?.isSessionSupported('immersive-ar')) ?? false; } catch { return false; } },
   // XR must be requested inside the Enter gesture, so it starts first and the music waits for the piece.
-  enter: () => enterXR().then(async () => {
+  enter: (mode: 'vr' | 'ar' = lastMode) => enterXR(mode).then(async () => {
+    lastMode = mode;
     const session = world.session;
     if (session) {
+      shell.worlds.setMode(mode === 'ar'); // a passthrough session opens on the room
       lifecycle.watchSession(session);
       shell.worlds.warm(); // VR renders with multiview: compile the hidden worlds' shaders for it now, not at the first change
       // Leaving VR pauses (lifecycle); the page offers Resume, which re-enters where the music stopped.
@@ -149,5 +155,5 @@ if (import.meta.env.DEV) {
   world.registerSystem(class DevStatsSystem extends createSystem() {
     update() { stats.update(); }
   });
-  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, songs, worlds: shell.worlds, stats: stats.sample, statsReset: stats.resetMax } });
+  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, songs, landing, worlds: shell.worlds, stats: stats.sample, statsReset: stats.resetMax } });
 }

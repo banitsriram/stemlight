@@ -14,6 +14,7 @@ export interface WorldLook { id: string; name: string; orb: readonly [string, st
 export interface PickerDraw {
   bubbles: Vec3[]; // the open picker's bubbles; empty while closed
   orbs: Vec3[]; // the open picker's world orbs; empty while closed
+  orbIds?: string[]; // the world of each of orbs (default: every world, in order)
   world: number; // the current world (its orb tinted amber: yours)
   current: number; // the song played last (amber tint), -1 for none
   loading: number; // the song just touched, pulsing amber while it loads, -1 for none
@@ -90,7 +91,8 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
         cx += c[0]; cy += c[1]; cz += c[2];
       });
       orbs.forEach((m, i) => {
-        const c = d.orbs[i];
+        const j = d.orbIds ? d.orbIds.indexOf(worlds[i].id) : i;
+        const c = j < 0 ? undefined : d.orbs[j];
         m.visible = orbLabels[i].sprite.visible = !!c;
         if (!c) return;
         m.position.set(c[0], c[1] + 0.002 * Math.sin(d.clock * 1.3 + i * 1.7), c[2]);

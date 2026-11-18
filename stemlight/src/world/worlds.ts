@@ -6,12 +6,13 @@
 // Warm-up: the hidden worlds are drawn for a few frames with colour writes off, so their shaders compile without
 // showing anything. It runs at start (the 2D page) and again when the XR session starts (warm()), because in VR the
 // renderer uses multiview, a separate shader variant: without it the first change in the headset would stutter.
-import { Color, type Material, type Mesh, type Object3D, type Scene } from 'three';
+import { Color, type Material, type Mesh, type Object3D, type Scene, type WebGLRenderer } from 'three';
 import { WORLD_GLOW, livePalette, setPalette } from './deepsea';
 import { createSea } from './sky';
 import { createStarry } from './starry';
 import { createAurora } from './aurora';
-import { WORLDS, createSwitch, loadWorld, saveWorld, worldInfo, type WorldId, type WorldParts } from './worldList';
+import { createRoom } from './room';
+import { WORLDS, availableWorlds, createSwitch, loadWorld, saveWorld, worldInfo, type WorldId, type WorldParts } from './worldList';
 
 export interface Worlds {
   list: typeof WORLDS;
@@ -19,6 +20,12 @@ export interface Worlds {
   /** True while a change is fading. */
   changing(): boolean;
   set(id: WorldId): void;
+  /** The world in the scene now (a change swaps it half way). */
+  shown(): WorldId;
+  /** The worlds this session offers: Passthrough only in a passthrough session. */
+  available(): WorldId[];
+  /** Call when a session starts: a passthrough session opens on the room, a VR one never does. */
+  setMode(ar: boolean): void;
   /** Compile the hidden worlds' shaders for the current render mode (call when the XR session starts). */
   warm(): void;
   update(dt: number): void;
@@ -27,8 +34,9 @@ export interface Worlds {
 
 const WARM_FRAMES = 3;
 
-export function initWorlds(scene: Object3D): Worlds {
-  const parts: Record<WorldId, WorldParts> = { sea: createSea(), starry: createStarry(), aurora: createAurora() };
+export function initWorlds(scene: Object3D, renderer?: WebGLRenderer): Worlds {
+  const parts: Record<WorldId, WorldParts> = { sea: createSea(), starry: createStarry(), aurora: createAurora(), room: createRoom() };
+  let ar = false;
   const ids = Object.keys(parts) as WorldId[];
   for (const id of ids) scene.add(...parts[id].objects);
   const mats = (id: WorldId) => parts[id].objects.map((o) => (o as Mesh).material as Material);
@@ -37,7 +45,9 @@ export function initWorlds(scene: Object3D): Worlds {
   let warming = 0;
   const setBackground = (id: WorldId) => {
     const s = scene as Scene;
-    if (s.isScene) s.background = new Color(worldInfo(id).palette.abyss);
+    // Passthrough: no background and a see-through clear, so the room shows wherever nothing is drawn.
+    if (s.isScene) s.background = id === 'room' ? null : new Color(worldInfo(id).palette.abyss);
+    renderer?.setClearColor(0x000000, id === 'room' ? 0 : 1);
   };
   // Each material's own depth write, restored when its world shows (an opaque world's land writes depth).
   const depth0 = new Map<Material, boolean>();
@@ -59,8 +69,22 @@ export function initWorlds(scene: Object3D): Worlds {
     list: WORLDS,
     current: () => sw.current(),
     changing: () => sw.changing(),
+    shown: () => shown,
+    available: () => availableWorlds(ar),
+    setMode(on) {
+      ar = on;
+      const id = on ? 'room' : sw.current() === 'room' ? loadWorld() : null;
+      if (!id || id === sw.current()) return;
+      sw.jump(id);
+      shown = id;
+      setBackground(id);
+      for (const w of ids) parts[w].setFade(w === id ? 1 : 0);
+      setPalette(worldInfo(id).palette);
+      WORLD_GLOW.value = worldInfo(id).glow;
+      applyVisibility();
+    },
     set(id) {
-      if (id === sw.current()) return;
+      if (id === sw.current() || !availableWorlds(ar).includes(id)) return;
       sw.request(id, performance.now() / 1000, look());
       saveWorld(id);
     },

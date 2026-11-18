@@ -1,4 +1,4 @@
-import { Float32BufferAttribute, IcosahedronGeometry, Mesh, Object3D, ShaderMaterial } from 'three';
+import { Float32BufferAttribute, IcosahedronGeometry, Mesh, Object3D, ShaderMaterial, type WebGLRenderer } from 'three';
 import type { AppContext, Vec3 } from '../contracts';
 import { createCreatures, type HeadFn } from './creatures';
 import { SEA_GLSL, SEA_UNIFORMS } from './deepsea';
@@ -57,16 +57,17 @@ void main() {
  * Adds the seat, the worlds (deep sea, Starry Night, Aurora: one shown at a time) and the creatures; the creatures
  * keep one target per stem of the loaded piece in the registry.
  */
-export function initShell(ctx: AppContext, scene: Object3D, head: HeadFn) {
+export function initShell(ctx: AppContext, scene: Object3D, head: HeadFn, renderer?: WebGLRenderer) {
   const rock = rockSeat();
   scene.add(rock);
-  const worlds = initWorlds(scene);
+  const worlds = initWorlds(scene, renderer);
   const creatures = createCreatures(ctx, scene, head, reachSpot, CREATURE_RADIUS);
   return {
     creatures,
     worlds,
     update(dt: number) {
       worlds.update(dt);
+      rock.visible = worlds.shown() !== 'room'; // Passthrough: no seat, just your room
       (rock.material as ShaderMaterial).uniforms.uTime.value = performance.now() / 1000;
       creatures.update(dt);
     },
