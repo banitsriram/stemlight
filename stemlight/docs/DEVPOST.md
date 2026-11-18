@@ -1,6 +1,6 @@
 # Devpost submission text: DRAFT 5 (task 67)
 
-> **Internal note: delete this block before pasting into Devpost.** Final text, 18 Nov 2026. Describes the live build `assets/index-CwPwIwlo.js` (full freeze check 14/14, `tests/browser/results/2026-11-18-release-check-stemlight.vercel.app-full.txt`). Do not deploy after the deadline (Thu 19 Nov 01:30 IST). The hand-off for banit is `docs/SUBMISSION-HANDOFF.md`.
+> **Internal note: delete this block before pasting into Devpost.** Final text, 18 Nov 2026. Describes the live build `assets/index-CwPwIwlo.js` (full freeze check 14/14, `tests/browser/results/2026-11-18-release-check-stemlight.vercel.app-full.txt`). Do not deploy after the deadline (Thu 19 Nov 01:30 IST). The hand-off for banit is `docs/audits/2026-11-18-submission-handoff.md`.
 
 ---
 
