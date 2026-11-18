@@ -1,12 +1,14 @@
 // Deep water, seabed with light shafts, and plankton (PLAN s8, restyled deep-sea glass on 17 Nov): three draw
-// calls together (F17). Light comes from the sunlit surface far above: a bright rippling window overhead, rays
+// calls together (F17). Since 18 Nov this is one of three worlds (worlds.ts): createSea() builds it, uFade
+// dims it for a world change. Light comes from the sunlit surface far above: a bright rippling window overhead, rays
 // fanning down from it, shafts slanting through the water near you and caustics dancing on the sand.
 // Plankton drift on wall-clock time, so they keep moving while the music is paused, and brighten on the beat.
 import {
   AdditiveBlending, BackSide, BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh, Object3D, Points,
   ShaderMaterial, SphereGeometry,
 } from 'three';
-import { SEA_GLSL } from './deepsea';
+import { SEA_GLSL, SEA_UNIFORMS } from './deepsea';
+import type { WorldParts } from './worldList';
 
 const NOISE = /* glsl */ `
 float h(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
@@ -19,10 +21,10 @@ float fbm(vec3 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a
 
 function water(): Mesh {
   const mat = new ShaderMaterial({
-    side: BackSide, depthWrite: false, uniforms: { uTime: { value: 0 } },
+    side: BackSide, depthWrite: false, uniforms: { ...SEA_UNIFORMS, uTime: { value: 0 }, uFade: { value: 1 } },
     vertexShader: `varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: NOISE + SEA_GLSL + /* glsl */ `
-uniform float uTime; varying vec3 vDir;
+uniform float uTime; uniform float uFade; varying vec3 vDir;
 void main() {
   vec3 d = normalize(vDir);
   float up = d.y;
@@ -47,7 +49,7 @@ void main() {
     float rim = exp(-abs(up - 0.67) * 40.0);
     c = mix(c, surf, win) + SEA_SHALLOWS * rim * 0.35;
   }
-  gl_FragColor = vec4(c, 1.0);
+  gl_FragColor = vec4(c * uFade, 1.0);
   #include <colorspace_fragment>
 }`,
   });
@@ -94,7 +96,8 @@ function seabed(): Mesh {
   g.setAttribute('seed', new Float32BufferAttribute(seed, 1));
   g.setIndex(index);
   const mat = new ShaderMaterial({
-    transparent: true, depthWrite: false, premultipliedAlpha: true, side: DoubleSide, uniforms: { uTime: { value: 0 } },
+    transparent: true, depthWrite: false, premultipliedAlpha: true, side: DoubleSide,
+    uniforms: { ...SEA_UNIFORMS, uTime: { value: 0 }, uFade: { value: 1 } },
     vertexShader: /* glsl */ `
 uniform float uTime; attribute float kind; attribute vec2 uvS; attribute float seed;
 varying vec3 vW; varying float vKind; varying vec2 vUv; varying float vSeed;
@@ -106,7 +109,7 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`,
     fragmentShader: NOISE + SEA_GLSL + /* glsl */ `
-uniform float uTime; varying vec3 vW; varying float vKind; varying vec2 vUv; varying float vSeed;
+uniform float uTime; uniform float uFade; varying vec3 vW; varying float vKind; varying vec2 vUv; varying float vSeed;
 void main() {
   float dist = length(vW - cameraPosition);
   if (vKind > 0.5) {
@@ -115,7 +118,7 @@ void main() {
     float along = smoothstep(0.0, 0.4, vUv.y) * (1.0 - smoothstep(0.75, 1.0, vUv.y));
     float streak = 0.55 + 0.45 * n3(vec3(vUv.x * 4.0 + vSeed * 9.0, vUv.y * 3.0 - uTime * 0.06, vSeed * 3.0));
     float k = across * along * streak * (0.7 + 0.3 * sin(uTime * 0.37 + vSeed * 12.0)) * (1.0 - 0.6 * seaFog(dist));
-    gl_FragColor = vec4(SEA_SHALLOWS * 0.2 * k, 0.0); // alpha 0: purely additive
+    gl_FragColor = vec4(SEA_SHALLOWS * 0.2 * k * uFade, 0.0); // alpha 0: purely additive
     #include <colorspace_fragment>
     return;
   }
@@ -133,7 +136,7 @@ void main() {
   c += SEA_SHALLOWS * 0.035 * (1.0 - smoothstep(0.0, 6.0, r));
   c = mix(c, SEA_HAZE, seaFog(dist));
   float a = 1.0 - smoothstep(24.0, 40.0, r);
-  gl_FragColor = vec4(c, a);
+  gl_FragColor = vec4(c * uFade, a);
   #include <colorspace_fragment>
   gl_FragColor.rgb *= a; // premultiply after the colour conversion, as three's own materials do
 }`,
@@ -159,7 +162,7 @@ function plankton(): Points {
   g.setAttribute('position', new Float32BufferAttribute(pos, 3));
   g.setAttribute('seed', new Float32BufferAttribute(seed, 1));
   const mat = new ShaderMaterial({
-    transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 }, uPulse: { value: 0 } },
+    transparent: true, depthWrite: false, blending: AdditiveBlending, uniforms: { uTime: { value: 0 }, uPulse: { value: 0 }, uFade: { value: 1 } },
     vertexShader: /* glsl */ `
 uniform float uTime; uniform float uPulse; attribute float seed; varying float vA; varying vec3 vC;
 void main() {
@@ -180,11 +183,11 @@ void main() {
   gl_Position = projectionMatrix * mv;
 }`,
     fragmentShader: /* glsl */ `
-varying float vA; varying vec3 vC;
+uniform float uFade; varying float vA; varying vec3 vC;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
-  gl_FragColor = vec4(vC * vA * exp(-d * d * 14.0), 1.0);
+  gl_FragColor = vec4(vC * vA * exp(-d * d * 14.0) * uFade, 1.0);
 }`,
   });
   const p = new Points(g, mat);
@@ -192,15 +195,17 @@ void main() {
   return p;
 }
 
-export function createSky(scene: Object3D): { update(): void; pulse(k: number): void; objects: Object3D[] } {
-  const objects = [water(), seabed(), plankton()];
-  scene.add(...objects);
+/** The deep sea as a world (worlds.ts adds its objects to the scene and shows one world at a time). */
+export function createSea(): WorldParts {
+  const objects: Object3D[] = [water(), seabed(), plankton()];
   const mats = objects.map((o) => (o as Mesh).material as ShaderMaterial);
   return {
     objects,
-    update() {
-      const t = performance.now() / 1000;
+    update(t: number) {
       for (const m of mats) m.uniforms.uTime.value = t;
+    },
+    setFade(k: number) {
+      for (const m of mats) m.uniforms.uFade.value = k;
     },
     /** The beat swell above 1 (0 between beats, about 0.15 on a downbeat): the plankton brighten with it. */
     pulse(k: number) { mats[2].uniforms.uPulse.value = Math.max(0, k); },

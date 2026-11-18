@@ -5,11 +5,16 @@ import { Color, Group, Mesh, MeshBasicMaterial, RingGeometry, type Object3D } fr
 import type { Vec3 } from '../../contracts';
 import { textSprite } from '../../story/card.ts';
 import { SEA } from '../../world/deepsea.ts';
-import { instrumentMesh, songBubble } from './models.ts';
-import { PICKER, SONGS_BUBBLE, songLabel, type SongInfo } from './picker.ts';
+import { instrumentMesh, songBubble, worldOrb } from './models.ts';
+import { ORBS, PICKER, SONGS_BUBBLE, songLabel, type SongInfo } from './picker.ts';
+
+/** A world as the picker shows it: its name and its orb's glass and pearl colours. */
+export interface WorldLook { id: string; name: string; orb: readonly [string, string] }
 
 export interface PickerDraw {
   bubbles: Vec3[]; // the open picker's bubbles; empty while closed
+  orbs: Vec3[]; // the open picker's world orbs; empty while closed
+  world: number; // the current world (its orb tinted amber: yours)
   current: number; // the song played last (amber tint), -1 for none
   loading: number; // the song just touched, pulsing amber while it loads, -1 for none
   songsAt: Vec3 | null; // the songs bubble while a song plays
@@ -20,7 +25,7 @@ export interface PickerDraw {
 
 const RING_STEPS = 24;
 
-export function createPickerView(scene: Object3D, songs: readonly SongInfo[]) {
+export function createPickerView(scene: Object3D, songs: readonly SongInfo[], worlds: readonly WorldLook[] = []) {
   const group = new Group();
   scene.add(group);
   const cyan = new Color(SEA.cyan), amber = new Color(SEA.amber);
@@ -38,8 +43,21 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[]) {
     group.add(t.sprite);
     return t;
   });
-  const caption = textSprite(0.3, 1024, 8);
-  caption.set(['Touch a song to play it']);
+  const orbs = worlds.map((w) => {
+    const m = instrumentMesh(worldOrb(w.orb[0], w.orb[1]), amber, cyan);
+    m.scale.setScalar(ORBS.radius);
+    group.add(m);
+    return m;
+  });
+  const orbLabels = worlds.map((w) => {
+    const t = textSprite(0.1, 512, 5);
+    t.set([w.name]);
+    t.sprite.visible = false;
+    group.add(t.sprite);
+    return t;
+  });
+  const caption = textSprite(0.34, 1024, 6);
+  caption.set(worlds.length ? ['Touch a song to play it', 'Touch an orb below to change the world'] : ['Touch a song to play it'], 0.13);
   caption.sprite.visible = false;
   group.add(caption.sprite);
   const small = instrumentMesh(geo, amber, cyan);
@@ -70,6 +88,15 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[]) {
           i === d.loading ? 0.55 + 0.45 * Math.sin(d.clock * 9) : i === d.current ? 0.3 : 0;
         labels[i].sprite.position.set(c[0], c[1] + 0.1, c[2]);
         cx += c[0]; cy += c[1]; cz += c[2];
+      });
+      orbs.forEach((m, i) => {
+        const c = d.orbs[i];
+        m.visible = orbLabels[i].sprite.visible = !!c;
+        if (!c) return;
+        m.position.set(c[0], c[1] + 0.002 * Math.sin(d.clock * 1.3 + i * 1.7), c[2]);
+        (m.material.uniforms.uFlash.value as number[])[0] = i === d.world ? 0.4 : 0;
+        orbLabels[i].sprite.position.set(c[0], c[1] + 0.043, c[2]); // just above its orb: below it fell out of view
+        orbLabels[i].sprite.material.opacity = i === d.world ? 1 : 0.7;
       });
       const n = d.bubbles.length;
       caption.sprite.visible = n > 0;

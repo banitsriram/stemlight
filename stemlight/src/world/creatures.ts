@@ -7,7 +7,7 @@ import {
 } from 'three';
 import type { AppContext, Envelopes, MuteState, StemId, Vec3 } from '../contracts';
 import { endCardUp } from '../story/sequencer';
-import { SEA, SEA_GLSL } from './deepsea';
+import { SEA, SEA_GLSL, SEA_UNIFORMS } from './deepsea';
 import { instrument } from './instruments';
 
 export const GLIDE_SEC = 0.6;
@@ -191,7 +191,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       const color = new Color(ACCENT[stem]);
       const bodyMat = new ShaderMaterial({
         vertexShader: BODY_VERT, fragmentShader: BODY_FRAG, side: DoubleSide,
-        uniforms: { uColor: { value: color }, uBright: { value: 1 }, uPulse: { value: 0 }, uTime: { value: 0 } },
+        uniforms: { ...SEA_UNIFORMS, uColor: { value: color }, uBright: { value: 1 }, uPulse: { value: 0 }, uTime: { value: 0 } },
       });
       const lineGeo = new BufferGeometry();
       lineGeo.setAttribute('position', new Float32BufferAttribute(lines, 3));

@@ -1,18 +1,19 @@
 url: https://localhost:4173/
 profile: brand-new, empty, deleted afterwards
 PASS page loads (HTTP 200)
-Enter visible after 1.5 s
-live bundle: assets/index-Bf1fbeGv.js
-PASS no dev code shipped (window.__stemlight absent, DevHandPose not in bundle, bundle 0.24 MB)
-after Enter: XR session true, audio running, clock 0.79 -> 3.81 s, 10 sources started
+Enter visible after 4.4 s
+live bundle: assets/index-MKSorArX.js
+PASS no dev code shipped (window.__stemlight absent, DevHandPose not in bundle, bundle 0.28 MB)
+after Enter: XR session true, audio running, clock 2.70 -> 5.72 s, 10 sources started
 PASS Enter starts XR and the music (emulated Quest 3, hands only)
-first piece: beethoven5
+first piece: dvorak9
 PASS full run: beethoven5 played to its end (84 s), then the picker waited: no song started by itself
 PASS touching the Dvorak bubble plays it (tip 0.0 cm from the centre; loaded beethoven5 -> dvorak9)
-PASS holding the songs bubble brings the picker back; touching Beethoven 7 plays it (hold tip 0.0 cm, touch 0.0 cm; loaded beethoven5 -> dvorak9 -> beethoven7; 110 s)
+PASS touching the Starry Night orb changes the world (saved world: starry; tip 0.0 cm)
+PASS holding the songs bubble brings the picker back; touching Beethoven 7 plays it (hold tip 0.0 cm, touch 0.0 cm; loaded beethoven5 -> dvorak9 -> beethoven7; 108 s)
 PASS leaving VR shows Resume
-PASS Resume re-enters and the music carries on (session true, clock 119.33 -> 121.84 s)
+PASS Resume re-enters and the music carries on (session true, clock 118.85 -> 121.36 s)
 PASS reload comes back clean (button "Enter", IndexedDB ["stemlight"])
 PASS no page errors
 PASS no console errors
-PASS no failed requests (68 responses)
+PASS no failed requests (80 responses)

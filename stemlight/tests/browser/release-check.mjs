@@ -9,7 +9,7 @@
 //  - a reload in the same profile comes back clean, with the save in IndexedDB;
 //  - with --full: the tutorial song plays to its end and the song picker waits (no song starts by itself); a
 //    fingertip touch on a bubble plays Dvorak, the songs bubble held mid-song brings the picker back, and a touch
-//    plays Beethoven 7 (about 2.5 minutes). The emulated right index tip is placed with the standard WebXR
+//    plays Beethoven 7 (about 2.5 minutes); on the way it touches the Starry Night world orb and checks the world changed. The emulated right index tip is placed with the standard WebXR
 //    joint pose, the way a real hand reaches it.
 // Usage (from stemlight/):
 //   node tests/browser/release-check.mjs [url] [--expect assets/index-XXXX.js] [--full]
@@ -93,7 +93,8 @@ try {
   const a2 = await audio();
   log(`after Enter: XR session ${a1.session}, audio ${a2.state}, clock ${a1.time.toFixed(2)} -> ${a2.time.toFixed(2)} s, ${a2.sources} sources started`);
   check(a1.session && a2.state === 'running' && a2.time > a1.time + 2 && a2.sources > 0, 'Enter starts XR and the music (emulated Quest 3, hands only)');
-  const firstPiece = requests.find((r) => /\/pieces\/[^/]+\/manifest\.json/.test(r.url));
+  // The first piece loaded (beats.json: the song picker reads every manifest up front, so manifests don't tell).
+  const firstPiece = requests.find((r) => /\/pieces\/[^/]+\/beats\.json/.test(r.url));
   log(`first piece: ${firstPiece ? firstPiece.url.match(/pieces\/([^/]+)\//)[1] : 'none'}`);
 
   // ---- full sequence: the song picker (18 Nov) ----
@@ -102,7 +103,8 @@ try {
     // longer mark a start. Bubble positions come from the app's own layout (picker.ts, layout.ts), at the seat the
     // app fixes on the first play: the headset's pose then (it doesn't move in this run).
     const loaded = () => [...new Set(requests.filter((r) => /\/pieces\/[^/]+\/beats\.json/.test(r.url)).map((r) => r.url.match(/pieces\/([^/]+)\//)[1]))];
-    const { bubbleLocal, songsBubbleLocal } = await import('../../src/ui/remake/picker.ts');
+    const { bubbleLocal, songsBubbleLocal, orbLocal } = await import('../../src/ui/remake/picker.ts');
+    const { WORLDS } = await import('../../src/world/worldList.ts');
     const { toWorld } = await import('../../src/ui/remake/layout.ts');
     const { SONGS } = await import('../../src/audio/sequence.ts');
     const ids = SONGS.map((s) => s.id);
@@ -159,6 +161,13 @@ try {
     await tipTo(towardEye(songsAt, 0.1), 500);
     const r2 = await tipTo(songsAt, 1600);
     await tipTo(towardEye(songsAt, 0.12), 1200);
+    // With the picker up, touch the Starry Night orb: the world changes (the device remembers it) and the picker stays.
+    const orb = toWorld(seat, orbLocal(WORLDS.findIndex((w) => w.id === 'starry'), WORLDS.length));
+    await tipTo(towardEye(orb, 0.12), 400);
+    const r4 = await tipTo(orb, 600);
+    await tipTo(towardEye(orb, 0.12), 1200);
+    const world = await page.evaluate(() => localStorage.getItem('stemlight.world'));
+    check(world === 'starry', `touching the Starry Night orb changes the world (saved world: ${world}; tip ${r4.ok ? `${(r4.err * 100).toFixed(1)} cm` : r4.why})`);
     const r3 = await touchSong('beethoven7');
     const b7 = await waitFor(async () => loaded().includes('beethoven7') && (await audio()).sources > s1, 20000);
     check(b7, `holding the songs bubble brings the picker back; touching Beethoven 7 plays it (hold tip ${r2.ok ? `${(r2.err * 100).toFixed(1)} cm` : r2.why}, touch ${r3.ok ? `${(r3.err * 100).toFixed(1)} cm` : r3.why}; loaded ${loaded().join(' -> ')}; ${((Date.now() - start) / 1000).toFixed(0)} s)`);

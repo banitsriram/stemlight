@@ -8,7 +8,7 @@ import type { Object3D, Sprite } from 'three';
 import type { AppContext, Hand, PieceId, PieceManifest, Target, Vec3 } from '../../contracts';
 import { toWorld, type Frame } from './layout.ts';
 import { createPicker, songsBubbleLocal, type SongInfo, type Tip } from './picker.ts';
-import { createPickerView } from './pickerView.ts';
+import { createPickerView, type WorldLook } from './pickerView.ts';
 
 export interface SongsDeps {
   world: World;
@@ -23,17 +23,28 @@ export interface SongsDeps {
   creditLines: (credits: PieceManifest['credits']) => string[];
   /** Each song's manifest (title, length, credits), read before it is played. */
   manifestUrl?: (id: PieceId) => string;
+  /** The worlds to choose from with the orbs under the songs (shell.ts worlds), if any. */
+  worlds?: { list: readonly WorldLook[]; current(): string; set(id: string): void };
 }
 
-/** The credits card under the arc: 1 m ahead and 72 cm below the eye (36° down, clear of the bubbles), half size. */
-const CARD_AT: Vec3 = [0, -0.72, 1.0];
+/**
+ * The credits card under everything: 95 cm ahead and 1.05 m below the eye (48° down), below the song bubbles and
+ * the world orbs (32° down), so it never draws over them (text sprites draw on top); a glance down reads it.
+ */
+const CARD_AT: Vec3 = [0, -1.05, 0.95];
 const CARD_SCALE = 0.31;
 const FADE_SEC = 0.6;
+/**
+ * After touching a song, orb touches are ignored for this long, and the other way round: a finger dropping from a
+ * song bubble to the orb below it (or lifting from an orb into a bubble) must not trigger both (review, 18 Nov).
+ */
+const CROSS_SEC = 0.6;
 
 export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   const songs: SongInfo[] = deps.songs.map((s) => ({ ...s }));
-  const picker = createPicker(songs);
-  const view = createPickerView(scene, songs);
+  const worldList = deps.worlds?.list ?? [];
+  const picker = createPicker(songs, worldList);
+  const view = createPickerView(scene, songs, worldList);
   const credits = new Map<PieceId, PieceManifest['credits']>();
   const tips = new Map<Hand, Tip>();
   const registered = new Set<string>();
@@ -42,6 +53,7 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   let current: PieceId | null = null, last: PieceId | null = null, loading: PieceId | null = null;
   let passed = ctx.save.load().tutorialDone; // the songs bubble shows once the tutorial song has ended (or was done before)
   let fading = false, hold = 0, songsAt: Vec3 | null = null;
+  let songTouchAt = -1e9, worldTouchAt = -1e9;
 
   const url = deps.manifestUrl ?? ((id: PieceId) => `/pieces/${id}/manifest.json`);
   songs.forEach((s, i) => {
@@ -95,8 +107,10 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       const t = now(), list = [...tips.values()];
       songsAt = null;
       if (picker.isOpen()) {
-        const id = picker.touch(t, list);
-        if (id && !loading) void choose(id);
+        // Both are asked every frame (each keeps track of fingertips going in and out), then the lockout applies.
+        const id = picker.touch(t, list), w = picker.touchWorld(t, list);
+        if (id && !loading && t - worldTouchAt > CROSS_SEC) { songTouchAt = t; void choose(id); }
+        else if (w && deps.worlds && !loading && t - songTouchAt > CROSS_SEC) { worldTouchAt = t; deps.worlds.set(w); }
       } else if (passed && !fading && ctx.transport.playing()) {
         songsAt = toWorld(deps.frames().play, songsBubbleLocal());
         const h = picker.hold(delta, songsAt, list);
@@ -110,7 +124,8 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       }
       sync(picker.targets(songsAt));
       const at = (id: PieceId | null) => songs.findIndex((s) => s.id === id);
-      view.draw({ bubbles: picker.bubbles(), current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
+      const world = deps.worlds ? worldList.findIndex((w) => w.id === deps.worlds!.current()) : -1;
+      view.draw({ bubbles: picker.bubbles(), orbs: picker.orbs(), world, current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
     }
   });
 
@@ -118,7 +133,7 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
     isOpen: () => picker.isOpen(),
     open,
     /** Dev and IWER checks read this. */
-    state: () => ({ open: picker.isOpen(), current, last, loading, passed, hold, songsAt, bubbles: picker.bubbles(), songs }),
+    state: () => ({ open: picker.isOpen(), current, last, loading, passed, hold, songsAt, bubbles: picker.bubbles(), orbs: picker.orbs(), world: deps.worlds?.current() ?? null, songs }),
   };
   return api;
 }
