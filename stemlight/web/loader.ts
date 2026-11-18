@@ -18,7 +18,6 @@ import { createWaveTrail, fillGrid, waveVertex } from '../src/world/waveGrid';
 const MIN_SHOW = 3.6; // s: long enough for the name to form even on a fast connection
 const GRID = 40;
 const BEAT = 1.1; // s between ripples
-const BOLT = '#7a0a0a'; // thin blood-red lightning behind the name: flat lines, no glow
 const COLOR_BASE = '#1b1e22';
 const COLOR_HIGH = '#59626d';
 const PARTICLE = '#e4e8ec';
@@ -241,53 +240,6 @@ function start(root: HTMLElement): void {
   composer.addPass(new OutputPass());
 
   // ── Particles (the name) ───────────────────────────────────────────────────
-  // ── Lightning: thin dark-red bolts that flicker like distant thunder, once the name has formed ──
-  const bolts = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: BOLT, transparent: true, opacity: 0, depthTest: false }));
-  bolts.frustumCulled = false;
-  const boltScene = new THREE.Scene().add(bolts);
-  const boltCam = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
-  let storm = false, nextBolt = 0.6, boltAge = -1;
-  /** One jagged bolt from above the screen downward, with a branch or two, as line segments in screen space. */
-  const strike = () => {
-    const pts: number[] = [];
-    const branch = (x: number, y: number, len: number, depth: number) => {
-      let px = x, py = y;
-      const steps = Math.round(10 + len * 14);
-      for (let i = 0; i < steps; i++) {
-        const nx = px + (Math.random() - 0.5) * 0.09, ny = py - len / steps * (0.6 + Math.random() * 0.8);
-        pts.push(px, py, 0, nx, ny, 0);
-        if (depth < 2 && Math.random() < 0.08) branch(nx, ny, len * 0.45, depth + 1);
-        px = nx; py = ny;
-      }
-    };
-    branch(-0.95 + Math.random() * 1.9, 1.05, 0.9 + Math.random() * 1.0, 0);
-    bolts.geometry.dispose();
-    bolts.geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    boltAge = 0;
-  };
-  // A real flash flickers: on, dim, on again, gone.
-  const FLICKER = [[0, 0.9], [0.05, 0.25], [0.1, 0.85], [0.16, 0.4], [0.3, 0]] as const;
-  const flicker = (t: number) => {
-    for (let i = 1; i < FLICKER.length; i++) if (t < FLICKER[i][0]) {
-      const [t0, a0] = FLICKER[i - 1], [t1, a1] = FLICKER[i];
-      return a0 + (a1 - a0) * ((t - t0) / (t1 - t0));
-    }
-    return 0;
-  };
-  const thunder = (dt: number) => {
-    if (!storm) return;
-    if ((nextBolt -= dt) <= 0) { strike(); nextBolt = 1.6 + Math.random() * 3.2; }
-    if (boltAge >= 0) {
-      boltAge += dt;
-      bolts.material.opacity = flicker(boltAge);
-      if (boltAge > 0.3) boltAge = -1;
-    }
-    if (boltAge < 0) return;
-    renderer.autoClear = false;
-    renderer.render(boltScene, boltCam);
-    renderer.autoClear = true;
-  };
-
   const pScene = new THREE.Scene();
   const pCam = new THREE.PerspectiveCamera(50, v.w / v.h, 1, 10000);
   pCam.position.z = 300;
@@ -334,7 +286,7 @@ function start(root: HTMLElement): void {
     const wait = Math.max(0, 0.7 - (performance.now() - t0) / 1000);
     gsap.to(pu.uSize, { value: 1.5, duration: 1.4, delay: wait, ease: 'power2.out' });
     gsap.to(pu.uRandom, { value: 1.8, duration: 2.4, delay: wait, ease: 'expo.out' });
-    gsap.to(pu.uDepth, { value: 3, duration: 2.8, delay: wait, ease: 'expo.out', onComplete: () => { storm = true; } });
+    gsap.to(pu.uDepth, { value: 3, duration: 2.8, delay: wait, ease: 'expo.out' });
   });
 
   // ── Pointer ────────────────────────────────────────────────────────────────
@@ -368,7 +320,6 @@ function start(root: HTMLElement): void {
     prev = now;
     trail.update(dt);
     composer.render();
-    thunder(dt);
     if (particles && pu) {
       touch.update();
       pu.uTime.value += dt;
