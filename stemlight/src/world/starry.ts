@@ -76,7 +76,8 @@ void main() {
   float az = degrees(atan(d.x, -d.z));
   float el = degrees(asin(clamp(d.y, -1.0, 1.0)));
   // Canvas coordinates in degrees; near the zenith the azimuth is squeezed so the strokes don't fan out.
-  vec2 p = vec2(az * mix(1.0, cos(radians(el)), smoothstep(45.0, 80.0, el)), el);
+  float squeeze = mix(1.0, cos(radians(el)), smoothstep(45.0, 80.0, el));
+  vec2 p = vec2(az * squeeze, el);
   float t = uTime;
   vec3 c;
   float hillEl = ridge(az);
@@ -85,7 +86,7 @@ void main() {
     float s = strokes(p, t);
     // Behind you the azimuth wraps from +180 to -180: blend with the same strokes a turn away, so there's no seam.
     float wrap = smoothstep(150.0, 180.0, abs(az));
-    if (wrap > 0.0) s = mix(s, strokes(p - vec2(360.0 * sign(az), 0.0), t), wrap * 0.5);
+    if (wrap > 0.0) s = mix(s, strokes(p - vec2(360.0 * squeeze * sign(az), 0.0), t), wrap * 0.5); // a turn, squeezed like p
     vec2 c1 = vec2(3.0, 33.0), c2 = vec2(19.4, 27.4);
     float w1 = exp(-pow(length(p - c1) / 11.5, 2.0));
     // Sky colour by height: night blue at the top, cobalt lower, lighter toward the hills.
