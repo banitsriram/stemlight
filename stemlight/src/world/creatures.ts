@@ -163,6 +163,8 @@ export type HeadFn = () => { eye: Vec3; yaw: number };
 
 export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, reachSpot: (eye: Vec3, yaw: number) => Vec3, radius: number) {
   let creatures: Creature[] = [];
+  const root = new Group(); // every creature visual, so the song picker's lobby can hide them at once
+  scene.add(root);
   let mute: Partial<Record<StemId, MuteState>> = {};
   let lock = 0;
   let solo: StemId | null = null;
@@ -174,9 +176,9 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     new MeshBasicMaterial({ color: SEA.cyan, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
   const ringCount = ring.geometry.index!.count;
   ring.visible = false;
-  scene.add(ring);
+  root.add(ring);
   const glow = halos(9);
-  scene.add(glow.mesh);
+  root.add(glow.mesh);
 
   const clear = () => { mute = {}; solo = null; summoned = null; lock = 0; };
 
@@ -205,7 +207,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
       obj.add(new Mesh(body, bodyMat));
       if (lines.length) obj.add(new LineSegments(lineGeo, lineMat));
       obj.position.set(...homeSeat);
-      scene.add(obj);
+      root.add(obj);
       ctx.registry.set({ id: `creature:${stem}`, kind: 'creature', stem, center: homeSeat, radius });
       return { stem, home: homeSeat, obj, body: bodyMat, lines: lineMat, color, from: homeSeat, to: homeSeat, glideStart: 0, gliding: false, pos: homeSeat, bright: 1 };
     });
@@ -235,6 +237,8 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     position: (stem: StemId): Vec3 | undefined => creatures.find((c) => c.stem === stem)?.pos,
     muteOf: (stem: StemId) => mute[stem],
     solo: () => solo,
+    /** Hidden while the song picker's lobby is up. */
+    hide(on: boolean) { root.visible = !on; },
     update(dt: number) {
       const now = performance.now() / 1000;
       // The end card needs the space ahead: send the summoned creature home while it shows.

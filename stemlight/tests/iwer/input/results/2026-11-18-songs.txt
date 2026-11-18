@@ -8,7 +8,7 @@ PASS touching the middle bubble plays Dvorak (log open:end, pick:dvorak9)
 PASS mid-song: the songs bubble shows beside the reset shell, and the play surfaces are back
 shot tests/iwer/input/results/2026-11-18-songs-2-dvorak-playing-songs-bubble.png
 shot tests/iwer/input/results/2026-11-18-songs-3-holding-songs-bubble.png
-PASS holding the songs bubble fades the song out and opens the picker (Dvorak stopped at 17.1 s, started from 7.4 s)
+PASS holding the songs bubble fades the song out and opens the picker (Dvorak stopped at 11.7 s, started from 5.4 s)
 PASS touching bubble 3 plays beethoven7 (log open:end, pick:dvorak9, open:shell, pick:beethoven7)
 shot tests/iwer/input/results/2026-11-18-songs-4-beethoven7-playing.png
 PASS returning player: Enter opens the picker, no music yet (log open:start)

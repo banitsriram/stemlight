@@ -4,7 +4,7 @@
 import type { Object3D } from 'three';
 import { SEA, SEA_PALETTE, type Palette } from './deepsea.ts';
 
-export type WorldId = 'sea' | 'starry' | 'aurora';
+export type WorldId = 'sea' | 'starry' | 'aurora' | 'room';
 
 /** What a world builds: its sky, its floor and its particles, three draw calls in all (F17). */
 export interface WorldParts {
@@ -28,10 +28,15 @@ export const STARRY_PALETTE: Palette = { abyss: '#070E24', deep: '#142B57', shal
 /** An arctic night; the light is the aurora, high ahead. */
 export const AURORA_PALETTE: Palette = { abyss: '#02070F', deep: '#0B2233', shallows: '#1E6E6A', surface: '#8CFFD2', foam: '#F0FBFF', light: [0, 0.8, -0.6], caustic: 0.15 };
 
+/** Passthrough: the instruments keep the sea's glass light, without the underwater caustics. */
+export const ROOM_PALETTE: Palette = { ...SEA_PALETTE, caustic: 0 };
+
 export const WORLDS: readonly WorldInfo[] = [
   { id: 'sea', name: 'Deep sea', palette: SEA_PALETTE, orb: [SEA.shallows, SEA.surface], glow: 1 },
   { id: 'starry', name: 'Starry Night', palette: STARRY_PALETTE, orb: ['#2E4E9E', '#F5D33E'], glow: 0.7 },
   { id: 'aurora', name: 'Aurora', palette: AURORA_PALETTE, orb: ['#0B2233', '#3CFFB0'], glow: 0.8 },
+  // The player's own room, seen through the headset: only in a passthrough (immersive-ar) session.
+  { id: 'room', name: 'Passthrough', palette: ROOM_PALETTE, orb: ['#9FB4BC', '#FFFFFF'], glow: 1 },
 ];
 export const DEFAULT_WORLD: WorldId = 'sea';
 export const WORLD_KEY = 'stemlight.world';
@@ -39,6 +44,9 @@ export const WORLD_KEY = 'stemlight.world';
 export const FADE_SEC = 1.0;
 
 export const isWorld = (x: unknown): x is WorldId => WORLDS.some((w) => w.id === x);
+/** The worlds a session can show: Passthrough only in a passthrough session. */
+export const availableWorlds = (ar: boolean): WorldId[] => WORLDS.filter((w) => ar || w.id !== 'room').map((w) => w.id);
+
 export const worldInfo = (id: WorldId): WorldInfo => WORLDS.find((w) => w.id === id) ?? WORLDS[0];
 
 function safeStorage(): Storage | null {
@@ -49,13 +57,14 @@ function safeStorage(): Storage | null {
 export function loadWorld(storage: Pick<Storage, 'getItem'> | null = safeStorage()): WorldId {
   try {
     const v = storage?.getItem(WORLD_KEY);
-    return isWorld(v) ? v : DEFAULT_WORLD;
+    return isWorld(v) && v !== 'room' ? v : DEFAULT_WORLD; // Passthrough is a session's mode, not kept
   } catch {
     return DEFAULT_WORLD;
   }
 }
 
 export function saveWorld(id: WorldId, storage: Pick<Storage, 'setItem'> | null = safeStorage()): void {
+  if (id === 'room') return; // a normal Enter must never open on an empty world
   try { storage?.setItem(WORLD_KEY, id); } catch { /* private mode: the choice lasts this visit */ }
 }
 
@@ -80,6 +89,8 @@ export function createSwitch(initial: WorldId) {
     current: () => current,
     shown: () => shown,
     changing: () => change !== null,
+    /** An instant change, no fade (a session starting in another mode). */
+    jump(id: WorldId) { current = shown = id; change = null; },
     request(id: WorldId, now: number, live: LiveLook) {
       if (id === current) return;
       let at = now;

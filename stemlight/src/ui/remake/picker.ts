@@ -14,12 +14,13 @@ export interface Tip { hand: Hand; at: Vec3; ok: boolean }
  * Touches count only `armSec` after the picker opens, and only from a fingertip that came in from outside, so a
  * hand already resting where a bubble appears never picks a song by accident.
  */
-export const PICKER = { reach: 0.45, below: 0.15, stepDeg: 26, radius: 0.055, touch: 0.065, armSec: 0.8 } as const;
+// Spread out in the lobby (sir, 18 Nov): songs near eye level, 32° apart; world orbs a clear row below.
+export const PICKER = { reach: 0.45, below: 0.04, stepDeg: 32, radius: 0.055, touch: 0.065, armSec: 0.8 } as const;
 /**
- * The world orbs (18 Nov): a row under the song bubbles, 12 cm apart, 26.5 cm below the eye and 43 cm out (31.6°
+ * The world orbs (18 Nov): a row under the song bubbles, 15 cm apart, 22 cm below the eye and 43 cm out (27°
  * down: inside the 70×66° view and in reach), small enough that their touch spheres stay clear of the bubbles'.
  */
-export const ORBS = { below: 0.265, ahead: 0.43, step: 0.12, radius: 0.03, touch: 0.04 } as const;
+export const ORBS = { below: 0.22, ahead: 0.43, step: 0.15, radius: 0.03, touch: 0.04 } as const;
 export interface WorldChoice { id: string; name: string }
 export const worldTargetId = (id: string) => `world:${id}`;
 /** Frame-local centre of world orb i of n. */
@@ -55,6 +56,8 @@ export interface Picker {
   bubbles(): Vec3[];
   /** World centres of the open picker's world orbs, in world order; empty while closed. */
   orbs(): Vec3[];
+  /** The worlds of orbs(), in the same order (a normal VR session leaves out Passthrough). */
+  orbIds(): string[];
   /** What the input engine should know about: the open picker's bubbles, else the songs bubble if shown. */
   targets(songsAt: Vec3 | null): Target[];
   /** One frame of fingertips: the song whose bubble a fingertip just entered (armed, from outside), or null. */
@@ -65,13 +68,14 @@ export interface Picker {
   hold(dt: number, at: Vec3 | null, tips: Tip[]): { progress: number; fire: boolean };
 }
 
-export function createPicker(songs: readonly SongInfo[], worlds: readonly WorldChoice[] = []): Picker {
+export function createPicker(songs: readonly SongInfo[], all: readonly WorldChoice[] = [], shows: (id: string) => boolean = () => true): Picker {
+  const shown = () => all.filter((w) => shows(w.id)); // the orbs this session offers
   let open = false, openedAt = 0, frame: Frame | null = null;
   const inside = new Map<string, boolean>(); // `${hand}:${i}` → that fingertip was inside bubble i last frame
   const insideOrb = new Map<string, boolean>(); // the same for the world orbs
   let held = 0, spent = false;
   const bubbles = (): Vec3[] => (frame ? songs.map((_, i) => toWorld(frame as Frame, bubbleLocal(i, songs.length))) : []);
-  const orbs = (): Vec3[] => (frame ? worlds.map((_, i) => toWorld(frame as Frame, orbLocal(i, worlds.length))) : []);
+  const orbs = (): Vec3[] => { const w = shown(); return frame ? w.map((_, i) => toWorld(frame as Frame, orbLocal(i, w.length))) : []; };
   /** Index of the target a fingertip just entered, armed and from outside (first sight counts as inside), or -1. */
   const entered = (seen: Map<string, boolean>, centres: Vec3[], r: number, now: number, tips: Tip[]): number => {
     let hit = -1;
@@ -92,11 +96,12 @@ export function createPicker(songs: readonly SongInfo[], worlds: readonly WorldC
     close() { open = false; frame = null; inside.clear(); insideOrb.clear(); },
     bubbles,
     orbs,
+    orbIds: () => (frame ? shown().map((w) => w.id) : []),
     targets(songsAt) {
       if (open) {
         return [
           ...bubbles().map((center, i) => ({ id: songTargetId(songs[i].id), kind: 'song' as const, center, radius: PICKER.radius })),
-          ...orbs().map((center, i) => ({ id: worldTargetId(worlds[i].id), kind: 'song' as const, center, radius: ORBS.radius })),
+          ...orbs().map((center, i) => ({ id: worldTargetId(shown()[i].id), kind: 'song' as const, center, radius: ORBS.radius })),
         ];
       }
       return songsAt ? [{ id: SONGS_ID, kind: 'song' as const, center: songsAt, radius: SONGS_BUBBLE.radius }] : [];
@@ -109,7 +114,7 @@ export function createPicker(songs: readonly SongInfo[], worlds: readonly WorldC
     touchWorld(now, tips) {
       if (!open) return null;
       const i = entered(insideOrb, orbs(), ORBS.touch, now, tips);
-      return i < 0 ? null : worlds[i].id;
+      return i < 0 ? null : shown()[i].id;
     },
     hold(dt, at, tips) {
       const on = !open && !!at && tips.some((t) => t.ok && dist(t.at, at) < SONGS_BUBBLE.touch);

@@ -17,8 +17,8 @@ const FRAME = { eye: [0, 1.2, 0], yaw: 0 };
 const store = (init = {}) => { const m = new Map(Object.entries(init)); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), m }; };
 
 test('three worlds: deep sea (the default), Starry Night, Aurora; each palette valid, its light a unit vector', () => {
-  assert.deepEqual(WORLDS.map((w) => w.id), ['sea', 'starry', 'aurora']);
-  assert.deepEqual(WORLDS.map((w) => w.name), ['Deep sea', 'Starry Night', 'Aurora']);
+  assert.deepEqual(WORLDS.map((w) => w.id), ['sea', 'starry', 'aurora', 'room']);
+  assert.deepEqual(WORLDS.map((w) => w.name), ['Deep sea', 'Starry Night', 'Aurora', 'Passthrough']);
   assert.equal(DEFAULT_WORLD, 'sea');
   for (const w of WORLDS) {
     for (const k of ['abyss', 'deep', 'shallows', 'surface', 'foam']) assert.match(w.palette[k], /^#[0-9A-F]{6}$/i, `${w.id}.${k}`);
@@ -94,7 +94,7 @@ test('Starry Night: sky, toon land, fireflies (three draw calls); fade, time and
 });
 
 test('world orbs: a row under the song bubbles, inside the view and reach, their touch spheres clear of the bubbles', () => {
-  const p = createPicker(SONGS, WORLDS);
+  const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
   const orbs = p.orbs(), bubbles = p.bubbles(), eye = FRAME.eye;
   assert.equal(orbs.length, 3);
@@ -113,7 +113,7 @@ test('world orbs: a row under the song bubbles, inside the view and reach, their
 });
 
 test('world orbs: a fingertip coming in from outside once armed picks that world; resting or early never does', () => {
-  const p = createPicker(SONGS, WORLDS);
+  const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
   const [, starry] = p.orbs(), away = [0.5, 0.2, 0.3];
   const tip = (at) => [{ hand: 'right', at, ok: true }];
@@ -128,11 +128,11 @@ test('world orbs: a fingertip coming in from outside once armed picks that world
   assert.deepEqual(createPicker(SONGS).orbs(), [], 'no worlds given: no orbs');
 });
 
-test('the orb row sits where the layout says (frame-local -12/0/+12 cm, 26.5 cm down, 43 cm out)', () => {
-  const p = createPicker(SONGS, WORLDS);
+test('the orb row sits where the layout says (frame-local -15/0/+15 cm, 22 cm down, 43 cm out)', () => {
+  const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
-  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.12, 0.935, -0.43], [0, 0.935, -0.43], [0.12, 0.935, -0.43]]);
-  assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.935, -0.43]);
+  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.15, 0.98, -0.43], [0, 0.98, -0.43], [0.15, 0.98, -0.43]]);
+  assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.98, -0.43]);
 });
 
 test('Starry Night land: opaque toon mesh (writes depth, so instruments sort against it) with every shared palette uniform', () => {
@@ -169,4 +169,26 @@ test('Starry Night village (sir: close round you, open straight ahead): no cotta
   assert.ok(az(CYPRESS) < -30 && az(CYPRESS) > -55, `cypress on the left (${az(CYPRESS).toFixed(0)} deg)`);
   // The ground falls away ahead (the far village sits lower) and the seat area stays near the old floor height.
   assert.ok(Math.abs(groundY(0, 0) + 0.6) < 0.25 && groundY(0, -25) < groundY(0, 0) - 2, 'the meadow falls away ahead');
+});
+
+test('passthrough: offered only in a passthrough session, never kept, and the room draws nothing once up', async () => {
+  const { availableWorlds, loadWorld, saveWorld, createSwitch } = await import('../../src/world/worldList.ts');
+  const { createRoom } = await import('../../src/world/room.ts');
+  assert.deepEqual(availableWorlds(true), ['sea', 'starry', 'aurora', 'room']);
+  assert.deepEqual(availableWorlds(false), ['sea', 'starry', 'aurora']);
+  const kept = new Map();
+  const store = { getItem: (k) => kept.get(k) ?? null, setItem: (k, v) => kept.set(k, v) };
+  saveWorld('room', store);
+  assert.equal(kept.size, 0, 'Passthrough is not saved');
+  kept.set('stemlight.world', 'room');
+  assert.equal(loadWorld(store), 'sea', 'a stored room falls back to the deep sea');
+  const sw = createSwitch('starry');
+  sw.jump('room');
+  assert.equal(sw.shown(), 'room');
+  assert.equal(sw.changing(), false, 'jump is instant');
+  const room = createRoom();
+  room.setFade(1);
+  assert.equal(room.objects[0].material.visible, false, 'no draw call once the room is up');
+  room.setFade(0.3);
+  assert.ok(room.objects[0].material.visible && Math.abs(room.objects[0].material.opacity - 0.7) < 1e-9, 'the veil fades the room in');
 });

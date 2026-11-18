@@ -24,7 +24,7 @@ export interface SongsDeps {
   /** Each song's manifest (title, length, credits), read before it is played. */
   manifestUrl?: (id: PieceId) => string;
   /** The worlds to choose from with the orbs under the songs (shell.ts worlds), if any. */
-  worlds?: { list: readonly WorldLook[]; current(): string; set(id: string): void };
+  worlds?: { list: readonly WorldLook[]; current(): string; set(id: string): void; available?(): readonly string[] };
 }
 
 /**
@@ -43,7 +43,7 @@ const CROSS_SEC = 0.6;
 export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   const songs: SongInfo[] = deps.songs.map((s) => ({ ...s }));
   const worldList = deps.worlds?.list ?? [];
-  const picker = createPicker(songs, worldList);
+  const picker = createPicker(songs, worldList, (id) => deps.worlds?.available?.().includes(id) ?? true);
   const view = createPickerView(scene, songs, worldList);
   const credits = new Map<PieceId, PieceManifest['credits']>();
   const tips = new Map<Hand, Tip>();
@@ -125,7 +125,7 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       sync(picker.targets(songsAt));
       const at = (id: PieceId | null) => songs.findIndex((s) => s.id === id);
       const world = deps.worlds ? worldList.findIndex((w) => w.id === deps.worlds!.current()) : -1;
-      view.draw({ bubbles: picker.bubbles(), orbs: picker.orbs(), world, current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
+      view.draw({ bubbles: picker.bubbles(), orbs: picker.orbs(), orbIds: picker.orbIds(), world, current: at(last ?? current), loading: at(loading), songsAt, hold, eye: deps.head().eye, clock: t });
     }
   });
 

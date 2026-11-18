@@ -405,3 +405,6 @@
   
   Stills: `tests/iwer/input/results/2026-11-18-world-*`.
 - **Not verified:** the headset look and frame rate.
+
+## 18 Nov: Passthrough world (branch biyon/passthrough, on top of the worlds PR #11)
+Sir's design: a fourth world that is the player's own room. A passthrough session (immersive-ar) opens on the room with no seat rock. The picker offers 4 orbs there (the 3 worlds cover the room; the Passthrough orb clears it again); a normal VR session offers 3 and never opens on the room. Passthrough is never saved as the device's world. Room world: no draw calls once up (a dark veil only during a fade). Evidence: unit 160/160, tsc clean, IWER `passthrough.mjs` 8/8 (stills `tests/iwer/input/results/2026-11-18-passthrough-*.png`). Entry: a quieter "Enter in passthrough" button under Enter on the landing page (banit's file; built on sir's go, for banit's review), shown only when immersive-ar is supported; IWER test presses it (9/9). Not verified: the real passthrough look and frame rate on a Quest.
