@@ -16,7 +16,36 @@ Entertainment (music visualisation) · New Experience · built with IWSDK (WebXR
 ## Elevator pitch (already on the Devpost draft)
 The music you can reach into: silence it, reshape it, play your own part, while every real note floats around you.
 
-## Description
+## Description: short version (paste this into the description field; about 500 words, as the overview suggests)
+
+**Stemlight is a seated, hands-only music visualiser.** Look at an instrument and it comes to you. Close your fist and it falls silent. Stretch it to reshape its sound. Cut its part out and play your own.
+
+### Inspiration
+We love music but neither of us plays in an orchestra. Tools that split a song into its parts made us want to sit inside one: hear the horns alone, take the timpani out and play them ourselves. A screen keeps you outside the music; a headset and your bare hands put you in the middle of it.
+
+### What it is
+- Eight instruments float around you, modelled in code, each playing from where it sits through spatial audio. Every note from the score leaves its instrument as a floating notation symbol: its length is the note's length, its height the pitch, its size the loudness. Your own notes are amber.
+- Three songs: Beethoven's 5th (with a short tutorial), the finale of Dvořák's *New World* Symphony and the Allegretto of Beethoven's 7th. You choose them in a calm, empty space by touching a glass bubble.
+- Three worlds, chosen with small glass orbs: the deep sea, a cartoon-shaded *Starry Night* after van Gogh, and Aurora over ice. On headsets that support it, *Enter in passthrough* plays it all in your own room.
+
+### What your hands do
+Look at an instrument to bring it close. A fist silences it and freezes its notes into glass; hold the fist to keep it quiet. Pinch twice to solo it. Pinch with both hands and stretch to reshape its tone. Pinch the score ribbon to pause or scrub. Cut a stretch of a part and drums, a harp or a keyboard appear: play into the gap, and your part snaps to the beat and loops. No controller, no account, no menus; a ghost hand and a word or two teach each move.
+
+### How we built it
+- IWSDK (WebXR) and its entity system: a static build at https://stemlight.vercel.app.
+- An offline pipeline turns open orchestral scores (Mutopia Project) into eight stems rendered with CC0 samples, plus the note, beat and loudness data the visuals use.
+- One audio clock drives sound and sight, so the parts never drift, and pause, scrubbing and loops stay exact.
+- The hard problem was fist versus pinch: both curl the fingers. Thresholds that can't overlap, hysteresis and drop-out handling gave zero cross-triggers in 120 scripted gestures.
+- The instruments you play are synthesised in code; your mix and recorded parts are saved on the device.
+- With no headset, we scripted every interaction in the IWSDK emulator. At the busiest moment: 64 draw calls and 102k triangles, within budget.
+- An AI coding assistant wrote most of the code under our direction; we designed, reviewed and tested it.
+
+### What's next
+Any song: split a track on your own laptop, then sit inside it in the headset, processed on your device with nothing uploaded. Target: public beta on 15 February 2027.
+
+**Credits:** Dvořák, Mutopia #1793, CC BY-SA 3.0 (our stems are shared under the same licence); Beethoven, Mutopia #941 and #595, public domain; van Gogh, *The Starry Night* (1889), public domain; VSCO 2 Community Edition samples, CC0; Bravura font, SIL OFL 1.1.
+
+## Description: full version (keep in the repo; use parts of it if the form has room)
 
 **Stemlight is a seated, hands-only music visualiser.** Look at an instrument and it comes to you; close your fist and it falls silent; stretch it to reshape its sound; cut its part out and play your own on drums, harp or keyboard.
 
