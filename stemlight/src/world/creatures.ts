@@ -238,7 +238,15 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
     muteOf: (stem: StemId) => mute[stem],
     solo: () => solo,
     /** Hidden while the song picker's lobby is up. */
-    hide(on: boolean) { root.visible = !on; },
+    hide(on: boolean) {
+      if (root.visible === !on) return;
+      root.visible = !on;
+      // Hidden creatures can't be summoned or silenced: their targets leave the registry until the lobby closes.
+      for (const c of creatures) {
+        if (on) ctx.registry.remove(`creature:${c.stem}`);
+        else ctx.registry.set({ id: `creature:${c.stem}`, kind: 'creature', stem: c.stem, center: c.pos, radius });
+      }
+    },
     update(dt: number) {
       const now = performance.now() / 1000;
       // The end card needs the space ahead: send the summoned creature home while it shows.
@@ -251,7 +259,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
           const k = (now - c.glideStart) / GLIDE_SEC;
           c.pos = glideAt(c.from, c.to, k);
           c.gliding = k < 1;
-          ctx.registry.set({ id: `creature:${c.stem}`, kind: 'creature', stem: c.stem, center: c.pos, radius });
+          if (root.visible) ctx.registry.set({ id: `creature:${c.stem}`, kind: 'creature', stem: c.stem, center: c.pos, radius });
         }
         // The envelopes ignore mute and solo, so a silenced section's score must not wake it: its loudness
         // fades out with its brightness (1 when sounding, 0 at the muted 0.2 and outside-solo 0.25).

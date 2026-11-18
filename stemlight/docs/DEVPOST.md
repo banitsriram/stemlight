@@ -1,6 +1,6 @@
 # Devpost submission text: DRAFT 5 (task 67)
 
-> **Internal note: delete this block before pasting into Devpost.** Draft 5, 17 Nov 2026, after scoring audit 3 (`docs/audits/2026-11-17-audit.md`). Describes the frozen build: live since 17 Nov as `assets/index-P9Cub1t-.js` (freeze run 11/11, `tests/browser/results/2026-11-17-FREEZE-release-check-full.txt`). No deploys after the freeze unless sir lifts it. Nothing is published without sir's approval. **[CHECK]** marks a decision still sir's; resolve each before submitting. No brand names except the tools we must disclose.
+> **Internal note: delete this block before pasting into Devpost.** Final text, 18 Nov 2026. Describes the live build `assets/index-CwPwIwlo.js` (full freeze check 14/14, `tests/browser/results/2026-11-18-release-check-stemlight.vercel.app-full.txt`). Do not deploy after the deadline (Thu 19 Nov 01:30 IST). The hand-off for banit is `docs/SUBMISSION-HANDOFF.md`.
 
 ---
 
@@ -51,7 +51,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 
 ### How we built it
 - **IWSDK (WebXR), using its entity system.** A static build that opens in the Quest Browser: https://stemlight.vercel.app.
-- **An offline score-to-stems pipeline.** Public-domain and CC BY-SA orchestral scores (Mutopia Project) → eight instrument groups → rendered with free CC0 orchestral samples (VSCO 2 Community Edition) through an open-source sampler → one shared reverb → level-matched mono stems, plus the note, beat and loudness data the visuals use. Note counts are checked against the source score (1,840 and 4,249 notes).
+- **An offline score-to-stems pipeline.** Public-domain and CC BY-SA orchestral scores (Mutopia Project) → eight instrument groups → rendered with free CC0 orchestral samples (VSCO 2 Community Edition) through an open-source sampler → one shared reverb → level-matched mono stems, plus the note, beat and loudness data the visuals use. Note counts are checked against each source score.
 - **One clock for sound and sight.** Every stem starts on the same audio-clock instant, so they never drift. Every note's position is a pure function of that clock: pause freezes the notes, scrubbing rewinds them, and loops are sample-exact.
 - **The hard problem: fist versus pinch.** Both curl the fingers. We gave them thresholds that can't overlap: a fist needs 3 of 4 fingers curled ≥0.75; a pinch needs the other fingers ≤0.6, with hysteresis and debounce. Short tracking drop-outs (≤0.3 s) hold the gesture; longer ones release quietly with no action. In 120 scripted fists, pinches and double pinches near and far from instruments there were **0 cross-triggers**, and 20 gap-injected double pinches gave 0 false solos.
 - **Gaze without eye tracking.** Quest 3 and 3S have no eye tracking, so "look to summon" uses head direction (within 12° for half a second).
@@ -59,7 +59,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 - **Saved on the device.** Your mix, cuts and recorded parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off, the system menu and ending the session all resume cleanly (all 36 scripted checks in the emulator).
 - **Within budget.** At the busiest moment (Dvořák's densest four seconds, with the eight instruments, the drums, the ribbon and the songs bubble showing): 64 draw calls, 101.7k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
 - **Testing without a headset.** Every interaction was scripted in the IWSDK emulator (IWER) with a dev-only hand-pose switch that never ships, plus unit tests and headless-browser checks of the audio clock, saving and memory.
-- **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it. **[CHECK, sir: live rules read 12 Nov. They don't ask for AI tools to be disclosed, and ban brand names, logos and slogans in the Project ("commercial or corporate advertising"). So this line discloses the help without naming the product. Keep it, name the tool, or drop the line.]**
+- **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it.
 
 ### Accessibility and comfort
 - Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m: the tutorial, ghost hands, drums and end card were checked in the emulator with a field-of-view mask, and the ribbon, harp, keyboard, reset shell and song bubbles by layout tests.
@@ -81,7 +81,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 ### Known limits
 - We had no headset during the build. Frame rate, hand feel, comfort and brightness on a real Quest 3/3S are **unverified**; everything was tested in the emulator.
 - Three songs, fixed excerpts.
-- No passthrough or room use: Stemlight is a fully immersive, seated experience by design.
+- Seated by design. Passthrough is optional: the default is fully immersive.
 
 ## Hand interactions (optional field)
 Use the "What your hands do" table and the fist-versus-pinch paragraph above. What excites us: hands turn listening into playing, and you don't need to know an instrument to take part.
@@ -89,20 +89,20 @@ Use the "What your hands do" table and the fist-versus-pinch paragraph above. Wh
 ## Judge instructions
 1. Open https://stemlight.vercel.app in the Quest Browser.
 2. Press **Enter** (a pinch works). No account, nothing to install.
-3. Sit down and use your hands only. The first song (about 1:30) teaches the gestures; then touch a glass bubble to choose any of the three songs.
+3. Sit down and use your hands only. The first song (about 1:24) teaches the gestures; then touch a glass bubble to choose any of the three songs, and an orb below them to choose a world.
+5. Optional, on headsets that support it: **Enter in passthrough** plays it in your own room.
 4. Sound on, ideally with headphones.
 
 ## Team (form fields)
 - Biyon: Representative; audio engine, hand gestures, music pipeline, the remake surfaces and the instruments you play (score ribbon, cut lanes, drums, harp, keyboard, reset shell), saving, deploy, write-up.
-- Banit: the nine instruments and world art, notes, sound effects, tutorial and ghost hands, sequencer and credits, video.
+- Banit: the eight instruments and world art, notes, sound effects, tutorial and ghost hands, sequencer and credits, video.
 **[CHECK: emails and roles as each person wants them shown]**
 
-## Screenshots (at least 5, real build, same colour treatment)
-Current-look candidates (instruments build only):
-- `tests/iwer/input/results/2026-11-16-shot-4-region-pads-countin.png`: drums either side of the timpani, the cut region and the count-in.
-- `tests/iwer/input/results/2026-11-16-shot-5-pad-hit-amber.png`: a drum hit in amber.
-- `tests/iwer/input/results/2026-11-16-harp-pluck.png`: the harp.
-- `tests/iwer/input/results/2026-11-16-keys-hint.png`: the keyboard with its first-time hint.
-- `tests/iwer/input/results/2026-11-16-shot-1-ribbon-lane.png`: the score ribbon and lane.
-- banit's 13 Nov `tests/iwer/visual/results/{1-field-look,3-held-vln-glass-ghost-open,6-solo-vla_vc-ghost-cut}.jpg`: the field of instruments, a fist freezing notes to glass, solo. Crop the credit strip off the bottom.
-- Don't use anything from before 13 Nov (old sea creatures). **[CHECK: sir picks the final 5+; the 17 Nov reset-shell look needs a fresh shot if the shell shows]**
+## Screenshots (at least 5, real build)
+Current look, 18 Nov (crop the credit strip off the bottom where it shows):
+- `tests/iwer/input/results/2026-11-18-passthrough-sea-in-ar.png`: the song picker's empty space, three songs and four world orbs.
+- `tests/iwer/input/results/2026-11-18-world-starry-ahead.png`: the Starry Night world.
+- `tests/iwer/input/results/2026-11-18-world-aurora-ahead.png`: the Aurora world.
+- `tests/iwer/input/results/2026-11-18-songs-4-beethoven7-playing.png`: a song playing in the deep sea, with the instruments and notes.
+- `tests/iwer/input/results/2026-11-18-perf-heaviest.png`: the busiest moment, every instrument and the drums showing.
+- `tests/iwer/visual/results/2026-11-18-landing-desktop.png`: the start page (before the passthrough button was added; retake if it should show).

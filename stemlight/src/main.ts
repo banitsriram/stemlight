@@ -1,5 +1,5 @@
 import { Color, createSystem, SessionMode, World } from '@iwsdk/core';
-import { Quaternion, Vector3 } from 'three';
+import { AddEquation, AdditiveBlending, CustomBlending, type Material, type Mesh, OneFactor, Quaternion, SrcAlphaFactor, Vector3, ZeroFactor } from 'three';
 import projectOptions from 'virtual:iwsdk-project';
 import { COPY, mountLanding } from '../web/landing';
 import { createBus } from './bus';
@@ -119,8 +119,27 @@ mountLanding(landingRoot, landing);
 const glyphs = await loadNoteGlyphs();
 world.scene.add(glyphs.object);
 const notes = createNotesLayer(ctx, glyphs, shell.creatures.position);
+/**
+ * Glows add light but must not add alpha: in a passthrough session the frame starts see-through, and additive
+ * blending's alpha would turn every glow quad solid (dark patches over the room). Same colour, alpha left alone;
+ * harmless in VR, where alpha is ignored. Re-checked every 30 frames for materials made later (a new piece).
+ */
+let blendCheck = 0;
+const keepAlpha = (m: Material) => {
+  if (m.blending !== AdditiveBlending) return;
+  m.blending = CustomBlending;
+  m.blendEquation = AddEquation;
+  m.blendSrc = m.premultipliedAlpha ? OneFactor : SrcAlphaFactor;
+  m.blendDst = OneFactor;
+  m.blendSrcAlpha = ZeroFactor;
+  m.blendDstAlpha = OneFactor;
+};
 world.registerSystem(class NotesSystem extends createSystem() {
   update() {
+    if (blendCheck-- <= 0) {
+      blendCheck = 30;
+      world.scene.traverse((o) => { const m = (o as Mesh).material; if (m) for (const x of Array.isArray(m) ? m : [m]) keepAlpha(x); });
+    }
     shell.pulse(notes.update() - 1); // the plankton brighten on the beat
     // The song picker is a blank lobby (sir, 18 Nov): no world, instruments or notes behind the choices.
     shell.hide(pickerUp());
