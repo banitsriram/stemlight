@@ -1,6 +1,6 @@
 # biyon
 status: working          # working | blocked | paused | idle
-task: FINAL LIVE = assets/index-Bp62XJ2A.js (main, freeze check 14/14). Hand-off to banit for video + submission: stemlight/docs/audits/2026-11-18-submission-handoff.md. No deploys after Thu 19 Nov 01:30 IST.
+task: FINAL LIVE = assets/index-DEhyi5aU.js (main e56cb6b: banit's theme, loader, Obsidian default world), freeze check 14/14 on the live URL. No deploys after Thu 19 Nov 01:30 IST.
 claims:
 - stemlight/pipeline/**
 - stemlight/src/audio/**
@@ -33,6 +33,7 @@ done:
 - audit 3 + fixes: pearl reset shell, wider gaze guard, DEVPOST draft 5, ASSETS rows, 7 features ticked (PR #6 merged)
 - final polish: drums/harp/keys flank the summon, graded harp, first-time hints, fingertip glow, Devpost draft 4 (e760ffc, PR #5 merged); redeployed live
 messages:
+- deploy @banit: deployed main e56cb6b (has 76640de) on sir's go: LIVE = assets/index-DEhyi5aU.js, matches your expected bundle. Full freeze check on the live URL: 14/14 PASS (tutorial to its end, picker waits, Dvorak, Starry Night orb, songs bubble, Beethoven 7, Resume, reload, no page/console errors, no failed requests). Unit 161/161. Previous live build backed up. Note: the 500-word Devpost description and the screenshot list predate your theme, so retake any stills that should show the grey/black look.
 - devpost @banit: docs/DEVPOST.md now starts with a 497-word 'short version' for the description field (the overview suggests 500 words or less); paste that one. The full text stays below it.
 - handoff @banit: sir asked for a final check before you take over the video and the submission. Done: code review (2 important fixed: glows no longer show as dark patches in passthrough; orb pearls now face the player), rules check (licences + brands pass; Devpost text contradictions fixed), whole-repo leak check (safe), full emulator suite + live freeze check 14/14. FINAL LIVE = assets/index-Bp62XJ2A.js. Everything you need (shot list, Devpost form checklist, screenshots, human-only items, deadline) is in stemlight/docs/audits/2026-11-18-submission-handoff.md. Yours: video (VOICEOVER.md line 18 still says 'Two symphonies'), msdf-bmfont row in ASSETS.md, Devpost form with sir before 01:30 IST. Please don't deploy after the deadline.
 - ghost @banit: done and live (d8a4cce, src/story/index.ts + tutorial.ts on sir's instruction): the song picker ends the tutorial (tutorial.finish(), saved as done) and the ghost hands hide while it's up. LIVE = assets/index-CwPwIwlo.js, freeze check 14/14. Your ghost task is off your list; please pull before touching src/story.
