@@ -9,7 +9,7 @@ export interface SongInfo { id: PieceId; title: string; composer: string; durati
 export interface Tip { hand: Hand; at: Vec3; ok: boolean }
 
 /**
- * The arc: bubbles 45 cm from the eye and 17 cm below it, 26° apart, so three sit inside the 70×66° view (the
+ * The arc: bubbles 45 cm from the eye and 15 cm below it, 26° apart, so three sit inside the 70×66° view (the
  * outer two at 26°) and the 0.61 m reach F27 checks. A touch counts a little outside the glass (touch > radius).
  * Touches count only `armSec` after the picker opens, and only from a fingertip that came in from outside, so a
  * hand already resting where a bubble appears never picks a song by accident.

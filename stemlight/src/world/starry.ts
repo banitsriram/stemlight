@@ -66,8 +66,9 @@ float strokes(vec2 p, float t) {
 // the right, as on the canvas; lower and gentler round the sides and behind.
 float ridge(float az) {
   float front = 8.0 + 3.0 * smoothstep(-54.0, 10.0, az) + 9.0 * smoothstep(26.0, 50.0, az) * (1.0 - smoothstep(52.0, 70.0, az));
-  float waves = 1.4 * sin(az * 0.09) + 0.8 * sin(az * 0.23 + 1.3);
-  float behind = 4.0 + 1.5 * sin(az * 0.05 + 2.0);
+  // Whole numbers of waves per turn, so the ridge meets itself behind you.
+  float waves = 1.4 * sin(radians(az) * 5.0) + 0.8 * sin(radians(az) * 13.0 + 1.3);
+  float behind = 4.0 + 1.5 * sin(radians(az) * 3.0 + 2.0);
   float w = smoothstep(60.0, 90.0, abs(az));
   return mix(front, behind, w) + waves;
 }
@@ -98,14 +99,17 @@ void main() {
     float swirl = max(w1, exp(-pow(length(p - c2) / 7.0, 2.0)) * 0.8);
     c = mix(c, mix(LIGHT, PALE, smoothstep(0.5, 0.8, s)), swirl * 0.75);
     // The pale wind above the hills: a band of cream and turquoise strokes flowing right, rising toward the moon.
-    float band = exp(-pow((el - (15.0 + 0.16 * az + 3.5 * sin(az * 0.06))) / 5.0, 2.0)) * smoothstep(-60.0, -20.0, az) * (1.0 - smoothstep(55.0, 80.0, az));
+    float bd = (el - (15.0 + 0.16 * az + 3.5 * sin(az * 0.06))) / 5.0; // pow() of a negative base is undefined in GLSL
+    float band = exp(-bd * bd) * smoothstep(-60.0, -20.0, az) * (1.0 - smoothstep(55.0, 80.0, az));
     c = mix(c, mix(PALE, WHITE, smoothstep(0.55, 0.85, s)), band * smoothstep(0.35, 0.6, s) * 0.85);
     // Stars: the nearest one's halo (rings of yellow and cream strokes), with a bright core; halos swell on the beat.
     float best = 1e3; vec3 star = vec3(0.0);
     for (int i = 0; i < NSTARS; i++) { float dd = length(p - STARS[i].xy) / STARS[i].z; if (dd < best) { best = dd; star = STARS[i]; } }
     // Faint stars all round the rest of the sky, so looking away from the canvas there are stars too.
-    vec2 g = floor(p / 9.0); vec2 gc = (g + 0.2 + 0.6 * vec2(hash2(g), hash2(g + 7.1))) * 9.0;
-    float extra = (abs(az) > 58.0 || el > 58.0) && hash2(g + 3.3) > 0.55 ? length(p - gc) / 1.8 : 1e3;
+    // On the plain azimuth (not the squeezed one), 40 cells of 9 degrees per turn, so they wrap exactly behind you.
+    vec2 ga = vec2(mod(az + 180.0, 360.0), el), g = floor(ga / 9.0);
+    vec2 gc = (g + 0.2 + 0.6 * vec2(hash2(g), hash2(g + 7.1))) * 9.0;
+    float extra = (abs(az) > 58.0 || el > 58.0) && el < 76.0 && hash2(g + 3.3) > 0.55 ? length(ga - gc) / 1.8 : 1e3;
     if (best < 2.6) {
       // A halo of loose concentric strokes, cream and yellow over the blue, wobbling (no atan: no seam).
       vec2 sd = p - star.xy; float rr = length(sd) / star.z;
@@ -134,29 +138,47 @@ void main() {
     // ---- the land: hills, and in front of you the village with its spire ----
     float depth = hillEl - el;
     float s = vnoise(vec2(az * 0.55 + el * 0.4, el * 2.6)) * 0.65 + vnoise(vec2(az * 1.3 - el * 0.9, el * 5.0 + 2.0)) * 0.35;
+    float lw = smoothstep(150.0, 180.0, abs(az)); // and a turn away, blended, so there's no seam behind you
+    if (lw > 0.0) {
+      float az2 = az - 360.0 * sign(az);
+      s = mix(s, vnoise(vec2(az2 * 0.55 + el * 0.4, el * 2.6)) * 0.65 + vnoise(vec2(az2 * 1.3 - el * 0.9, el * 5.0 + 2.0)) * 0.35, lw * 0.5);
+    }
     c = mix(HILL, HILLLIT, smoothstep(0.45, 0.8, s) * (1.0 - smoothstep(0.0, 6.0, depth)) * 0.9);
     c = mix(c, PEAK, smoothstep(40.0, 52.0, az) * (1.0 - smoothstep(58.0, 72.0, az)) * (1.0 - smoothstep(0.0, 9.0, depth)) * 0.85);
-    // The village: below the ridge ahead and to the right, in the valley: low houses in uneven rows, blue walls
-    // and dark roofs, a few lit windows, dark round trees between them, all in loose strokes.
-    float vz = smoothstep(-24.0, -12.0, az) * (1.0 - smoothstep(50.0, 60.0, az));
-    float vTop = hillEl - 3.5;
-    if (vz > 0.0 && el < vTop && el > -11.0) {
-      float row = floor(el / 1.7);
-      vec2 cell = vec2(az / (2.4 + 1.2 * hash2(vec2(row, 3.0))) + hash2(vec2(row, 1.0)) * 7.0, el / 1.7);
-      vec2 id = floor(cell), fc = fract(cell);
+    // The village, as on the canvas: a loose huddle of small houses gathered round the church in the valley below
+    // the ridge, thinning out into dark fields and round trees to either side. Gabled roofs, walls outlined in dark
+    // blue, a few lit windows. (18 Nov: a uniform grid read as boxes, so houses now crowd only near the spire.)
+    float vTop = hillEl - 3.0;
+    float cluster = exp(-((az - 12.0) * (az - 12.0)) / 450.0); // densest round the church, gone by about +-35
+    if (el < vTop && el > -10.0) {
+      float down = vTop - el;                       // degrees below the ridge
+      float rowH = 2.2, row = floor(down / rowH);
+      float cw = 3.2 * (1.0 + row * 0.2);           // nearer rows a little bigger
+      vec2 cell = vec2((az + hash2(vec2(row, 5.0)) * cw) / cw, down / rowH);
+      vec2 id = floor(cell), fc = fract(cell);     // fc.y runs downward, from the ridge
       float h = hash2(id);
-      float houseW = 0.55 + 0.35 * hash2(id + 2.0), wallTop = 0.55 + 0.2 * hash2(id + 4.0);
-      float inHouse = step(h, 0.5) * step(abs(fc.x - 0.5), houseW * 0.5) * step(fc.y, wallTop + 0.25);
-      float roofK = step(wallTop, fc.y) * step(fc.y - wallTop, 0.25 - abs(fc.x - 0.5) * 0.5);
-      float tree = step(0.72, h) * (1.0 - smoothstep(0.32, 0.42, length(fc - vec2(0.5, 0.45))));
-      float sv = vnoise(vec2(az * 2.5, el * 3.0)) * 0.5 + 0.75;
-      vec3 v = c * 0.8;
-      v = mix(v, WALL * sv, inHouse * step(fc.y, wallTop));
-      v = mix(v, ROOF * sv, inHouse * roofK);
-      v = mix(v, TREE * sv, tree);
-      float win = inHouse * step(fc.y, wallTop) * step(abs(fc.x - 0.45 + 0.1 * hash2(id + 6.0)), 0.07) * step(abs(fc.y - wallTop * 0.5), 0.09) * step(0.55, hash2(id + 9.0));
+      float sv = 0.8 + 0.4 * vnoise(vec2(az * 2.2, el * 3.5));
+      vec3 v = mix(TREE, HILL, 0.45) * sv;          // fields and gardens between the houses
+      float cx = 0.5 + (hash2(id + 1.0) - 0.5) * 0.3, hw = 0.2 + 0.14 * hash2(id + 2.0);
+      float wy0 = 0.42 + 0.1 * hash2(id + 3.0), wy1 = 0.88, rh = 0.18 + 0.1 * hash2(id + 4.0);
+      float dx = abs(fc.x - cx);
+      float house = step(h, cluster * 0.9);
+      float wall = house * step(dx, hw) * step(wy0, fc.y) * step(fc.y, wy1);
+      float roof = house * step(wy0 - rh, fc.y) * step(fc.y, wy0) * step(dx, hw * (fc.y - (wy0 - rh)) / rh + 0.02);
+      float edge = 1.0 - step(0.035, min(min(hw - dx, fc.y - wy0), wy1 - fc.y)); // dark outline round the wall
+      v = mix(v, WALL * sv, wall);
+      v = mix(v, ROOF * 0.8, wall * edge * 0.8);
+      v = mix(v, ROOF * sv, roof);
+      float win = wall * step(0.7, hash2(id + 9.0)) * step(abs(fc.x - cx - 0.06), 0.05) * step(abs(fc.y - (wy0 + wy1) * 0.5), 0.07);
       v = mix(v, WINDOW * (0.8 + 0.2 * sin(t * 0.6 + h * 30.0)), win);
-      c = mix(c, v, vz * (1.0 - smoothstep(vTop - 1.2, vTop, el)) * smoothstep(-11.0, -8.0, el));
+      float tree = (1.0 - house) * step(0.55, hash2(id + 11.0)) * (1.0 - smoothstep(0.26, 0.34, length(fc - vec2(cx, 0.6))));
+      v = mix(v, TREE * sv * 0.9, tree);
+      // The church below the spire: a long nave with a dark roof, lit by one window.
+      float nave = step(abs(az - 7.0), 1.8) * step(vTop - 3.2, el) * step(el, vTop - 0.4);
+      v = mix(v, mix(WALL * 1.15, ROOF, step(vTop - 1.3, el)), nave);
+      v = mix(v, WINDOW, nave * step(abs(az - 7.6), 0.25) * step(abs(el - (vTop - 2.3)), 0.35));
+      float vz = smoothstep(-30.0, -18.0, az) * (1.0 - smoothstep(48.0, 60.0, az));
+      c = mix(c, v, vz * (1.0 - smoothstep(vTop - 1.0, vTop, el)) * smoothstep(-10.0, -7.0, el));
     }
   }
   // The church spire, just right of straight ahead: it rises from the village up past the ridge into the sky.
@@ -247,14 +269,15 @@ void main() {
     gl_FragColor.rgb *= a;
     return;
   }
-  float r = length(vW.xz), ang = atan(vW.z, vW.x);
-  // Grass strokes flowing across the hill, combed by the same wind as the sky.
-  float s = vnoise(vec2(vW.x * 1.3 + sin(vW.z * 0.6) * 0.8, vW.z * 4.0 + vW.x * 0.8)) * 0.65 + vnoise(vec2(ang * 18.0, r * 3.0 - uTime * 0.05)) * 0.35;
+  float r = length(vW.xz);
+  // Grass strokes flowing across the hill, combed by the same wind as the sky (no angle term: no seam).
+  float s = vnoise(vec2(vW.x * 1.3 + sin(vW.z * 0.6) * 0.8, vW.z * 4.0 + vW.x * 0.8)) * 0.65
+    + vnoise(vec2(vW.x * 3.1 + vW.z * 1.7, vW.z * 3.1 - vW.x * 1.7 - uTime * 0.05)) * 0.35;
   vec3 c = mix(GRASS, GRASS2, smoothstep(0.35, 0.7, s));
   c = mix(c, GRASS3, smoothstep(0.78, 0.95, s) * 0.6);
   c = mix(c, NIGHTBLUE, smoothstep(2.0, ${HILL_R.toFixed(1)}, r) * 0.6);
   // Moonlight on the hill: lighter toward the moon (high on the right ahead).
-  c *= 0.85 + 0.25 * max(0.0, dot(normalize(vec3(vW.x, 0.0, vW.z) + 1e-4), normalize(vec3(SEA_L.x, 0.0, SEA_L.z))));
+  c *= 0.85 + 0.25 * max(0.0, dot(normalize(vec3(vW.x, 0.0, vW.z) + 1e-4), normalize(vec3(SEA_L.x, 0.0, SEA_L.z) + vec3(1e-4, 0.0, 0.0))));
   float a = 1.0 - smoothstep(${(HILL_R * 0.7).toFixed(2)}, ${HILL_R.toFixed(2)}, r);
   gl_FragColor = vec4(c * uFade, a);
   #include <colorspace_fragment>

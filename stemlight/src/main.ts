@@ -98,6 +98,7 @@ const landing = {
     const session = world.session;
     if (session) {
       lifecycle.watchSession(session);
+      shell.worlds.warm(); // VR renders with multiview: compile the hidden worlds' shaders for it now, not at the first change
       // Leaving VR pauses (lifecycle); the page offers Resume, which re-enters where the music stopped.
       session.addEventListener('end', () => mountLanding(landingRoot, landing, COPY.resume));
     }

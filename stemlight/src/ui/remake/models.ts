@@ -189,7 +189,8 @@ export function songBubble(): BufferGeometry {
 export function worldOrb(glass: string, pearl: string): BufferGeometry {
   const p = new Parts();
   p.add(new SphereGeometry(1, 28, 14), [glass, 0.35], [0, 0, 0], [0, 0, 0], 0);
-  p.add(new SphereGeometry(0.42, 16, 10), [pearl, 0.6], [0.12, 0.18, 0.25], [0, 0, 0], 0);
+  // The pearl rides on the front of the glass (the side facing the seat, -z), so it shows: inside, it was hidden.
+  p.add(new SphereGeometry(0.5, 16, 10), [pearl, 0.6], [0.1, 0.15, -0.72], [0, 0, 0], 0);
   return p.done();
 }
 

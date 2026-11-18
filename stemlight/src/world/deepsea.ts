@@ -74,6 +74,15 @@ export function setPalette(a: Palette, b: Palette = a, k = 0) {
 }
 setPalette(SEA_PALETTE);
 
+/** The palette on screen now (part way through a glide, perhaps), as a Palette to glide on from. */
+export function livePalette(): Palette {
+  const u = SEA_UNIFORMS, hex = (c: Color) => `#${c.getHexString()}`, l = u.SEA_L.value;
+  return {
+    abyss: hex(u.SEA_ABYSS.value), deep: hex(u.SEA_DEEP.value), shallows: hex(u.SEA_SHALLOWS.value),
+    surface: hex(u.SEA_SURFACE.value), foam: hex(u.SEA_FOAM.value), light: [l.x, l.y, l.z], caustic: u.SEA_CAUSTIC.value,
+  };
+}
+
 /**
  * GLSL shared by everything lit in the world. seaEnv: what a glossy surface reflects for a reflected ray's
  * height. seaGlass: glass lit by the world's light, a tinted body you half see into, the light reflected at

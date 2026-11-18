@@ -95,7 +95,7 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
         if (!c) return;
         m.position.set(c[0], c[1] + 0.002 * Math.sin(d.clock * 1.3 + i * 1.7), c[2]);
         (m.material.uniforms.uFlash.value as number[])[0] = i === d.world ? 0.4 : 0;
-        orbLabels[i].sprite.position.set(c[0], c[1] - 0.048, c[2]);
+        orbLabels[i].sprite.position.set(c[0], c[1] + 0.043, c[2]); // just above its orb: below it fell out of view
         orbLabels[i].sprite.material.opacity = i === d.world ? 1 : 0.7;
       });
       const n = d.bubbles.length;

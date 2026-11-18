@@ -34,6 +34,11 @@ export interface SongsDeps {
 const CARD_AT: Vec3 = [0, -1.05, 0.95];
 const CARD_SCALE = 0.31;
 const FADE_SEC = 0.6;
+/**
+ * After touching a song, orb touches are ignored for this long, and the other way round: a finger dropping from a
+ * song bubble to the orb below it (or lifting from an orb into a bubble) must not trigger both (review, 18 Nov).
+ */
+const CROSS_SEC = 0.6;
 
 export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   const songs: SongInfo[] = deps.songs.map((s) => ({ ...s }));
@@ -48,6 +53,7 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
   let current: PieceId | null = null, last: PieceId | null = null, loading: PieceId | null = null;
   let passed = ctx.save.load().tutorialDone; // the songs bubble shows once the tutorial song has ended (or was done before)
   let fading = false, hold = 0, songsAt: Vec3 | null = null;
+  let songTouchAt = -1e9, worldTouchAt = -1e9;
 
   const url = deps.manifestUrl ?? ((id: PieceId) => `/pieces/${id}/manifest.json`);
   songs.forEach((s, i) => {
@@ -101,10 +107,10 @@ export function initSongs(ctx: AppContext, scene: Object3D, deps: SongsDeps) {
       const t = now(), list = [...tips.values()];
       songsAt = null;
       if (picker.isOpen()) {
-        const id = picker.touch(t, list);
-        if (id && !loading) void choose(id);
-        const w = picker.touchWorld(t, list);
-        if (w && deps.worlds) deps.worlds.set(w);
+        // Both are asked every frame (each keeps track of fingertips going in and out), then the lockout applies.
+        const id = picker.touch(t, list), w = picker.touchWorld(t, list);
+        if (id && !loading && t - worldTouchAt > CROSS_SEC) { songTouchAt = t; void choose(id); }
+        else if (w && deps.worlds && !loading && t - songTouchAt > CROSS_SEC) { worldTouchAt = t; deps.worlds.set(w); }
       } else if (passed && !fading && ctx.transport.playing()) {
         songsAt = toWorld(deps.frames().play, songsBubbleLocal());
         const h = picker.hold(delta, songsAt, list);
