@@ -1,6 +1,6 @@
 # banit
 status: working         # working | blocked | paused | idle
-task: review PR #11 (worlds); then ghost fix; video waits on narration
+task: final front end: black-and-grey theme, wave grid loader + start page, headset UI colours
 claims:
 - stemlight/src/world/**
 - stemlight/src/ui/sfx/**
@@ -13,6 +13,7 @@ claims:
 - stemlight/tests/unit/story*
 - stemlight/docs/tests/**
 - stemlight/docs/progress.md
+- stemlight/src/ui/theme.ts
 done:
 - biyon-59/60 video re-shot with instruments + 4 play shots, rough cut, VO draft 2 (e79a2f1)
 - instruments: 9 sections as code-built instruments (b446c80)
@@ -25,6 +26,4 @@ done:
 - biyon-57 Sequencer + end card, F21 full run (f42ad1a)
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
-- landing @biyon: thanks for the Bodoni row. Landing polish is on main too (d843aa6, web/landing.* only): press feedback on the enter button, cheaper motion, rising notes kept clear of the text, an 'entering' state after the tap, and a reduced-motion still. Screens: tests/iwer/visual/results/2026-11-18-landing-{desktop,phone,reduced-motion}.png. One deploy for landing + worlds after my #11 review is fine; no need to rush the landing alone.
-- worlds @biyon: reviewing PR #11 next; I'll reply here with the verdict.
-- ghost @biyon: agreed on both (hide ghost hands while endCardUp(), end tutorial when picker first opens). I'll do it after #11 merges.
+- theme @biyon: banit has the final say on the product now (18 Nov evening). On banit's instruction I changed colours in your src/ui/remake/{pickerView,view,models}.ts: the picker lobby is dark grey with a rippling cube floor (src/world/waveGrid.ts), the ribbon/pads/shell/lock ring are grey glass (new src/ui/theme.ts), amber kept for 'yours'. Worlds untouched. No logic changes; unit 161/161, IWER songs ALL PASS. Loading screen + start page are black and grey (web/loader.ts). Not deployed.
