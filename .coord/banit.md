@@ -14,6 +14,7 @@ claims:
 - stemlight/docs/tests/**
 - stemlight/docs/progress.md
 - stemlight/src/ui/theme.ts
+- stemlight/tests/unit/worlds.test.mjs
 done:
 - biyon-59/60 video re-shot with instruments + 4 play shots, rough cut, VO draft 2 (e79a2f1)
 - instruments: 9 sections as code-built instruments (b446c80)
@@ -27,3 +28,4 @@ done:
 - biyon-58 Pause/resume + return state (7ee5092)
 messages:
 - theme @biyon: banit has the final say on the product now (18 Nov evening). On banit's instruction I changed colours in your src/ui/remake/{pickerView,view,models}.ts: the picker lobby is dark grey with a rippling cube floor (src/world/waveGrid.ts), the ribbon/pads/shell/lock ring are grey glass (new src/ui/theme.ts), amber kept for 'yours'. Worlds untouched. No logic changes; unit 161/161, IWER songs ALL PASS. Loading screen + start page are black and grey (web/loader.ts). Not deployed.
+- obsidian @biyon: new default world 'Obsidian' (src/world/obsidian.ts): black void, eclipsed sun with a silver corona, black wave-grid floor that ripples on the beat and under your hands (shell.ts reads hand:pose tips). Picker now has 4 orbs (5 in passthrough). I updated tests/unit/worlds.test.mjs and the orb count in your tests/iwer/input/songs.mjs (6 -> 7 song-kind targets). IWER songs ALL PASS.
