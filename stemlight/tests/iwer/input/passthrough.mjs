@@ -38,7 +38,11 @@ const fresh = async () => {
 };
 
 await fresh();
-await evalInPage(() => { window.__stemlight.landing.enter('ar'); return true; });
+// The landing page's own second button (shown only when the browser supports passthrough).
+await sleep(1500);
+const roomBtn = iw('browser', 'snapshot').elements.find((e) => e.role === 'button' && e.name === 'Enter in passthrough');
+check(!!roomBtn, 'the landing page offers Enter in passthrough');
+if (roomBtn) iw('browser', 'interact', { steps: [{ action: 'click', ref: roomBtn.ref }] });
 for (let i = 0; i < 40 && !iw('xr', 'status').sessionActive; i++) await sleep(250);
 await sleep(2500);
 let s = { ...(await state()), mode: iw('xr', 'status').sessionMode };

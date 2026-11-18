@@ -1,3 +1,4 @@
+PASS the landing page offers Enter in passthrough
 {"blend":"alpha-blend","world":"room","shown":"room","orbs":0,"open":false,"bg":null,"alpha":0,"rock":false,"mode":"immersive-ar"}
 PASS the passthrough entry starts an immersive-ar session (immersive-ar)
 PASS it opens on the room: no background, clear alpha 0
