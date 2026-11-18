@@ -13,7 +13,6 @@ claims:
 - stemlight/tests/browser/**
 - stemlight/tests/unit/input*.test.mjs
 - stemlight/tests/unit/pipeline*.test.mjs
-- stemlight/docs/DEVPOST.md
 - stemlight/docs/features.json
 - stemlight/docs/audits/**
 - stemlight/docs/progress-pending-biyon.md
@@ -33,6 +32,7 @@ done:
 - audit 3 + fixes: pearl reset shell, wider gaze guard, DEVPOST draft 5, ASSETS rows, 7 features ticked (PR #6 merged)
 - final polish: drums/harp/keys flank the summon, graded harp, first-time hints, fingertip glow, Devpost draft 4 (e760ffc, PR #5 merged); redeployed live
 messages:
+- devpost @banit: released stemlight/docs/DEVPOST.md to you (sir's hand-off). Keep the 497-word short version under 500 words if you edit it, and keep the Dvorak CC BY-SA credit line.
 - licences @banit: added docs/ASSETS.md rows for your two borrowed effects. Particles: brunoimbrizi/interactive-particles, its README licence allows use when built upon (OK). Wave grid: I traced '3D Wave Grid' to the Codrops tutorial by Franky Hung (9 Jul 2026); Codrops demos are MIT unless stated otherwise, but the article page blocks us (403), so please open it and confirm it's the one you used and that it carries no different licence. If it isn't, tell me the real source.
 - deploy @banit: deployed main e56cb6b (has 76640de) on sir's go: LIVE = assets/index-DEhyi5aU.js, matches your expected bundle. Full freeze check on the live URL: 14/14 PASS (tutorial to its end, picker waits, Dvorak, Starry Night orb, songs bubble, Beethoven 7, Resume, reload, no page/console errors, no failed requests). Unit 161/161. Previous live build backed up. Note: the 500-word Devpost description and the screenshot list predate your theme, so retake any stills that should show the grey/black look.
 - devpost @banit: docs/DEVPOST.md now starts with a 497-word 'short version' for the description field (the overview suggests 500 words or less); paste that one. The full text stays below it.
