@@ -13,11 +13,12 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { createWaveTrail, fillGrid, waveVertex } from '../src/world/waveGrid';
 
 const MIN_SHOW = 3.6; // s: long enough for the name to form even on a fast connection
 const GRID = 40;
-const MAX_TRAIL = 128;
 const BEAT = 1.1; // s between ripples
+const BOLT = '#7a0a0a'; // thin blood-red lightning behind the name: flat lines, no glow
 const COLOR_BASE = '#1b1e22';
 const COLOR_HIGH = '#59626d';
 const PARTICLE = '#e4e8ec';
@@ -121,38 +122,6 @@ const VIGNETTE_RGB_SHIFT = {
     }`,
 };
 
-/** Mouse-trail wave displacement, shared by the visible and the shadow (depth) material. */
-const waveVertex = (src: string) => src
-  .replace('#include <common>', /* glsl */ `#include <common>
-    varying float vHeight;
-    attribute vec2 aOffset;
-    uniform sampler2D uTrailTexture;
-    uniform int uTrailCount;
-    uniform float uWaveSpeed, uWaveFreq, uWaveWidth, uFadeTime, uAmplitude, uJitter, uMaxHeight;
-    vec2 hash2(vec2 p) {
-      p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-      return fract(sin(p) * 43758.5453123) - 0.5;
-    }`)
-  .replace('#include <begin_vertex>', /* glsl */ `#include <begin_vertex>
-    vHeight = 0.0;
-    if (position.y > 0.0) {
-      vec2 worldXZ = aOffset + hash2(aOffset) * uJitter;
-      float waveHeight = 0.0, totalWeight = 0.0;
-      for (int i = 0; i < ${MAX_TRAIL}; i++) {
-        if (i >= uTrailCount) break;
-        vec4 td = texture2D(uTrailTexture, vec2((float(i) + 0.5) / ${MAX_TRAIL}.0, 0.5));
-        float dist = length(worldXZ - td.rg);
-        float relDist = dist - uWaveSpeed * td.b;
-        float weight = exp(-td.b / uFadeTime) * exp(-(relDist * relDist) / (uWaveWidth * uWaveWidth)) / (1.0 + dist * 0.1) * td.a;
-        waveHeight += weight * cos(uWaveFreq * relDist);
-        totalWeight += weight;
-      }
-      waveHeight /= max(totalWeight, 1.0);
-      float d = clamp(waveHeight * uAmplitude, -uMaxHeight, uMaxHeight);
-      transformed.y += d;
-      vHeight = d;
-    }`);
-
 /** Particle positions come from the name drawn in the landing title's font. */
 async function nameCanvas(): Promise<HTMLCanvasElement> {
   const font = '400 112px "Bodoni Moda", Didot, "Times New Roman", serif';
@@ -246,22 +215,10 @@ function start(root: HTMLElement): void {
   fill.position.set(10, 5, -3);
   scene.add(fill);
 
-  const trailData = new Float32Array(MAX_TRAIL * 4);
-  const trailTexture = new THREE.DataTexture(trailData, MAX_TRAIL, 1, THREE.RGBAFormat, THREE.FloatType);
-  trailTexture.needsUpdate = true;
-  const wave = {
-    uTrailTexture: { value: trailTexture }, uTrailCount: { value: 0 }, uFadeTime: { value: 2 },
-    uWaveSpeed: { value: 6 }, uWaveFreq: { value: 1.2 }, uWaveWidth: { value: 3 },
-    uAmplitude: { value: 0.4 }, uJitter: { value: 0.2 }, uMaxHeight: { value: 0.4 },
-  };
+  const trail = createWaveTrail({ bounds, speed: 6, freq: 1.2, width: 3, amplitude: 0.4, jitter: 0.2, maxHeight: 0.4 }, BEAT);
+  const wave = trail.uniforms;
   const colors = { uColorBase: { value: new THREE.Color(COLOR_BASE) }, uColorHigh: { value: new THREE.Color(COLOR_HIGH) } };
-  const trail: { x: number; z: number; age: number; d: number }[] = [];
-  let beat = BEAT; // the first ripple starts at once
-  const push = (x: number, z: number, d: number) => { if (trail.length >= MAX_TRAIL) trail.shift(); trail.push({ x, z, age: 0, d }); };
-
   const geometry = new THREE.BoxGeometry(cubeW, cubeH, cubeW);
-  const aOffset = new THREE.InstancedBufferAttribute(new Float32Array(GRID * GRID * 2), 2);
-  geometry.setAttribute('aOffset', aOffset);
   const material = new THREE.MeshPhongMaterial({ color: 0xffffff });
   material.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, wave, colors);
@@ -275,14 +232,7 @@ function start(root: HTMLElement): void {
   const cubes = new THREE.InstancedMesh(geometry, material, GRID * GRID);
   cubes.customDepthMaterial = depthMaterial;
   cubes.castShadow = cubes.receiveShadow = true;
-  const dummy = new THREE.Object3D();
-  const half = ((GRID - 1) * (cubeW + 0.01)) / 2;
-  for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) {
-    const x = i * (cubeW + 0.01) - half, z = j * (cubeW + 0.01) - half;
-    dummy.position.set(x, 0, z); dummy.updateMatrix();
-    cubes.setMatrixAt(i * GRID + j, dummy.matrix);
-    aOffset.setXY(i * GRID + j, x, z);
-  }
+  fillGrid(cubes, GRID, cubeW, 0.01, 0); // centred on y = 0, as in the demo
   scene.add(cubes);
 
   const composer = new EffectComposer(renderer);
@@ -291,6 +241,53 @@ function start(root: HTMLElement): void {
   composer.addPass(new OutputPass());
 
   // ── Particles (the name) ───────────────────────────────────────────────────
+  // ── Lightning: thin dark-red bolts that flicker like distant thunder, once the name has formed ──
+  const bolts = new THREE.LineSegments(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: BOLT, transparent: true, opacity: 0, depthTest: false }));
+  bolts.frustumCulled = false;
+  const boltScene = new THREE.Scene().add(bolts);
+  const boltCam = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+  let storm = false, nextBolt = 0.6, boltAge = -1;
+  /** One jagged bolt from above the screen downward, with a branch or two, as line segments in screen space. */
+  const strike = () => {
+    const pts: number[] = [];
+    const branch = (x: number, y: number, len: number, depth: number) => {
+      let px = x, py = y;
+      const steps = Math.round(10 + len * 14);
+      for (let i = 0; i < steps; i++) {
+        const nx = px + (Math.random() - 0.5) * 0.09, ny = py - len / steps * (0.6 + Math.random() * 0.8);
+        pts.push(px, py, 0, nx, ny, 0);
+        if (depth < 2 && Math.random() < 0.08) branch(nx, ny, len * 0.45, depth + 1);
+        px = nx; py = ny;
+      }
+    };
+    branch(-0.95 + Math.random() * 1.9, 1.05, 0.9 + Math.random() * 1.0, 0);
+    bolts.geometry.dispose();
+    bolts.geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    boltAge = 0;
+  };
+  // A real flash flickers: on, dim, on again, gone.
+  const FLICKER = [[0, 0.9], [0.05, 0.25], [0.1, 0.85], [0.16, 0.4], [0.3, 0]] as const;
+  const flicker = (t: number) => {
+    for (let i = 1; i < FLICKER.length; i++) if (t < FLICKER[i][0]) {
+      const [t0, a0] = FLICKER[i - 1], [t1, a1] = FLICKER[i];
+      return a0 + (a1 - a0) * ((t - t0) / (t1 - t0));
+    }
+    return 0;
+  };
+  const thunder = (dt: number) => {
+    if (!storm) return;
+    if ((nextBolt -= dt) <= 0) { strike(); nextBolt = 1.6 + Math.random() * 3.2; }
+    if (boltAge >= 0) {
+      boltAge += dt;
+      bolts.material.opacity = flicker(boltAge);
+      if (boltAge > 0.3) boltAge = -1;
+    }
+    if (boltAge < 0) return;
+    renderer.autoClear = false;
+    renderer.render(boltScene, boltCam);
+    renderer.autoClear = true;
+  };
+
   const pScene = new THREE.Scene();
   const pCam = new THREE.PerspectiveCamera(50, v.w / v.h, 1, 10000);
   pCam.position.z = 300;
@@ -337,7 +334,7 @@ function start(root: HTMLElement): void {
     const wait = Math.max(0, 0.7 - (performance.now() - t0) / 1000);
     gsap.to(pu.uSize, { value: 1.5, duration: 1.4, delay: wait, ease: 'power2.out' });
     gsap.to(pu.uRandom, { value: 1.8, duration: 2.4, delay: wait, ease: 'expo.out' });
-    gsap.to(pu.uDepth, { value: 3, duration: 2.8, delay: wait, ease: 'expo.out' });
+    gsap.to(pu.uDepth, { value: 3, duration: 2.8, delay: wait, ease: 'expo.out', onComplete: () => { storm = true; } });
   });
 
   // ── Pointer ────────────────────────────────────────────────────────────────
@@ -369,15 +366,9 @@ function start(root: HTMLElement): void {
   const frame = (now: number) => {
     const dt = Math.min((now - prev) / 1000, 0.05);
     prev = now;
-    for (let i = trail.length - 1; i >= 0; i--) if ((trail[i].age += dt) > 8) trail.splice(i, 1);
-    if ((beat += dt) >= BEAT) {
-      beat = 0;
-      push((Math.random() * 0.5 - 0.25) * bounds, (Math.random() * 0.5 - 0.25) * bounds, 0.8 + Math.random() * 0.2);
-    }
-    trail.forEach((t, i) => trailData.set([t.x, t.z, t.age, t.d], i * 4));
-    trailTexture.needsUpdate = true;
-    wave.uTrailCount.value = trail.length;
+    trail.update(dt);
     composer.render();
+    thunder(dt);
     if (particles && pu) {
       touch.update();
       pu.uTime.value += dt;

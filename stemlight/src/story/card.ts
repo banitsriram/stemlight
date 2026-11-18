@@ -42,7 +42,7 @@ export function textSprite(widthM: number, px = 1024, aspect = 4) {
       g.font = `600 ${bigPx}px system-ui, sans-serif`;
       const fit = Math.min(1, (W * 0.92) / g.measureText(lines[0]).width); // a long title shrinks to fit
       g.font = `600 ${bigPx * fit}px system-ui, sans-serif`;
-      g.fillStyle = '#EAFBFF';
+      g.fillStyle = '#F4F5F6';
       g.fillText(lines[0], W / 2, y);
       y += bigPx * 0.65 + smallPx * 0.7;
       g.font = `400 ${smallPx}px system-ui, sans-serif`;

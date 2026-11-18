@@ -97,7 +97,7 @@ export function createGhost(parent: Object3D) {
   const group = new Group();
   const mat = new ShaderMaterial({
     vertexShader: GHOST_VERT, fragmentShader: GHOST_FRAG, transparent: true, blending: AdditiveBlending, depthWrite: false,
-    uniforms: { uColor: { value: new Color('#6FF3FF') }, opacity: { value: 0.35 } },
+    uniforms: { uColor: { value: new Color('#E6E8EA') }, opacity: { value: 0.35 } },
   });
   const mesh = new InstancedMesh(new CylinderGeometry(0.01, 0.01, 1, 16, 1), mat, BONES * 2);
   mesh.frustumCulled = false;

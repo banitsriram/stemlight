@@ -8,6 +8,7 @@ import {
 import type { AppContext, Envelopes, MuteState, StemId, Vec3 } from '../contracts';
 import { endCardUp } from '../story/sequencer';
 import { SEA, SEA_GLSL, SEA_UNIFORMS } from './deepsea';
+import { UI } from '../ui/theme';
 import { instrument } from './instruments';
 
 export const GLIDE_SEC = 0.6;
@@ -173,7 +174,7 @@ export function createCreatures(ctx: AppContext, scene: Object3D, head: HeadFn, 
   let request = 0;
 
   const ring = new Mesh(new RingGeometry(radius + 0.02, radius + 0.035, 64, 1),
-    new MeshBasicMaterial({ color: SEA.cyan, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
+    new MeshBasicMaterial({ color: UI.touch, transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }));
   const ringCount = ring.geometry.index!.count;
   ring.visible = false;
   root.add(ring);
