@@ -4,7 +4,7 @@
 import type { Object3D } from 'three';
 import { SEA, SEA_PALETTE, type Palette } from './deepsea.ts';
 
-export type WorldId = 'sea' | 'starry' | 'aurora' | 'room';
+export type WorldId = 'obsidian' | 'sea' | 'starry' | 'aurora' | 'room';
 
 /** What a world builds: its sky, its floor and its particles, three draw calls in all (F17). */
 export interface WorldParts {
@@ -28,17 +28,22 @@ export const STARRY_PALETTE: Palette = { abyss: '#070E24', deep: '#142B57', shal
 /** An arctic night; the light is the aurora, high ahead. */
 export const AURORA_PALETTE: Palette = { abyss: '#02070F', deep: '#0B2233', shallows: '#1E6E6A', surface: '#8CFFD2', foam: '#F0FBFF', light: [0, 0.8, -0.6], caustic: 0.15 };
 
+/** Black (18 Nov, banit): silver light from the eclipsed sun's corona, 35 degrees up straight ahead (obsidian.ts). */
+export const OBSIDIAN_PALETTE: Palette = { abyss: '#000000', deep: '#07080A', shallows: '#2B2F35', surface: '#DDE1E6', foam: '#FFFFFF', light: [0, 0.57358, -0.81915], caustic: 0 };
+
 /** Passthrough: the instruments keep the sea's glass light, without the underwater caustics. */
 export const ROOM_PALETTE: Palette = { ...SEA_PALETTE, caustic: 0 };
 
 export const WORLDS: readonly WorldInfo[] = [
+  // The black world (18 Nov, banit): the default, in the app's black-and-grey look.
+  { id: 'obsidian', name: 'Obsidian', palette: OBSIDIAN_PALETTE, orb: ['#111316', '#E8EAED'], glow: 0.6 },
   { id: 'sea', name: 'Deep sea', palette: SEA_PALETTE, orb: [SEA.shallows, SEA.surface], glow: 1 },
   { id: 'starry', name: 'Starry Night', palette: STARRY_PALETTE, orb: ['#2E4E9E', '#F5D33E'], glow: 0.7 },
   { id: 'aurora', name: 'Aurora', palette: AURORA_PALETTE, orb: ['#0B2233', '#3CFFB0'], glow: 0.8 },
   // The player's own room, seen through the headset: only in a passthrough (immersive-ar) session.
   { id: 'room', name: 'Passthrough', palette: ROOM_PALETTE, orb: ['#9FB4BC', '#FFFFFF'], glow: 1 },
 ];
-export const DEFAULT_WORLD: WorldId = 'sea';
+export const DEFAULT_WORLD: WorldId = 'obsidian';
 export const WORLD_KEY = 'stemlight.world';
 /** A world change: the old world fades out over the first half, the new one in over the second. */
 export const FADE_SEC = 1.0;
@@ -53,7 +58,7 @@ function safeStorage(): Storage | null {
   try { return typeof localStorage === 'undefined' ? null : localStorage; } catch { return null; }
 }
 
-/** The world this device chose last (a per-device preference, like the tutorial step), else the deep sea. */
+/** The world this device chose last (a per-device preference, like the tutorial step), else the default (Obsidian). */
 export function loadWorld(storage: Pick<Storage, 'getItem'> | null = safeStorage()): WorldId {
   try {
     const v = storage?.getItem(WORLD_KEY);

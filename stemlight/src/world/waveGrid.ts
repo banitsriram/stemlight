@@ -21,14 +21,16 @@ export function createWaveTrail(size: WaveSize, beat = 1.1) {
   };
   const trail: { x: number; z: number; age: number; d: number }[] = [];
   let t = beat; // the first ripple starts at once
+  /** A ripple from (x, z) with strength d (about 0..1). */
+  const push = (x: number, z: number, d: number) => { if (trail.length >= MAX_TRAIL) trail.shift(); trail.push({ x, z, age: 0, d }); };
   return {
     uniforms,
+    push,
     update(dt: number) {
       for (let i = trail.length - 1; i >= 0; i--) if ((trail[i].age += dt) > 8) trail.splice(i, 1);
-      if ((t += dt) >= beat) {
+      if (beat > 0 && (t += dt) >= beat) {
         t = 0;
-        if (trail.length >= MAX_TRAIL) trail.shift();
-        trail.push({ x: (Math.random() * 0.5 - 0.25) * size.bounds, z: (Math.random() * 0.5 - 0.25) * size.bounds, age: 0, d: 0.8 + Math.random() * 0.2 });
+        push((Math.random() * 0.5 - 0.25) * size.bounds, (Math.random() * 0.5 - 0.25) * size.bounds, 0.8 + Math.random() * 0.2);
       }
       trail.forEach((p, i) => data.set([p.x, p.z, p.age, p.d], i * 4));
       texture.needsUpdate = true;
@@ -90,13 +92,14 @@ export function fillGrid(mesh: InstancedMesh, grid: number, cube: number, gap: n
  * The lobby's floor for the headset: unlit (no lights or shadows to set up), tops lighter than sides, fading into
  * the lobby's dark toward its edge. Call update(dt) each frame while it shows.
  */
-export function createWaveFloor(opts: { grid: number; cube: number; base: string; high: string; fade: string; fadeFrom: number; fadeTo: number }) {
+export function createWaveFloor(opts: { grid: number; cube: number; base: string; high: string; fade: string; fadeFrom: number; fadeTo: number; beat?: number; glint?: number }) {
   const { grid, cube } = opts, gap = 0.01, height = cube * 3.5;
   const k = cube / 0.8; // the start page's grid in metres
-  const trail = createWaveTrail({ bounds: grid * (cube + gap), speed: 6 * k, freq: 1.2 / k, width: 3 * k, amplitude: 0.4 * k, jitter: 0.2 * k, maxHeight: 0.4 * k });
+  const trail = createWaveTrail({ bounds: grid * (cube + gap), speed: 6 * k, freq: 1.2 / k, width: 3 * k, amplitude: 0.4 * k, jitter: 0.2 * k, maxHeight: 0.4 * k }, opts.beat ?? 1.1);
   const colors = {
     uColorBase: { value: new Color(opts.base) }, uColorHigh: { value: new Color(opts.high) }, uFade: { value: new Color(opts.fade) },
     uFadeFrom: { value: opts.fadeFrom }, uFadeTo: { value: opts.fadeTo },
+    uDim: { value: 1 }, uGlint: { value: opts.glint ?? 0 },
   };
   const material = new MeshBasicMaterial({ color: 0xffffff });
   material.onBeforeCompile = (s) => {
@@ -105,14 +108,19 @@ export function createWaveFloor(opts: { grid: number; cube: number; base: string
       .replace('#include <common>', '#include <common>\nvarying float vShade;\nvarying float vDist;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvShade = normal.y > 0.5 ? 1.0 : (abs(normal.x) > 0.5 ? 0.62 : 0.48);\nvDist = length(aOffset);');
     s.fragmentShader = s.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vHeight;\nvarying float vShade;\nvarying float vDist;\nuniform vec3 uColorBase, uColorHigh, uFade;\nuniform float uMaxHeight, uFadeFrom, uFadeTo;')
-      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(mix(uColorBase, uColorHigh, clamp(vHeight / uMaxHeight, 0.0, 1.0)) * vShade, uFade, smoothstep(uFadeFrom, uFadeTo, vDist));');
+      .replace('#include <common>', '#include <common>\nvarying float vHeight;\nvarying float vShade;\nvarying float vDist;\nuniform vec3 uColorBase, uColorHigh, uFade;\nuniform float uMaxHeight, uFadeFrom, uFadeTo, uDim, uGlint;')
+      .replace('#include <color_fragment>', '#include <color_fragment>\nfloat crest = clamp(vHeight / uMaxHeight, 0.0, 1.0);\nvec3 cube = mix(uColorBase, uColorHigh, crest) * vShade + uColorHigh * uGlint * pow(crest, 3.0) * step(0.9, vShade);\ndiffuseColor.rgb = mix(cube, uFade, smoothstep(uFadeFrom, uFadeTo, vDist)) * uDim;');
   };
   const mesh = new InstancedMesh(new BoxGeometry(cube, height, cube), material, grid * grid);
   fillGrid(mesh, grid, cube, gap, height);
   mesh.frustumCulled = false;
   return {
     mesh,
+    push: trail.push,
     update: (dt: number) => trail.update(dt),
+    /** 0..1: dims the whole floor (a world change fades through dark). */
+    dim(k: number) { colors.uDim.value = k; },
+    /** Extra shine on the crests' tops (the beat). */
+    glint(k: number) { colors.uGlint.value = k; },
   };
 }

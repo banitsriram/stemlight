@@ -16,10 +16,10 @@ import { SONGS } from '../../src/audio/sequence.ts';
 const FRAME = { eye: [0, 1.2, 0], yaw: 0 };
 const store = (init = {}) => { const m = new Map(Object.entries(init)); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), m }; };
 
-test('three worlds: deep sea (the default), Starry Night, Aurora; each palette valid, its light a unit vector', () => {
-  assert.deepEqual(WORLDS.map((w) => w.id), ['sea', 'starry', 'aurora', 'room']);
-  assert.deepEqual(WORLDS.map((w) => w.name), ['Deep sea', 'Starry Night', 'Aurora', 'Passthrough']);
-  assert.equal(DEFAULT_WORLD, 'sea');
+test('four worlds: Obsidian (the default), deep sea, Starry Night, Aurora; each palette valid, its light a unit vector', () => {
+  assert.deepEqual(WORLDS.map((w) => w.id), ['obsidian', 'sea', 'starry', 'aurora', 'room']);
+  assert.deepEqual(WORLDS.map((w) => w.name), ['Obsidian', 'Deep sea', 'Starry Night', 'Aurora', 'Passthrough']);
+  assert.equal(DEFAULT_WORLD, 'obsidian');
   for (const w of WORLDS) {
     for (const k of ['abyss', 'deep', 'shallows', 'surface', 'foam']) assert.match(w.palette[k], /^#[0-9A-F]{6}$/i, `${w.id}.${k}`);
     assert.ok(Math.abs(Math.hypot(...w.palette.light) - 1) < 0.02, `${w.id}: light is a unit vector`);
@@ -31,12 +31,12 @@ test('three worlds: deep sea (the default), Starry Night, Aurora; each palette v
   assert.ok(isWorld('aurora') && !isWorld('moon') && !isWorld(null));
 });
 
-test('the choice is remembered on this device; anything odd or unavailable falls back to the deep sea', () => {
-  assert.equal(loadWorld(store()), 'sea');
+test('the choice is remembered on this device; anything odd or unavailable falls back to Obsidian', () => {
+  assert.equal(loadWorld(store()), 'obsidian');
   assert.equal(loadWorld(store({ [WORLD_KEY]: 'starry' })), 'starry');
-  assert.equal(loadWorld(store({ [WORLD_KEY]: 'volcano' })), 'sea');
-  assert.equal(loadWorld(null), 'sea');
-  assert.equal(loadWorld({ getItem() { throw new Error('blocked'); } }), 'sea');
+  assert.equal(loadWorld(store({ [WORLD_KEY]: 'volcano' })), 'obsidian');
+  assert.equal(loadWorld(null), 'obsidian');
+  assert.equal(loadWorld({ getItem() { throw new Error('blocked'); } }), 'obsidian');
   const s = store();
   saveWorld('aurora', s);
   assert.equal(s.m.get(WORLD_KEY), 'aurora');
@@ -97,7 +97,7 @@ test('world orbs: a row under the song bubbles, inside the view and reach, their
   const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
   const orbs = p.orbs(), bubbles = p.bubbles(), eye = FRAME.eye;
-  assert.equal(orbs.length, 3);
+  assert.equal(orbs.length, 4);
   for (const [i, c] of orbs.entries()) {
     const d = [c[0] - eye[0], c[1] - eye[1], c[2] - eye[2]];
     const yaw = Math.abs(Math.atan2(d[0], -d[2]) * 57.2958), pitch = Math.abs(Math.atan2(d[1], Math.hypot(d[0], d[2])) * 57.2958);
@@ -108,14 +108,14 @@ test('world orbs: a row under the song bubbles, inside the view and reach, their
       assert.ok(gap > 0.01, `orb ${i} keeps ${(gap * 100).toFixed(1)} cm from a bubble's touch sphere`);
     }
   }
-  assert.ok(orbs[0][0] < orbs[1][0] && orbs[1][0] < orbs[2][0], 'left to right in world order');
-  assert.deepEqual(p.targets(null).filter((t) => t.id.startsWith('world:')).map((t) => `${t.id}:${t.kind}`), ['world:sea:song', 'world:starry:song', 'world:aurora:song']);
+  assert.ok(orbs[0][0] < orbs[1][0] && orbs[1][0] < orbs[2][0] && orbs[2][0] < orbs[3][0], 'left to right in world order');
+  assert.deepEqual(p.targets(null).filter((t) => t.id.startsWith('world:')).map((t) => `${t.id}:${t.kind}`), ['world:obsidian:song', 'world:sea:song', 'world:starry:song', 'world:aurora:song']);
 });
 
 test('world orbs: a fingertip coming in from outside once armed picks that world; resting or early never does', () => {
   const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
-  const [, starry] = p.orbs(), away = [0.5, 0.2, 0.3];
+  const [, , starry] = p.orbs(), away = [0.5, 0.2, 0.3];
   const tip = (at) => [{ hand: 'right', at, ok: true }];
   assert.equal(p.touchWorld(0, tip(away)), null);
   assert.equal(p.touchWorld(0.3, tip(starry)), null, 'before the arm time');
@@ -128,10 +128,10 @@ test('world orbs: a fingertip coming in from outside once armed picks that world
   assert.deepEqual(createPicker(SONGS).orbs(), [], 'no worlds given: no orbs');
 });
 
-test('the orb row sits where the layout says (frame-local -15/0/+15 cm, 22 cm down, 43 cm out)', () => {
+test('the orb row sits where the layout says (frame-local -22.5/-7.5/+7.5/+22.5 cm, 22 cm down, 43 cm out)', () => {
   const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
-  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.15, 0.98, -0.43], [0, 0.98, -0.43], [0.15, 0.98, -0.43]]);
+  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.225, 0.98, -0.43], [-0.075, 0.98, -0.43], [0.075, 0.98, -0.43], [0.225, 0.98, -0.43]]);
   assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.98, -0.43]);
 });
 
@@ -174,14 +174,14 @@ test('Starry Night village (sir: close round you, open straight ahead): no cotta
 test('passthrough: offered only in a passthrough session, never kept, and the room draws nothing once up', async () => {
   const { availableWorlds, loadWorld, saveWorld, createSwitch } = await import('../../src/world/worldList.ts');
   const { createRoom } = await import('../../src/world/room.ts');
-  assert.deepEqual(availableWorlds(true), ['sea', 'starry', 'aurora', 'room']);
-  assert.deepEqual(availableWorlds(false), ['sea', 'starry', 'aurora']);
+  assert.deepEqual(availableWorlds(true), ['obsidian', 'sea', 'starry', 'aurora', 'room']);
+  assert.deepEqual(availableWorlds(false), ['obsidian', 'sea', 'starry', 'aurora']);
   const kept = new Map();
   const store = { getItem: (k) => kept.get(k) ?? null, setItem: (k, v) => kept.set(k, v) };
   saveWorld('room', store);
   assert.equal(kept.size, 0, 'Passthrough is not saved');
   kept.set('stemlight.world', 'room');
-  assert.equal(loadWorld(store), 'sea', 'a stored room falls back to the deep sea');
+  assert.equal(loadWorld(store), 'obsidian', 'a stored room falls back to the default world');
   const sw = createSwitch('starry');
   sw.jump('room');
   assert.equal(sw.shown(), 'room');

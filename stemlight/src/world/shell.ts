@@ -60,7 +60,10 @@ void main() {
 export function initShell(ctx: AppContext, scene: Object3D, head: HeadFn, renderer?: WebGLRenderer) {
   const rock = rockSeat();
   scene.add(rock);
-  const worlds = initWorlds(scene, renderer);
+  // Fingertips, for the Obsidian floor's ripples under your hands.
+  const tips = new Map<string, Vec3>();
+  ctx.bus.on('hand:pose', (e) => { if (e.tracked) tips.set(e.hand, e.tip); else tips.delete(e.hand); });
+  const worlds = initWorlds(scene, renderer, () => [...tips.values()]);
   let lobby = false;
   const creatures = createCreatures(ctx, scene, head, reachSpot, CREATURE_RADIUS);
   return {

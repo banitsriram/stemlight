@@ -12,6 +12,8 @@ import { createSea } from './sky';
 import { createStarry } from './starry';
 import { createAurora } from './aurora';
 import { createRoom } from './room';
+import { createObsidian } from './obsidian';
+import type { Vec3 } from '../contracts';
 import { WORLDS, availableWorlds, createSwitch, loadWorld, saveWorld, worldInfo, type WorldId, type WorldParts } from './worldList';
 
 export interface Worlds {
@@ -36,8 +38,8 @@ export interface Worlds {
 
 const WARM_FRAMES = 3;
 
-export function initWorlds(scene: Object3D, renderer?: WebGLRenderer): Worlds {
-  const parts: Record<WorldId, WorldParts> = { sea: createSea(), starry: createStarry(), aurora: createAurora(), room: createRoom() };
+export function initWorlds(scene: Object3D, renderer?: WebGLRenderer, hands?: () => Vec3[]): Worlds {
+  const parts: Record<WorldId, WorldParts> = { obsidian: createObsidian(hands), sea: createSea(), starry: createStarry(), aurora: createAurora(), room: createRoom() };
   let ar = false;
   const ids = Object.keys(parts) as WorldId[];
   for (const id of ids) scene.add(...parts[id].objects);
