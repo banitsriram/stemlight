@@ -24,6 +24,8 @@ export interface Tutorial {
   /** Call each frame with seconds; returns how many nudges the current step has had. */
   tick(now: number): number;
   start(now: number): void;
+  /** Ends the tutorial for good (the song picker opened: sir, 'after the starting tutorial you choose a song'). */
+  finish(): void;
 }
 
 /** Where an unfinished tutorial got to, kept on this device so a reload doesn't start it over. */
@@ -58,6 +60,7 @@ export function createTutorial(bus: Pick<Bus, 'on' | 'emit'>, save: SaveApi, mem
       clock = now;
       if (i < 0) go(Math.min(Math.max(memory.get(), early), STEPS.length - 1));
     },
+    finish() { if (i < STEPS.length) go(STEPS.length); },
     tick(now) {
       clock = now;
       if (i < 0 || i >= STEPS.length) return 0;

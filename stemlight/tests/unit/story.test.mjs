@@ -116,3 +116,14 @@ test('a creature summoned before the music starts still completes the Look step'
   t.start(0);
   assert.equal(t.step(), 'silence');
 });
+
+test('the song picker ends the tutorial for good: no more steps, no ghost hands', () => {
+  const save = fakeSave(), m = mem();
+  const t = createTutorial(createBus(), save, m);
+  t.start(0);
+  assert.equal(t.step(), 'summon');
+  t.finish();
+  assert.equal(t.step(), 'free');
+  assert.equal(t.words(), '', 'no caption, so the ghost hands hide');
+  assert.equal(save.load().tutorialDone, true, 'kept: it does not come back next visit');
+});

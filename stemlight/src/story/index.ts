@@ -20,6 +20,7 @@ export function hasSavedChanges(m: MixState | undefined): boolean {
 export function initStory(
   ctx: AppContext, scene: Object3D, head: HeadFn,
   reachSpot: (eye: Vec3, yaw: number) => Vec3, creatureAt: (stem: StemId) => Vec3 | undefined,
+  pickerUp: () => boolean = () => false,
 ) {
   const tutorial = createTutorial(ctx.bus, ctx.save);
   const ghost = createGhost(scene);
@@ -40,6 +41,9 @@ export function initStory(
     tutorial,
     update() {
       const now = performance.now() / 1000;
+      // The song picker ends the tutorial: no ghost hands over the songs (18 Nov).
+      const picking = pickerUp();
+      if (picking) tutorial.finish();
       const nudges = tutorial.tick(now);
       const step = tutorial.step();
       const { eye, yaw } = head();
@@ -47,7 +51,7 @@ export function initStory(
       const at = step === 'summon' && first ? creatureAt(first) : undefined;
       const spot: Vec3 = at ? [at[0], at[1] + 0.12, at[2]] : reachSpot(eye, yaw);
       const glow = nudges > 0 ? 0.5 + 0.5 * Math.sin(now * 6) : 0;
-      ghost.update(step, endCardUp() ? '' : tutorial.words(), now, spot, step === 'summon' ? Math.atan2(eye[0] - spot[0], eye[2] - spot[2]) : yaw, glow);
+      ghost.update(step, picking || endCardUp() ? '' : tutorial.words(), now, spot, step === 'summon' ? Math.atan2(eye[0] - spot[0], eye[2] - spot[2]) : yaw, glow);
       // Shown once the music plays, 1.2 m ahead and above the eye, clear of the tutorial caption.
       back.sprite.visible = now < backUntil && ctx.transport.playing();
       if (back.sprite.visible) back.sprite.position.set(eye[0] - Math.sin(yaw) * 1.2, eye[1] + 0.35, eye[2] - Math.cos(yaw) * 1.2);

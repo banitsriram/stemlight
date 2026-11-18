@@ -65,7 +65,7 @@ const head = () => {
   return { eye: [camEye.x, camEye.y, camEye.z] as [number, number, number], yaw: Math.atan2(-camFwd.x, -camFwd.z) };
 };
 const shell = initShell(ctx, world.scene, head, world.renderer);
-const story = initStory(ctx, world.scene, head, reachSpot, shell.creatures.position);
+const story = initStory(ctx, world.scene, head, reachSpot, shell.creatures.position, () => pickerUp()); // the picker ends the tutorial
 const endCard = endCardSprite();
 world.scene.add(endCard.sprite);
 initSfx(ctx, shell.creatures.position);
