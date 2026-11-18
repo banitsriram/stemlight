@@ -61,17 +61,20 @@ export function initShell(ctx: AppContext, scene: Object3D, head: HeadFn, render
   const rock = rockSeat();
   scene.add(rock);
   const worlds = initWorlds(scene, renderer);
+  let lobby = false;
   const creatures = createCreatures(ctx, scene, head, reachSpot, CREATURE_RADIUS);
   return {
     creatures,
     worlds,
     update(dt: number) {
       worlds.update(dt);
-      rock.visible = worlds.shown() !== 'room'; // Passthrough: no seat, just your room
+      rock.visible = !lobby && worlds.shown() !== 'room'; // Passthrough: no seat, just your room
       (rock.material as ShaderMaterial).uniforms.uTime.value = performance.now() / 1000;
       creatures.update(dt);
     },
     /** The beat swell above 1, from the notes layer: the world's particles and lights brighten on the beat. */
     pulse(k: number) { worlds.pulse(k); },
+    /** The song picker's blank lobby: hide the seat, the world and the creatures. */
+    hide(on: boolean) { lobby = on; worlds.hide(on); creatures.hide(on); },
   };
 }

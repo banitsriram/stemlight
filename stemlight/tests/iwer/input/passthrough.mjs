@@ -59,7 +59,7 @@ await evalInPage(() => { window.__stemlight.worlds.set('sea'); return true; });
 await sleep(1500);
 s = await state();
 // In an alpha-blend session three always clears see-through; the world's opaque sky dome covers the room.
-check(s.world === 'sea' && s.rock === true, `the deep-sea orb covers the room (world ${s.world}, rock ${s.rock})`);
+check(s.world === 'sea' && s.rock === false, `the deep-sea orb picks the sea; the picker's lobby still hides the seat (world ${s.world}, rock ${s.rock})`);
 shot('sea-in-ar');
 await evalInPage(() => { window.__stemlight.worlds.set('room'); return true; });
 await sleep(1500);

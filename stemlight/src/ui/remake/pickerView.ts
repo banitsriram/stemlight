@@ -1,7 +1,7 @@
 // The song picker's look, in the deep-sea glass of the play surfaces: each song a frosted glass bubble with cyan
 // edge light (you can touch it), the song played last tinted amber (yours), its title and length above it, a
 // caption over the arc, and the small songs bubble with its label and a ring that fills while it's held.
-import { Color, Group, Mesh, MeshBasicMaterial, RingGeometry, type Object3D } from 'three';
+import { BackSide, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, RingGeometry, SphereGeometry, type Object3D } from 'three';
 import type { Vec3 } from '../../contracts';
 import { textSprite } from '../../story/card.ts';
 import { SEA } from '../../world/deepsea.ts';
@@ -31,6 +31,16 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
   scene.add(group);
   const cyan = new Color(SEA.cyan), amber = new Color(SEA.amber);
   const geo = songBubble();
+  // The lobby (sir, 18 Nov): choosing happens in a blank space, deep slate-teal overhead to near-black below.
+  const lobbyGeo = new SphereGeometry(6, 24, 12);
+  const top = new Color('#123A4A'), bottom = new Color('#060E16'), col: number[] = [], pos = lobbyGeo.getAttribute('position');
+  for (let i = 0; i < pos.count; i++) { const c = bottom.clone().lerp(top, (pos.getY(i) / 6 + 1) / 2); col.push(c.r, c.g, c.b); }
+  lobbyGeo.setAttribute('color', new Float32BufferAttribute(col, 3));
+  const lobby = new Mesh(lobbyGeo, new MeshBasicMaterial({ vertexColors: true, side: BackSide }));
+  lobby.renderOrder = -20;
+  lobby.frustumCulled = false;
+  lobby.visible = false;
+  group.add(lobby);
   const bubbles = songs.map(() => {
     const m = instrumentMesh(geo, amber, cyan);
     m.scale.setScalar(PICKER.radius);
@@ -79,6 +89,8 @@ export function createPickerView(scene: Object3D, songs: readonly SongInfo[], wo
     label(i: number, s: SongInfo) { labels[i]?.set(songLabel(s), 0.17); },
     draw(d: PickerDraw) {
       let cx = 0, cy = 0, cz = 0;
+      lobby.visible = d.bubbles.length > 0;
+      lobby.position.set(...d.eye);
       bubbles.forEach((m, i) => {
         const c = d.bubbles[i];
         m.visible = labels[i].sprite.visible = !!c;

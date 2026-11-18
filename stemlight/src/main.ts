@@ -122,6 +122,9 @@ const notes = createNotesLayer(ctx, glyphs, shell.creatures.position);
 world.registerSystem(class NotesSystem extends createSystem() {
   update() {
     shell.pulse(notes.update() - 1); // the plankton brighten on the beat
+    // The song picker is a blank lobby (sir, 18 Nov): no world, instruments or notes behind the choices.
+    shell.hide(pickerUp());
+    glyphs.object.visible = !pickerUp();
   }
 });
 

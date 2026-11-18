@@ -128,11 +128,11 @@ test('world orbs: a fingertip coming in from outside once armed picks that world
   assert.deepEqual(createPicker(SONGS).orbs(), [], 'no worlds given: no orbs');
 });
 
-test('the orb row sits where the layout says (frame-local -12/0/+12 cm, 26.5 cm down, 43 cm out)', () => {
+test('the orb row sits where the layout says (frame-local -15/0/+15 cm, 22 cm down, 43 cm out)', () => {
   const p = createPicker(SONGS, WORLDS, (id) => id !== 'room');
   p.open(0, FRAME);
-  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.12, 0.935, -0.43], [0, 0.935, -0.43], [0.12, 0.935, -0.43]]);
-  assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.935, -0.43]);
+  assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.15, 0.98, -0.43], [0, 0.98, -0.43], [0.15, 0.98, -0.43]]);
+  assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.98, -0.43]);
 });
 
 test('Starry Night land: opaque toon mesh (writes depth, so instruments sort against it) with every shared palette uniform', () => {

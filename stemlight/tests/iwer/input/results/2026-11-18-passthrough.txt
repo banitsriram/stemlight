@@ -5,7 +5,7 @@ PASS it opens on the room: no background, clear alpha 0
 PASS the seat rock is hidden
 PASS the picker offers 4 world orbs (4)
 shot tests/iwer/input/results/2026-11-18-passthrough-room-picker.png
-PASS the deep-sea orb covers the room (world sea, rock true)
+PASS the deep-sea orb picks the sea; the picker's lobby still hides the seat (world sea, rock false)
 shot tests/iwer/input/results/2026-11-18-passthrough-sea-in-ar.png
 PASS the Passthrough orb clears back to the room
 PASS Passthrough is not kept as the device's world (kept sea)

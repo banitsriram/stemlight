@@ -14,12 +14,13 @@ export interface Tip { hand: Hand; at: Vec3; ok: boolean }
  * Touches count only `armSec` after the picker opens, and only from a fingertip that came in from outside, so a
  * hand already resting where a bubble appears never picks a song by accident.
  */
-export const PICKER = { reach: 0.45, below: 0.15, stepDeg: 26, radius: 0.055, touch: 0.065, armSec: 0.8 } as const;
+// Spread out in the lobby (sir, 18 Nov): songs near eye level, 32° apart; world orbs a clear row below.
+export const PICKER = { reach: 0.45, below: 0.04, stepDeg: 32, radius: 0.055, touch: 0.065, armSec: 0.8 } as const;
 /**
- * The world orbs (18 Nov): a row under the song bubbles, 12 cm apart, 26.5 cm below the eye and 43 cm out (31.6°
+ * The world orbs (18 Nov): a row under the song bubbles, 15 cm apart, 22 cm below the eye and 43 cm out (27°
  * down: inside the 70×66° view and in reach), small enough that their touch spheres stay clear of the bubbles'.
  */
-export const ORBS = { below: 0.265, ahead: 0.43, step: 0.12, radius: 0.03, touch: 0.04 } as const;
+export const ORBS = { below: 0.22, ahead: 0.43, step: 0.15, radius: 0.03, touch: 0.04 } as const;
 export interface WorldChoice { id: string; name: string }
 export const worldTargetId = (id: string) => `world:${id}`;
 /** Frame-local centre of world orb i of n. */

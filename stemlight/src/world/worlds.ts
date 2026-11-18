@@ -26,6 +26,8 @@ export interface Worlds {
   available(): WorldId[];
   /** Call when a session starts: a passthrough session opens on the room, a VR one never does. */
   setMode(ar: boolean): void;
+  /** Hide every world (the song picker's lobby is up); changes still run behind it. */
+  hide(on: boolean): void;
   /** Compile the hidden worlds' shaders for the current render mode (call when the XR session starts). */
   warm(): void;
   update(dt: number): void;
@@ -43,6 +45,7 @@ export function initWorlds(scene: Object3D, renderer?: WebGLRenderer): Worlds {
   const sw = createSwitch(loadWorld());
   let shown = sw.shown();
   let warming = 0;
+  let hidden = false;
   const setBackground = (id: WorldId) => {
     const s = scene as Scene;
     // Passthrough: no background and a see-through clear, so the room shows wherever nothing is drawn.
@@ -55,7 +58,7 @@ export function initWorlds(scene: Object3D, renderer?: WebGLRenderer): Worlds {
   /** Shown worlds draw normally; during a warm-up the hidden ones are drawn too, writing no colour and no depth. */
   const applyVisibility = () => {
     for (const id of ids) {
-      const on = id === shown;
+      const on = id === shown && !hidden;
       for (const o of parts[id].objects) o.visible = on || warming > 0;
       for (const m of mats(id)) { m.colorWrite = on; m.depthWrite = on && (depth0.get(m) ?? true); }
     }
@@ -88,6 +91,7 @@ export function initWorlds(scene: Object3D, renderer?: WebGLRenderer): Worlds {
       sw.request(id, performance.now() / 1000, look());
       saveWorld(id);
     },
+    hide(on) { if (on !== hidden) { hidden = on; applyVisibility(); } },
     warm() { warming = WARM_FRAMES; applyVisibility(); },
     update() {
       const t = performance.now() / 1000;
