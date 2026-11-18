@@ -20,7 +20,7 @@ const shot = (name) => {
   const r = iw('browser', 'screenshot', { format: 'png' });
   const file = join(OUT, `${DATE}-songs-${name}.png`);
   writeFileSync(file, Buffer.from(String(r.imageData).replace(/^data:[^,]+,/, ''), 'base64'));
-  log(`shot ${file}`);
+  log(`shot tests/iwer/input/results/${DATE}-songs-${name}.png`); // relative: no local paths in committed logs
 };
 
 const state = () => evalInPage(() => {
