@@ -18,7 +18,9 @@ const DENSE = 64.5;
 
 // Fresh page on the hero piece.
 try { iw('xr', 'exit'); } catch { /* not in a session */ }
-try { evalInPage(() => { indexedDB.deleteDatabase('stemlight'); localStorage.setItem('stemlight.tutorialStep', '99'); location.href = '/?piece=dvorak9'; return true; }); } catch { /* navigation cuts the call */ }
+// Optional world (18 Nov): node perf-heaviest.mjs [sea|starry|aurora]; the deep sea by default.
+const WORLD = process.argv[2] || 'sea';
+try { evalInPage((w) => { indexedDB.deleteDatabase('stemlight'); localStorage.setItem('stemlight.tutorialStep', '99'); localStorage.setItem('stemlight.world', w); location.href = '/?piece=dvorak9'; return true; }, WORLD); } catch { /* navigation cuts the call */ }
 await sleep(6000);
 const ready = async () => {
   for (let i = 0; i < 40; i++) {
@@ -58,8 +60,8 @@ for (let i = 0; i < 14; i++) {
 const max = samples.at(-1);
 for (const s of samples) log(`t=${s.t}  calls ${s.calls}  tris ${s.triangles}  notes ${s.notes}  pads ${s.pads}  (fps ${s.fps}, emulator)`);
 const shot = iw('browser', 'screenshot', { format: 'png' });
-writeFileSync(new URL(`${DATE}-perf-heaviest.png`, OUT), Buffer.from(String(shot.imageData).replace(/^data:[^,]+,/, ''), 'base64'));
-log(`screenshot: results/${DATE}-perf-heaviest.png`);
+writeFileSync(new URL(`${DATE}-perf-heaviest${WORLD === 'sea' ? '' : '-' + WORLD}.png`, OUT), Buffer.from(String(shot.imageData).replace(/^data:[^,]+,/, ''), 'base64'));
+log(`screenshot: results/${DATE}-perf-heaviest${WORLD === 'sea' ? '' : '-' + WORLD}.png (world ${WORLD})`);
 check('pads + lane shown during the run', samples.some((s) => s.pads > 0));
 check('the songs bubble shown during the run', samples.some((s) => s.songs));
 check('peak draw calls < 100', max.maxCalls < 100, `max ${max.maxCalls}`);
@@ -68,5 +70,5 @@ check('peak live notes <= 1,500', max.maxNotes <= 1500, `max ${max.maxNotes}`);
 log('Frame rate on a Quest 3/3S: unverified (no headset). The fps above is the headless emulator page and means nothing for the device.');
 const failed = results.filter((r) => !r).length;
 log(`${results.length - failed}/${results.length} passed`);
-writeFileSync(new URL(`${DATE}-perf-heaviest.txt`, OUT), lines.join('\n') + '\n');
+writeFileSync(new URL(`${DATE}-perf-heaviest${WORLD === "sea" ? "" : "-" + WORLD}.txt`, OUT), lines.join('\n') + '\n');
 process.exitCode = failed ? 1 : 0;

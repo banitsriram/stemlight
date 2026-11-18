@@ -349,3 +349,36 @@
 - **Beethoven 7 sources:** the 2005 source has the clarinet and horn tracks an octave high and the trumpets a fifth high (wrong `	ransposition`). They are corrected per track, with the evidence written up in groups.yaml.
 - **Listening mix** (local only, never commit): `tests/browser/results/listen/beethoven7-mix.wav`.
 - **Not verified:** hand feel and the headset look (emulator only). Nobody has listened to Beethoven 7 yet.
+
+## 18 Nov 2026 (01:40 IST): biyon, PR #10 merged on sir's instruction and deployed; freeze check 13/13
+- **Asked by sir:** "deploy", then "has this been pushed to main", then "do it". I merged PR #10 (4e14509) and deployed main.
+- **Live bundle:** `assets/index-Bf1fbeGv.js`.
+- **Freeze check** on live, full run: **13/13**. The picker bubbles were pressed with an emulated fingertip.
+- **contracts.ts:** the additions went in without banit's reply (sir's call). banit was told and offered a revert.
+
+## 18 Nov 2026 (02:00 IST onward): biyon, three worlds + world orbs (branch `biyon/worlds`)
+- **Asked by sir.** Each choice was his:
+  - two new worlds: Starry Night, "as close to the painting as you can", and Aurora over ice;
+  - world orbs in the song picker to choose;
+  - the swirls flow slowly;
+  - the deep sea stays the default;
+  - Claude builds both and banit reviews;
+  - ship before Thu 01:30 if ready.
+- **Groundwork:**
+  - `deepsea.ts`: the palette and light are now shared uniforms (`SEA_UNIFORMS`), so a world change re-lights the instruments and creatures. Two per-world values ride along: `WORLD_GLOW`, which dims the additive score ribbon over a bright sky, and `SEA_CAUSTIC`, which keeps the moving caustic light under water only.
+  - `worldList.ts` and `worlds.ts`: one world is drawn at a time, at 3 draw calls (F17). A change fades through dark over 1 s. The choice is kept per device. All worlds are drawn for 2 frames at start, so their shaders compile behind the landing page.
+- **Starry Night** (`starry.ts`), painted in code with no image files:
+  - the composition was measured from the painting and laid on the sky ahead: crescent moon, the 11 haloed stars, the S-shaped swirl and its counter-curl, the pale wind band, the hills with the dark peak, and the village with its spire;
+  - the cypress is a flame on the left, beside the hilltop you sit on;
+  - golden motes drift around you;
+  - the strokes twist round the swirls with no seams;
+  - the halos swell on the beat.
+- **Aurora over ice** (`aurora.ts`): built by an agent from a brief, then checked here (see below).
+- **World orbs:** a row of three under the song bubbles: 12 cm apart, 26.5 cm below the eye, 43 cm out (31.6° down, inside the view and reach). Touch to change the world; the picker stays up. The current world's orb is amber.
+- **Credits:** the van Gogh line is in the picker's credits, on the landing page, in ASSETS.md and in the Devpost draft.
+- **Evidence (emulator, 18 Nov):**
+  - unit tests 150/150 so far;
+  - world orbs 7/7 (`world-orbs.mjs`);
+  - Starry Night perf 5/5: peak 64 calls, 106,704 triangles, 380 notes;
+  - shader compile and link 32/32 (normal + multiview, SwiftShader WebGL2).
+- **Not verified:** frame rate and the look on a real headset.

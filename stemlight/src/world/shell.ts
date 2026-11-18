@@ -43,7 +43,7 @@ void main() {
   vec2 p = vW.xz * 6.0;
   p += 0.7 * vec2(sin(p.y * 0.9 + uTime * 0.7), sin(p.x * 1.1 - uTime * 0.6));
   float v = sin(p.x * 1.3 + uTime * 0.3) * sin(p.y * 1.5 - uTime * 0.25);
-  c += SEA_SHALLOWS * pow(1.0 - abs(v), 10.0) * 0.3 * max(vN.y, 0.0);
+  c += SEA_SHALLOWS * pow(1.0 - abs(v), 10.0) * 0.3 * max(vN.y, 0.0) * SEA_CAUSTIC; // under water only
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`,

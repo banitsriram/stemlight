@@ -24,7 +24,11 @@ export const SEA = {
  * the bright colour of the light itself as glossy things reflect it (`surface`), glint white (`foam`), and the
  * direction the light comes from (unit vector, world space, pointing toward the light).
  */
-export interface Palette { abyss: string; deep: string; shallows: string; surface: string; foam: string; light: [number, number, number] }
+export interface Palette {
+  abyss: string; deep: string; shallows: string; surface: string; foam: string; light: [number, number, number];
+  /** How much of the sea's moving caustic light falls on things (1 under water, little or none on dry land). */
+  caustic?: number;
+}
 
 export const SEA_PALETTE: Palette = { abyss: SEA.abyss, deep: SEA.deep, shallows: SEA.shallows, surface: SEA.surface, foam: SEA.foam, light: [-0.19, 0.95, 0.24] };
 
@@ -47,7 +51,7 @@ export const WORLD_GLOW = { value: 1 };
 export const SEA_UNIFORMS = {
   SEA_ABYSS: { value: new Color() }, SEA_DEEP: { value: new Color() }, SEA_HAZE: { value: new Color() },
   SEA_SHALLOWS: { value: new Color() }, SEA_SURFACE: { value: new Color() }, SEA_FOAM: { value: new Color() },
-  SEA_L: { value: new Vector3() },
+  SEA_L: { value: new Vector3() }, SEA_CAUSTIC: { value: 1 },
 };
 
 const ca = new Color(), cb = new Color();
@@ -66,6 +70,7 @@ export function setPalette(a: Palette, b: Palette = a, k = 0) {
   mixHex(a.surface, b.surface, k, u.SEA_SURFACE.value);
   mixHex(a.foam, b.foam, k, u.SEA_FOAM.value);
   u.SEA_L.value.set(...a.light).lerp(new Vector3(...b.light), k).normalize();
+  u.SEA_CAUSTIC.value = (a.caustic ?? 1) + ((b.caustic ?? 1) - (a.caustic ?? 1)) * k;
 }
 setPalette(SEA_PALETTE);
 
@@ -77,7 +82,7 @@ setPalette(SEA_PALETTE);
  */
 export const SEA_GLSL = /* glsl */ `
 uniform vec3 SEA_ABYSS; uniform vec3 SEA_DEEP; uniform vec3 SEA_HAZE; uniform vec3 SEA_SHALLOWS;
-uniform vec3 SEA_SURFACE; uniform vec3 SEA_FOAM; uniform vec3 SEA_L;
+uniform vec3 SEA_SURFACE; uniform vec3 SEA_FOAM; uniform vec3 SEA_L; uniform float SEA_CAUSTIC;
 vec3 seaEnv(float ry) {
   vec3 c = mix(SEA_ABYSS, SEA_DEEP, smoothstep(-0.7, 0.05, ry));
   c = mix(c, SEA_SHALLOWS * 0.6, smoothstep(0.1, 0.7, ry));
@@ -101,5 +106,5 @@ vec3 seaGlass(vec3 N, vec3 V, vec3 tint, float gloss, out float fres) {
 }
 float seaFog(float dist) { return 1.0 - exp(-dist * ${FOG_DENSITY.toFixed(3)}); }
 float dapple(vec3 p, float t) {
-  return 0.6 * sin(p.x * 11.0 + t * 1.1) * sin(p.z * 9.0 - t * 0.9) + 0.4 * sin((p.x + p.z) * 17.0 + t * 1.7);
+  return SEA_CAUSTIC * (0.6 * sin(p.x * 11.0 + t * 1.1) * sin(p.z * 9.0 - t * 0.9) + 0.4 * sin((p.x + p.z) * 17.0 + t * 1.7));
 }`;

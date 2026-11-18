@@ -27,8 +27,11 @@ export interface SongsDeps {
   worlds?: { list: readonly WorldLook[]; current(): string; set(id: string): void };
 }
 
-/** The credits card under the arc: 1 m ahead and 72 cm below the eye (36° down, clear of the bubbles), half size. */
-const CARD_AT: Vec3 = [0, -0.72, 1.0];
+/**
+ * The credits card under everything: 95 cm ahead and 1.05 m below the eye (48° down), below the song bubbles and
+ * the world orbs (32° down), so it never draws over them (text sprites draw on top); a glance down reads it.
+ */
+const CARD_AT: Vec3 = [0, -1.05, 0.95];
 const CARD_SCALE = 0.31;
 const FADE_SEC = 0.6;
 

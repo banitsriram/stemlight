@@ -27,6 +27,7 @@ We love music but neither of us plays in an orchestra. Tools that split a song i
 - **Entertainment, music visualisation.** For adults who love music but don't play, at home in the evening, seated, for about four minutes and then as long as they like. No score and no win state: the pleasure is listening and remaking.
 - Each instrument family is a real instrument floating around you, eight of them modelled in code (violin, cello, double bass, flute, clarinet, horn, trumpet, timpani), and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Every floating note is a real note from the score; the amber ones are yours.
 - Three songs. The opening of Beethoven’s 5th (about 1:24) carries the short tutorial. When it ends, a glass bubble for each song floats in reach: touch one to play the finale of Dvořák’s *New World* Symphony (about 2:33), the Allegretto of Beethoven’s 7th (about 2:41), or the 5th again. Each song's end brings the bubbles back, and a small songs bubble beside the reset shell switches songs mid-way.
+- Three worlds to sit in, chosen with a row of small glass orbs under the song bubbles: the deep sea, a **Starry Night** painted in code after van Gogh's 1889 canvas (its swirls flow slowly and the stars' halos swell with the beat), and **Aurora over ice**. The instruments take on each world's light.
 
 ### What your hands do
 | Gesture | What happens |
@@ -68,6 +69,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 - Dvořák, Symphony No. 9 "From the New World", 4th movement: Mutopia Project #1793, **CC BY-SA 3.0**. Our stems and note data made from it are shared under CC BY-SA 3.0.
 - Beethoven, Symphony No. 5, 1st movement: Mutopia Project #941, public domain.
 - Beethoven, Symphony No. 7, 2nd movement: Mutopia Project #595, public domain.
+- Starry Night world: after Vincent van Gogh, *The Starry Night* (1889), public domain; painted in code, no image used.
 - Orchestral samples: VSCO 2 Community Edition, CC0.
 - Music notation font: Bravura, SIL Open Font License 1.1.
 - The instruments' 3D models, the reverb, the drums, harp and keyboard you play, ticks and interface sounds are all made in code.
