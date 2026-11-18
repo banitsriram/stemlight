@@ -2,7 +2,7 @@
 
 html, body {
   margin: 0;
-  background: #03131A;
+  background: #0d0f11; /* matches the loading screen (web/loader.ts) */
 }
 
 .landing {

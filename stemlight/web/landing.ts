@@ -2,6 +2,7 @@ import gsap from 'gsap';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import './landing.css';
+import { loaded } from './loader';
 
 export interface LandingDeps {
   unlock(): Promise<void>;
@@ -47,7 +48,8 @@ export function mountLanding(root: HTMLElement, { unlock, enter, canPassthrough 
 
   const motion = gsap.matchMedia();
   motion.add('(prefers-reduced-motion: no-preference)', () => {
-    gsap.from('.landing-in', { y: 16, autoAlpha: 0, duration: 0.8, ease: 'expo.out', stagger: 0.07 });
+    const intro = gsap.from('.landing-in', { y: 16, autoAlpha: 0, duration: 0.8, ease: 'expo.out', stagger: 0.07, paused: true });
+    void loaded.then(() => intro.play()); // after the loading screen starts to lift
     gsap.to('.landing-shafts', { skewX: 4, opacity: 0.6, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1 });
     // Notes rise like bubbles through the light, each at its own pace and sway.
     gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => {
