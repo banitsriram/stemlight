@@ -36,7 +36,7 @@ export const ROOM_PALETTE: Palette = { ...SEA_PALETTE, caustic: 0 };
 
 export const WORLDS: readonly WorldInfo[] = [
   // The black world (18 Nov, banit): the default, in the app's black-and-grey look.
-  { id: 'obsidian', name: 'Obsidian', palette: OBSIDIAN_PALETTE, orb: ['#111316', '#E8EAED'], glow: 0.6 },
+  { id: 'obsidian', name: 'Eclipse', palette: OBSIDIAN_PALETTE, orb: ['#111316', '#E8EAED'], glow: 0.6 },
   { id: 'sea', name: 'Deep sea', palette: SEA_PALETTE, orb: [SEA.shallows, SEA.surface], glow: 1 },
   { id: 'starry', name: 'Starry Night', palette: STARRY_PALETTE, orb: ['#2E4E9E', '#F5D33E'], glow: 0.7 },
   { id: 'aurora', name: 'Aurora', palette: AURORA_PALETTE, orb: ['#0B2233', '#3CFFB0'], glow: 0.8 },

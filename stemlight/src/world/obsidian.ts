@@ -1,4 +1,4 @@
-// Obsidian (18 Nov, banit): the black world. A black void with drifting graphite smoke and faint stars; ahead and
+// Eclipse (18 Nov, banit; id 'obsidian'): the black world. A black void with drifting graphite smoke and faint stars; ahead and
 // high, an eclipsed black sun whose silver corona breathes with the music; underfoot, a floor of black cubes that
 // ripples on the beat and wherever your hands move over it (the start page's wave grid, src/world/waveGrid.ts);
 // silver dust in the air that brightens on the beat. Three draw calls (F17), like the other worlds. The corona sits

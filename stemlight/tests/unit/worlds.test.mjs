@@ -18,7 +18,7 @@ const store = (init = {}) => { const m = new Map(Object.entries(init)); return {
 
 test('four worlds: Obsidian (the default), deep sea, Starry Night, Aurora; each palette valid, its light a unit vector', () => {
   assert.deepEqual(WORLDS.map((w) => w.id), ['obsidian', 'sea', 'starry', 'aurora', 'room']);
-  assert.deepEqual(WORLDS.map((w) => w.name), ['Obsidian', 'Deep sea', 'Starry Night', 'Aurora', 'Passthrough']);
+  assert.deepEqual(WORLDS.map((w) => w.name), ['Eclipse', 'Deep sea', 'Starry Night', 'Aurora', 'Passthrough']);
   assert.equal(DEFAULT_WORLD, 'obsidian');
   for (const w of WORLDS) {
     for (const k of ['abyss', 'deep', 'shallows', 'surface', 'foam']) assert.match(w.palette[k], /^#[0-9A-F]{6}$/i, `${w.id}.${k}`);
