@@ -26,7 +26,7 @@ export interface WorldInfo { id: WorldId; name: string; palette: Palette; orb: [
 /** Night blues of the painting; the light comes from the crescent moon, high on the right ahead. */
 export const STARRY_PALETTE: Palette = { abyss: '#0A1430', deep: '#1D3478', shallows: '#3E6DB5', surface: '#F4DB6A', foam: '#FFF4CC', light: [0.533, 0.5, -0.682], caustic: 0 };
 /** An arctic night; the light is the aurora, high ahead. */
-export const AURORA_PALETTE: Palette = { abyss: '#02070F', deep: '#0B2233', shallows: '#1E6E6A', surface: '#8CFFD2', foam: '#F0FBFF', light: [0, 0.8, -0.6] };
+export const AURORA_PALETTE: Palette = { abyss: '#02070F', deep: '#0B2233', shallows: '#1E6E6A', surface: '#8CFFD2', foam: '#F0FBFF', light: [0, 0.8, -0.6], caustic: 0.15 };
 
 export const WORLDS: readonly WorldInfo[] = [
   { id: 'sea', name: 'Deep sea', palette: SEA_PALETTE, orb: [SEA.shallows, SEA.surface], glow: 1 },
