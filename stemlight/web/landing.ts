@@ -40,7 +40,7 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, 
 
   const motion = gsap.matchMedia();
   motion.add('(prefers-reduced-motion: no-preference)', () => {
-    gsap.from('.landing-in', { y: 18, autoAlpha: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 });
+    gsap.from('.landing-in', { y: 16, autoAlpha: 0, duration: 0.8, ease: 'expo.out', stagger: 0.07 });
     gsap.to('.landing-shafts', { skewX: 4, opacity: 0.6, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1 });
     // Notes rise like bubbles through the light, each at its own pace and sway.
     gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => {
@@ -50,11 +50,14 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, 
     });
   });
   motion.add('(prefers-reduced-motion: reduce)', () => {
+    gsap.from('.landing-in', { autoAlpha: 0, duration: 0.4, ease: 'none' });
     gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => gsap.set(el, { left: `${gsap.utils.random(4, 96)}%`, bottom: `${gsap.utils.random(5, 90)}%` }));
   });
 
   button.addEventListener('click', async () => {
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.textContent = copy.button === 'Enter' ? 'Entering…' : 'Resuming…';
     status.textContent = '';
     try {
       // Both start inside the click: requestSession needs the user activation.
@@ -62,6 +65,8 @@ export function mountLanding(root: HTMLElement, { unlock, enter }: LandingDeps, 
     } catch {
       status.textContent = `Couldn't start VR. Open this page in your headset's browser, then press ${copy.button} again.`;
       button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.textContent = copy.button;
       return;
     }
     gsap.to(page, {

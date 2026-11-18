@@ -6,6 +6,7 @@ Newest entry first. Each session reads this, then `PLAN.md`, then `features.json
 
 - `web/landing.css` + `web/landing.ts` only. Light shafts from the surface, note glyphs rising like bubbles (GSAP; static when reduced motion is on), title in Bodoni Moda lit from above (ASSETS.md row: biyon adds it, they hold that file), glass Enter button kept at the 112 px pinch size, one new line naming the gestures (fist, double pinch, tap).
 - Evidence: `tests/iwer/visual/results/2026-11-18-landing-desktop.png` and `-phone.png` (vite preview build, 1440 and 390 wide). Unit tests 142/142. Not tried in a headset browser.
+- Polish pass (design-engineering review): press feedback on Enter (scale 0.97), hover glow only on hover-capable pointers and fading opacity only, no blur/drop-shadow filters on moving layers (headset browser cost), notes fade out behind the text and stop above the credits, "Entering…" while VR starts, reduced motion keeps a gentle fade. Reduced-motion screen: `tests/iwer/visual/results/2026-11-18-landing-reduced-motion.png`.
 - Needs biyon's redeploy + freeze check before it is live.
 
 ## 17 Nov 2026 (late): banit, video re-shot again on the deep-sea restyle (it ships)
