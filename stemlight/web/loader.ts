@@ -1,10 +1,11 @@
 /**
  * Loading screen: a rippling grid of dark cubes, then particles that gather into the name.
- * Covers the cold start (World.create, save, first piece) and lifts once the landing page mounts.
+ * Covers the cold start (World.create, save, first piece). Once the landing page mounts the name lifts and
+ * the grid stays on as the page background (Start and Paused), resting while the headset session runs.
  * Wave grid adapted from the "3D Wave Grid" demo; particles from Bruno Imbrizi's Codrops
  * "Interactive Particles" (MIT). Both reworked here for one renderer, dark palette, text source.
- * Pointer (mouse, or the hand ray in a headset browser) sends ripples and scatters particles;
- * a web page can't read eye gaze, so the grid also ripples on its own to a steady beat.
+ * The grid ripples on its own to a steady beat; the pointer (mouse, or the hand ray in a headset
+ * browser) only scatters the name's particles.
  */
 import gsap from 'gsap';
 import * as THREE from 'three';
@@ -16,7 +17,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 const MIN_SHOW = 3.6; // s: long enough for the name to form even on a fast connection
 const GRID = 40;
 const MAX_TRAIL = 128;
-const BEAT = 1.1; // s between self-made ripples while the pointer is idle
+const BEAT = 1.1; // s between ripples
 const COLOR_BASE = '#1b1e22';
 const COLOR_HIGH = '#59626d';
 const PARTICLE = '#e4e8ec';
@@ -220,19 +221,17 @@ function start(root: HTMLElement): void {
   scene.background = new THREE.Color(COLOR_BASE).multiplyScalar(0.5);
   const camera = new THREE.PerspectiveCamera(40, v.w / v.h, 0.1, 500);
   let radius = 12;
-  const mouse = new THREE.Vector2(), lerped = new THREE.Vector2();
   const fit = () => {
     const vh = THREE.MathUtils.degToRad(camera.fov) / 2;
     const hh = Math.atan(Math.tan(vh) * camera.aspect);
     radius = Math.min(bounds / 2 / Math.tan(vh), bounds / 2 / Math.tan(hh)) * 0.9 + cubeH * 0.5;
   };
-  const place = (mx: number, my: number) => {
-    const a = my * Math.PI * 0.03, b = mx * Math.PI * 0.05;
-    camera.position.set(-radius * Math.cos(a) * Math.sin(b), radius * Math.cos(a) * Math.cos(b), radius * Math.sin(a));
+  const place = () => {
+    camera.position.set(0, radius, 0);
     camera.up.set(0, 0, -1);
     camera.lookAt(0, 0, 0);
   };
-  fit(); place(0, 0);
+  fit(); place();
 
   scene.add(new THREE.AmbientLight('#ffffff', 0.5));
   const key = new THREE.DirectionalLight('#ffffff', 4);
@@ -257,9 +256,7 @@ function start(root: HTMLElement): void {
   };
   const colors = { uColorBase: { value: new THREE.Color(COLOR_BASE) }, uColorHigh: { value: new THREE.Color(COLOR_HIGH) } };
   const trail: { x: number; z: number; age: number; d: number }[] = [];
-  let last: { x: number; z: number } | null = null;
-  let idle = 3; // counts as idle from the start, so the beat of ripples begins at once
-  let beat = BEAT;
+  let beat = BEAT; // the first ripple starts at once
   const push = (x: number, z: number, d: number) => { if (trail.length >= MAX_TRAIL) trail.shift(); trail.push({ x, z, age: 0, d }); };
 
   const geometry = new THREE.BoxGeometry(cubeW, cubeH, cubeW);
@@ -287,9 +284,6 @@ function start(root: HTMLElement): void {
     aOffset.setXY(i * GRID + j, x, z);
   }
   scene.add(cubes);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(bounds, bounds), new THREE.MeshBasicMaterial({ visible: false }));
-  floor.rotation.x = -Math.PI / 2;
-  floor.updateMatrixWorld(true);
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -349,31 +343,19 @@ function start(root: HTMLElement): void {
   // ── Pointer ────────────────────────────────────────────────────────────────
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const onMove = (e: PointerEvent) => {
+    if (!hit) return;
     ndc.set((e.clientX / v.w) * 2 - 1, -(e.clientY / v.h) * 2 + 1);
-    mouse.copy(ndc);
-    if (hit) {
-      ray.setFromCamera(ndc, pCam);
-      const h = ray.intersectObject(hit)[0];
-      if (h?.uv) touch.add(h.uv.x, h.uv.y);
-    }
-    ray.setFromCamera(ndc, camera);
-    const p = ray.intersectObject(floor)[0]?.point;
-    if (!p) return;
-    const d = last ? Math.hypot(p.x - last.x, p.z - last.z) : 0;
-    if (last && d < 0.1) return;
-    push(p.x, p.z, d);
-    last = { x: p.x, z: p.z };
-    idle = 0;
+    ray.setFromCamera(ndc, pCam);
+    const h = ray.intersectObject(hit)[0];
+    if (h?.uv) touch.add(h.uv.x, h.uv.y);
   };
-  const onLeave = () => { mouse.set(0, 0); last = null; };
   addEventListener('pointermove', onMove);
-  document.addEventListener('pointerleave', onLeave);
 
   const resize = () => {
     v = view();
     camera.aspect = pCam.aspect = v.w / v.h;
     camera.updateProjectionMatrix(); pCam.updateProjectionMatrix();
-    fit();
+    fit(); place();
     renderer.setPixelRatio(v.dpr); renderer.setSize(v.w, v.h, false);
     composer.setPixelRatio(v.dpr); composer.setSize(v.w, v.h);
     scaleName();
@@ -384,20 +366,17 @@ function start(root: HTMLElement): void {
   // ── Loop ───────────────────────────────────────────────────────────────────
   let disposed = false;
   let prev = performance.now();
-  renderer.setAnimationLoop((now: number) => {
+  const frame = (now: number) => {
     const dt = Math.min((now - prev) / 1000, 0.05);
     prev = now;
     for (let i = trail.length - 1; i >= 0; i--) if ((trail[i].age += dt) > 8) trail.splice(i, 1);
-    idle += dt;
-    if (idle >= 3 && (beat += dt) >= BEAT) { // a steady beat of ripples while nobody points
+    if ((beat += dt) >= BEAT) {
       beat = 0;
       push((Math.random() * 0.5 - 0.25) * bounds, (Math.random() * 0.5 - 0.25) * bounds, 0.8 + Math.random() * 0.2);
     }
     trail.forEach((t, i) => trailData.set([t.x, t.z, t.age, t.d], i * 4));
     trailTexture.needsUpdate = true;
     wave.uTrailCount.value = trail.length;
-    lerped.lerp(mouse, 0.04);
-    place(lerped.x, lerped.y);
     composer.render();
     if (particles && pu) {
       touch.update();
@@ -406,43 +385,39 @@ function start(root: HTMLElement): void {
       renderer.render(pScene, pCam);
       renderer.autoClear = true;
     }
-  });
+  };
+  renderer.setAnimationLoop(frame);
 
-  // ── Lift once the landing page has mounted and the name has had its moment ──
+  // ── Lift the name once the landing page has mounted and the name has had its moment ──
+  // The grid stays as the page's background; it rests while the landing is empty (the headset session).
   const landing = document.getElementById('landing');
   const lift = () => {
     if (disposed) return;
     disposed = true;
-    obs.disconnect();
     markLoaded();
-    if (pu) {
-      gsap.to(pu.uRandom, { value: 40, duration: 0.9, ease: 'power2.in' });
-      gsap.to(pu.uDepth, { value: 120, duration: 0.9, ease: 'power2.in' });
-      gsap.to(pu.uAlpha, { value: 0, duration: 0.8 });
-    }
-    gsap.to(root, {
-      autoAlpha: 0, duration: 0.9, delay: 0.15, ease: 'power1.inOut',
-      onComplete: () => {
-        renderer.setAnimationLoop(null);
-        removeEventListener('pointermove', onMove);
-        document.removeEventListener('pointerleave', onLeave);
-        removeEventListener('resize', resize);
-        if (pu) gsap.killTweensOf([pu.uSize, pu.uRandom, pu.uDepth, pu.uAlpha]);
-        scene.traverse((o) => { if (o instanceof THREE.Mesh) o.geometry.dispose(); });
-        pScene.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); } });
-        material.dispose(); depthMaterial.dispose(); trailTexture.dispose(); touch.texture.dispose();
-        composer.dispose(); renderer.dispose(); renderer.forceContextLoss();
-        root.remove();
-      },
-    });
+    root.style.zIndex = '0'; // under the landing page from now on
+    removeEventListener('pointermove', onMove);
+    if (!pu) return;
+    const done = () => {
+      pScene.traverse((o) => { if (o instanceof THREE.Mesh) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); } });
+      pScene.clear(); touch.texture.dispose(); particles = hit = null; pu = null;
+    };
+    gsap.to(pu.uRandom, { value: 40, duration: 0.9, ease: 'power2.in' });
+    gsap.to(pu.uDepth, { value: 120, duration: 0.9, ease: 'power2.in' });
+    gsap.to(pu.uAlpha, { value: 0, duration: 0.8, onComplete: done });
   };
   const ready = () => {
     const left = MIN_SHOW - (performance.now() - t0) / 1000;
     if (left > 0) setTimeout(lift, left * 1000); else lift();
   };
-  const obs = new MutationObserver(() => { if (landing?.childElementCount) { obs.disconnect(); ready(); } });
-  if (landing?.childElementCount) ready(); else if (landing) obs.observe(landing, { childList: true });
-  else ready();
+  const watch = () => {
+    const up = !!landing?.childElementCount;
+    if (up && !disposed) ready();
+    if (disposed) { prev = performance.now(); renderer.setAnimationLoop(up ? frame : null); }
+  };
+  if (landing) new MutationObserver(watch).observe(landing, { childList: true });
+  watch();
+  if (!landing) ready();
 }
 
 // Runs once, on the first load. Reduced motion or no WebGL: the plain dark page stays, as before.

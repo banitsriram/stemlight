@@ -25,7 +25,6 @@ export function mountLanding(root: HTMLElement, { unlock, enter, canPassthrough 
   const note = '<svg class="landing-note" viewBox="0 0 20 40" aria-hidden="true"><ellipse cx="7" cy="33" rx="7" ry="5" transform="rotate(-20 7 33)"/><rect x="12" y="4" width="2" height="29"/><path d="M14 4c0 6 7 8 6 16 3-8-4-10-6-12z"/></svg>';
   root.innerHTML = `
     <main class="landing">
-      <div class="landing-shafts" aria-hidden="true"></div>
       <div class="landing-notes" aria-hidden="true">${note.repeat(NOTES)}</div>
       <div class="landing-copy">
         <h1 class="landing-in">${copy.title}</h1>
@@ -50,7 +49,6 @@ export function mountLanding(root: HTMLElement, { unlock, enter, canPassthrough 
   motion.add('(prefers-reduced-motion: no-preference)', () => {
     const intro = gsap.from('.landing-in', { y: 16, autoAlpha: 0, duration: 0.8, ease: 'expo.out', stagger: 0.07, paused: true });
     void loaded.then(() => intro.play()); // after the loading screen starts to lift
-    gsap.to('.landing-shafts', { skewX: 4, opacity: 0.6, duration: 7, ease: 'sine.inOut', yoyo: true, repeat: -1 });
     // Notes rise like bubbles through the light, each at its own pace and sway.
     gsap.utils.toArray<SVGElement>('.landing-note').forEach((el) => {
       gsap.set(el, { left: `${gsap.utils.random(4, 96)}%`, scale: gsap.utils.random(0.5, 1.3) });

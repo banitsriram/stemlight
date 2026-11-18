@@ -16,23 +16,11 @@ html, body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #E4F6F8;
+  color: #ECEEF0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background:
-    radial-gradient(70% 45% at 50% 0%, #1E7F8C 0%, transparent 75%),
-    linear-gradient(#0B3D4A 0%, #03131A 70%);
-}
-
-/* Light falling through the surface, as in the world's seven shafts. */
-.landing-shafts {
-  position: absolute;
-  inset: -10% -20% 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(100deg, transparent 0 5%, #A8F4FF12 9%, transparent 13% 17%, #A8F4FF0B 21%, transparent 25%);
-  mask-image: linear-gradient(#000 0%, transparent 75%);
-  -webkit-mask-image: linear-gradient(#000 0%, transparent 75%);
-  transform-origin: 50% 0;
-  will-change: transform, opacity;
+  z-index: 1; /* above the wave grid (web/loader.ts) */
+  /* A soft dark pool behind the words keeps them readable over the moving grid. */
+  background: radial-gradient(ellipse 60% 55% at 50% 50%, #0d0f11cc 0%, #0d0f1166 60%, transparent 100%);
 }
 
 .landing-notes {
@@ -49,8 +37,8 @@ html, body {
   position: absolute;
   bottom: -60px;
   width: 28px;
-  fill: #7FF6FF;
-  opacity: 0.22;
+  fill: #C9CDD2;
+  opacity: 0.16;
   will-change: transform;
 }
 
@@ -69,12 +57,12 @@ html, body {
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.01em;
-  /* Lit from the surface: foam at the top of each letter, deep water at the foot. */
-  background: linear-gradient(#E6FDFF 20%, #7FF6FF 55%, #1E7F8C 100%);
+  /* Lit from above: white at the top of each letter, fading to grey at the foot. */
+  background: linear-gradient(#FFFFFF 20%, #C9CDD2 60%, #6B7178 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 28px #7FF6FF40);
+  filter: drop-shadow(0 0 28px #FFFFFF26);
 }
 
 .landing-pitch {
@@ -93,11 +81,11 @@ html, body {
   min-width: min(100%, 360px);
   min-height: 112px;
   padding: 0 64px;
-  border: 1px solid #A8F4FF99;
+  border: 1px solid #FFFFFF59;
   border-radius: 999px;
-  background: linear-gradient(#1E7F8CCC, #0B3D4ACC);
-  box-shadow: inset 0 1px 0 #E6FDFF66, 0 0 40px #7FF6FF33;
-  color: #E6FDFF;
+  background: linear-gradient(#3A3F45CC, #17191CCC);
+  box-shadow: inset 0 1px 0 #FFFFFF40, 0 0 40px #FFFFFF14;
+  color: #F4F5F6;
   font: inherit;
   font-size: 2.25rem;
   letter-spacing: 0.02em;
@@ -111,7 +99,7 @@ html, body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 64px #7FF6FF66;
+  box-shadow: 0 0 64px #FFFFFF33;
   opacity: 0;
   transition: opacity 200ms ease;
   pointer-events: none;
@@ -122,7 +110,7 @@ html, body {
 }
 
 .landing-enter:active { transform: scale(0.97); }
-.landing-enter:focus-visible { outline: 3px solid #FFB547; outline-offset: 4px; }
+.landing-enter:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 4px; }
 .landing-enter:disabled { opacity: 0.7; cursor: progress; transform: none; }
 
 .landing-room {
@@ -130,10 +118,10 @@ html, body {
   margin: 16px auto 0;
   min-height: 48px;
   padding: 0 28px;
-  border: 1px solid #A8F4FF55;
+  border: 1px solid #FFFFFF38;
   border-radius: 999px;
   background: transparent;
-  color: #CDEFF3;
+  color: #D6D9DC;
   font: inherit;
   font-size: 1.125rem;
   cursor: pointer;
@@ -141,10 +129,10 @@ html, body {
 }
 .landing-room[hidden] { display: none; }
 @media (hover: hover) and (pointer: fine) {
-  .landing-room:hover { border-color: #A8F4FFCC; }
+  .landing-room:hover { border-color: #FFFFFFAA; }
 }
 .landing-room:active { transform: scale(0.97); }
-.landing-room:focus-visible { outline: 3px solid #FFB547; outline-offset: 4px; }
+.landing-room:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 4px; }
 .landing-room:disabled { opacity: 0.7; cursor: progress; transform: none; }
 
 .landing-gestures {
@@ -152,7 +140,7 @@ html, body {
   max-width: 34em;
   font-size: 1.125rem;
   line-height: 1.6;
-  color: #B5D5DA;
+  color: #B9BDC2;
   text-wrap: balance;
 }
 
@@ -161,12 +149,16 @@ html, body {
   max-width: 34em;
   font-size: 1rem;
   line-height: 1.5;
-  color: #7FA3AB;
+  color: #8A9097;
 }
 
 .landing-status {
   margin: 16px 0 0;
   min-height: 1.5em;
   font-size: 1.125rem;
-  color: #FFB547;
+  color: #FFFFFF;
+  font-weight: 600;
 }
+
+/* The credits line (index.html) in the same greys; its colour is inline there. */
+#credits { color: #8A9097 !important; }
