@@ -3,7 +3,8 @@
 
   python -I stemlight/pipeline/fetch.py            # MIDI scores + only the VSCO 2 CE samples the groups.yaml files use
 
-Scores: Mutopia #941 (Beethoven 5/i, Public Domain) and #1793 (Dvorak 9, CC BY-SA 3.0).
+Scores: Mutopia #941 (Beethoven 5/i, Public Domain), #595 (Beethoven 7/ii MIDI + LilyPond parts, Public Domain)
+and #1793 (Dvorak 9, CC BY-SA 3.0).
 Samples: VSCO 2 Community Edition, SFZ branch (CC0-1.0), https://github.com/sgossner/VSCO-2-CE
 """
 import json, pathlib, re, sys, urllib.parse, urllib.request, zipfile
@@ -19,6 +20,9 @@ SCORES = {
     "Sym9-mids.zip": "https://www.mutopiaproject.org/ftp/DvorakA/O95/Sym9/Sym9-mids.zip",
     "p941.html": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=941",
     "p1793.html": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1793",
+    "Symphony7_2.mid": "https://www.mutopiaproject.org/ftp/BeethovenLv/O92/Symphony7_2/Symphony7_2.mid",
+    "Symphony7_2-lys.zip": "https://www.mutopiaproject.org/ftp/BeethovenLv/O92/Symphony7_2/Symphony7_2-lys.zip",
+    "p595.html": "https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=595",
 }
 # Small custom SFZ written next to the VSCO files: the single suspended-cymbal stroke in Dvorak (GM key 49),
 # pointing at the four rr1 crash samples of GM-StylePerc.sfz so we don't download the whole kit.

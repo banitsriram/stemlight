@@ -310,3 +310,42 @@
   - banit owns `src/world/**` and `web/landing.css`, so agree with him first;
   - every video shot and Devpost still shows the old look;
   - the frozen live build needs a new deploy and freeze run.
+
+## 18 Nov 2026 (00:30 IST): biyon, restyle deployed; freeze check 11/11
+- **Asked by sir:** "ship it, deploy main and tell banit" (banit had also decided it ships).
+- Deployed main `fff14d3` (PRs #8 + #9). Live bundle `assets/index-BL3uDj3p.js` (was `index-P9Cub1t-.js`).
+- **Freeze check** on live, pinned to the new bundle, full run: **11/11 PASS**. Results in `tests/browser/results/2026-11-18-release-check-*`.
+- No source changes after banit's re-shoot commit `728beff`, so his video matches live.
+
+## 18 Nov 2026 (01:00 IST): biyon, third song + song picker (branch `biyon/songs`, PR)
+- **Asked by sir.** Each choice below was his, picked one at a time:
+  - Beethoven 7, II. Allegretto (about 2:30, the full build);
+  - a song picker after the tutorial song;
+  - glass bubbles you touch;
+  - back to the picker after every song, with the credits under it;
+  - a songs bubble to switch mid-song;
+  - ship it if ready before Thu 01:30.
+- **Beethoven 7.** Rendered with the pipeline:
+  - source: Mutopia #595, public domain, Litolff edition, typeset by Stelios Samelis;
+  - excerpt: bars 1-100, 160.9 s, 1,707 notes;
+  - `validate.py`: 141/141 checks; beethoven5 and dvorak9 still pass;
+  - credit added to the landing page, ASSETS.md and the Devpost draft.
+- **Picker.** In `src/ui/remake/{picker,pickerView,songs}.ts`:
+  - **Bubbles:** three frosted glass bubbles in a low arc, 45 cm out and 17 cm below the eye, 26° apart. All sit inside the 70×66° view and 0.61 m reach.
+  - **Touch:** a fingertip has to come in from outside, at least 0.8 s after the picker opens, so a resting hand never picks a song.
+  - **Songs bubble:** the reset shell's mirror on the left. Touch and hold it for 0.8 s and the song fades out (0.6 s) and the picker opens.
+  - **Returning players** start at the picker.
+  - **Play surfaces** hide while the picker is up, and looking at a bubble never summons a creature.
+  - **Credits** sit on banit's end card, moved under the arc.
+  - **banit's code** is used by import only (`src/story/**` untouched). main.ts no longer calls `initSequencer`.
+- **contracts.ts:** PieceId gets `'beethoven7'`, TargetKind gets `'song'`, and two events are added, `'songs:open'` and `'songs:pick'`. **This needs banit's OK.**
+- **Freeze check:** the full run now drives the picker with a real fingertip touch. The emulated right index tip is placed through the WebXR joint pose.
+- **Evidence (18 Nov):**
+  - unit tests **142/142**, typecheck clean;
+  - IWER `tests/iwer/input/songs.mjs` **10/10**: first visit, end opens the picker, touch plays Dvorak, the songs bubble held mid-song, touch plays Beethoven 7, returning player starts at the picker. No console errors. Screenshots `tests/iwer/input/results/2026-11-18-songs-*`;
+  - freeze check full run on a local production build **12/12**, with the fingertip landing 0.0 cm from each bubble's centre (`tests/browser/results/2026-11-18-release-check-localhost_4173-full.txt`);
+  - perf **5/5** with the songs bubble showing: peak 64 calls, 101,700 triangles, 380 notes (`2026-11-18-perf-heaviest.txt`).
+- **Pipeline:** `build.py` gained two opt-in options, `excerpt.notes_before_beat` and per-part `transpose`, and it now merges the duplicate tempo and metre events that LilyPond 2.6 writes. A fresh rebuild of beethoven5 and dvorak9 is byte-identical to HEAD.
+- **Beethoven 7 sources:** the 2005 source has the clarinet and horn tracks an octave high and the trumpets a fifth high (wrong `	ransposition`). They are corrected per track, with the evidence written up in groups.yaml.
+- **Listening mix** (local only, never commit): `tests/browser/results/listen/beethoven7-mix.wav`.
+- **Not verified:** hand feel and the headset look (emulator only). Nobody has listened to Beethoven 7 yet.

@@ -20,10 +20,19 @@ const DENSE = 64.5;
 try { iw('xr', 'exit'); } catch { /* not in a session */ }
 try { evalInPage(() => { indexedDB.deleteDatabase('stemlight'); localStorage.setItem('stemlight.tutorialStep', '99'); location.href = '/?piece=dvorak9'; return true; }); } catch { /* navigation cuts the call */ }
 await sleep(6000);
-for (let i = 0; i < 40; i++) {
-  try { if (evalInPage(() => !!window.__stemlight && window.__stemlight.engine.stems().length > 0 && location.search.includes('dvorak9'))) break; } catch { /* loading */ }
-  await sleep(500);
-}
+const ready = async () => {
+  for (let i = 0; i < 40; i++) {
+    try { if (evalInPage(() => !!window.__stemlight && window.__stemlight.engine.stems().length > 0 && location.search.includes('dvorak9'))) return; } catch { /* loading */ }
+    await sleep(500);
+  }
+};
+await ready();
+// As a returning player (tutorial done), so the songs bubble shows while the song plays (18 Nov): the heaviest case.
+evalInPage(() => { window.__stemlight.ctx.save.patch({ tutorialDone: true }); return true; });
+await sleep(1500);
+try { evalInPage(() => { setTimeout(() => location.reload(), 50); return true; }); } catch { /* the reload cuts the call */ }
+await sleep(6000);
+await ready();
 await enterXR();
 iw('xr', 'set-input-mode', { mode: 'hand' });
 await sleep(1000);
@@ -44,7 +53,7 @@ evalInPage((dense) => {
 const samples = [];
 for (let i = 0; i < 14; i++) {
   await sleep(500);
-  samples.push(evalInPage(() => ({ ...window.__stemlight.stats(), t: +window.__stemlight.ctx.transport.time().toFixed(2), pads: window.__stemlight.ctx.registry.all().filter((x) => x.kind === 'pad').length })));
+  samples.push(evalInPage(() => ({ ...window.__stemlight.stats(), t: +window.__stemlight.ctx.transport.time().toFixed(2), pads: window.__stemlight.ctx.registry.all().filter((x) => x.kind === 'pad').length, songs: !!window.__stemlight.songs.state().songsAt })));
 }
 const max = samples.at(-1);
 for (const s of samples) log(`t=${s.t}  calls ${s.calls}  tris ${s.triangles}  notes ${s.notes}  pads ${s.pads}  (fps ${s.fps}, emulator)`);
@@ -52,6 +61,7 @@ const shot = iw('browser', 'screenshot', { format: 'png' });
 writeFileSync(new URL(`${DATE}-perf-heaviest.png`, OUT), Buffer.from(String(shot.imageData).replace(/^data:[^,]+,/, ''), 'base64'));
 log(`screenshot: results/${DATE}-perf-heaviest.png`);
 check('pads + lane shown during the run', samples.some((s) => s.pads > 0));
+check('the songs bubble shown during the run', samples.some((s) => s.songs));
 check('peak draw calls < 100', max.maxCalls < 100, `max ${max.maxCalls}`);
 check('peak triangles < 150k', max.maxTriangles < 150000, `max ${max.maxTriangles}`);
 check('peak live notes <= 1,500', max.maxNotes <= 1500, `max ${max.maxNotes}`);

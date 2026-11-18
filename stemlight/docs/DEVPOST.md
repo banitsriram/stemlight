@@ -26,7 +26,7 @@ We love music but neither of us plays in an orchestra. Tools that split a song i
 ### What it is, and who it's for
 - **Entertainment, music visualisation.** For adults who love music but don't play, at home in the evening, seated, for about four minutes and then as long as they like. No score and no win state: the pleasure is listening and remaking.
 - Each instrument family is a real instrument floating around you, eight of them modelled in code (violin, cello, double bass, flute, clarinet, horn, trumpet, timpani), and **every note from the score** leaves it as a floating notation symbol. The symbol matches the note's real length, its height is the pitch and its size is the loudness. Every floating note is a real note from the score; the amber ones are yours.
-- Two pieces: the opening of Beethoven’s 5th (about 1:24) and the finale of Dvořák’s *New World* Symphony (about 2:33), then free play.
+- Three songs. The opening of Beethoven’s 5th (about 1:24) carries the short tutorial. When it ends, a glass bubble for each song floats in reach: touch one to play the finale of Dvořák’s *New World* Symphony (about 2:33), the Allegretto of Beethoven’s 7th (about 2:41), or the 5th again. Each song's end brings the bubbles back, and a small songs bubble beside the reset shell switches songs mid-way.
 
 ### What your hands do
 | Gesture | What happens |
@@ -55,18 +55,19 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 - **Gaze without eye tracking.** Quest 3 and 3S have no eye tracking, so "look to summon" uses head direction (within 12° for half a second).
 - **Your part, in time.** The drums, harp and keyboard you play are synthesised in code: a timpani-like drum, a physically modelled plucked string, and a piano-like tone with stretched overtones. The cut snaps to the beat, a one-bar count-in leads into a sample-exact loop, your hits snap to the eighth-note grid and replay on every pass, and the original part plays quietly (−18 dB) under your first pass as a guide.
 - **Saved on the device.** Your mix, cuts and recorded parts are saved locally and come back next time; returning users skip the tutorial. Pause, taking the headset off, the system menu and ending the session all resume cleanly (all 36 scripted checks in the emulator).
-- **Within budget.** At the busiest moment (Dvořák's densest four seconds, with the eight instruments, the drums and the ribbon showing): 66 draw calls, 101.6k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
+- **Within budget.** At the busiest moment (Dvořák's densest four seconds, with the eight instruments, the drums, the ribbon and the songs bubble showing): 64 draw calls, 101.7k triangles and 380 live notes, against limits of 100 / 150k / 1,500. We measured this in the emulator. We had no headset, so frame rate on a real Quest is unmeasured.
 - **Testing without a headset.** Every interaction was scripted in the IWSDK emulator (IWER) with a dev-only hand-pose switch that never ships, plus unit tests and headless-browser checks of the audio clock, saving and memory.
 - **Built with an AI coding assistant.** We designed Stemlight and directed every decision. An AI coding assistant wrote most of the code under our direction, and we reviewed and tested it. **[CHECK, sir: live rules read 12 Nov. They don't ask for AI tools to be disclosed, and ban brand names, logos and slogans in the Project ("commercial or corporate advertising"). So this line discloses the help without naming the product. Keep it, name the tool, or drop the line.]**
 
 ### Accessibility and comfort
-- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m: the tutorial, ghost hands, drums and end card were checked in the emulator with a field-of-view mask, and the ribbon, harp, keyboard and reset shell by layout tests.
+- Seated, small reach, no standing or leaning. Every touch target sits inside a 70×66° view and within 0.61 m: the tutorial, ghost hands, drums and end card were checked in the emulator with a field-of-view mask, and the ribbon, harp, keyboard, reset shell and song bubbles by layout tests.
 - Instruments are told apart by shape first (each looks like the real instrument), with colour second.
 - No failure state, and a quiet reset is always within reach.
 
 ### Credits
 - Dvořák, Symphony No. 9 "From the New World", 4th movement: Mutopia Project #1793, **CC BY-SA 3.0**. Our stems and note data made from it are shared under CC BY-SA 3.0.
 - Beethoven, Symphony No. 5, 1st movement: Mutopia Project #941, public domain.
+- Beethoven, Symphony No. 7, 2nd movement: Mutopia Project #595, public domain.
 - Orchestral samples: VSCO 2 Community Edition, CC0.
 - Music notation font: Bravura, SIL Open Font License 1.1.
 - The instruments' 3D models, the reverb, the drums, harp and keyboard you play, ticks and interface sounds are all made in code.
@@ -76,7 +77,7 @@ Described on a phone, it stops working. The music is *around* you: each instrume
 
 ### Known limits
 - We had no headset during the build. Frame rate, hand feel, comfort and brightness on a real Quest 3/3S are **unverified**; everything was tested in the emulator.
-- Two pieces, fixed excerpts.
+- Three songs, fixed excerpts.
 - No passthrough or room use: Stemlight is a fully immersive, seated experience by design.
 
 ## Hand interactions (optional field)
@@ -85,7 +86,7 @@ Use the "What your hands do" table and the fist-versus-pinch paragraph above. Wh
 ## Judge instructions
 1. Open https://stemlight.vercel.app in the Quest Browser.
 2. Press **Enter** (a pinch works). No account, nothing to install.
-3. Sit down and use your hands only. The two pieces take about four minutes, then you're free to play.
+3. Sit down and use your hands only. The first song (about 1:30) teaches the gestures; then touch a glass bubble to choose any of the three songs.
 4. Sound on, ideally with headphones.
 
 ## Team (form fields)

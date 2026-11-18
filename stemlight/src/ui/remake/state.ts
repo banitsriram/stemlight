@@ -58,6 +58,8 @@ export interface RemakeStateDeps {
   beats?: () => Beats;
   /** notes.json for a piece; default fetches /pieces/<id>/notes.json. */
   loadNotes?: (id: PieceId) => Promise<NoteEvent[]>;
+  /** While true (the song picker is up) nothing shows and no target registers, so touching a song can't also strike a drum or key. */
+  hidden?: () => boolean;
 }
 
 export interface NoteMark { x: number; y: number; note: NoteEvent }
@@ -237,7 +239,7 @@ export function createRemakeState(ctx: Pick<AppContext, 'bus' | 'transport' | 'r
       const ribbon = ribbonNow();
       const seatF = seat ?? deps.head();
       const targets: Target[] = [];
-      const visible = manifest !== null;
+      const visible = manifest !== null && !deps.hidden?.();
       const view: RemakeView = {
         visible, ribbon, seat: seatF, play: ribbon, now, clock, stem: null, ticks: [], notes: [], regions: [], preview: null,
         playheadHeld: holders.size > 0, pads: [], strings: [], keys: [], countIn: null, countInOn: null, hint: null,

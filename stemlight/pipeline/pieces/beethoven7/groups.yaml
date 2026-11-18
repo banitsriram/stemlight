@@ -1,0 +1,70 @@
+# Beethoven, Symphony No. 7 in A major, Op. 92, mvt 2 (Allegretto). Mutopia #595, Public Domain
+# (Litolff edition, typeset by Stelios Samelis, 2005). Maps the Mutopia MIDI tracks (named by LilyPond staff, no colon)
+# to Stemlight's 8 stems. Same orchestra as Beethoven 5; no harp in this piece.
+id: beethoven7
+title: "Symphony No. 7 in A major, Op. 92: II. Allegretto"
+composer: Ludwig van Beethoven
+midi: Symphony7_2.mid                  # in pipeline/work/src/ (fetch.py)
+seed: 595                              # humanise RNG seed: same input, same output
+excerpt:                               # whole bars, 1-based, inclusive
+  first_bar: 1
+  last_bar: 100                        # the theme's whole crescendo; ends on the A minor chord of the echo, bar 100 beat 1
+  notes_before_beat: 2                 # leaves out the second violins' grace-note pickup B3 C#4 at the end of bar 100
+                                       # (MIDI beat 2.87), which leads into the A major section; bar 100 keeps its length
+  tail_sec: 3.0                        # silence after the last bar for release + reverb decay
+# The Mutopia MIDI has one tempo (quarter = 76) and the LilyPond parts have no fermata in bars 1-100.
+fermatas: {}
+# The Mutopia MIDI has every note at velocity 127 (no dynamics), so velocities come from this map of the score's
+# dynamics, read from the Mutopia LilyPond parts (all 12 staves): [bar, vel] steps at that bar, [bar, vel, ramp] is a
+# crescendo/diminuendo from the previous point. ff 112, piu f. 104, f 96, p 52, pp 40.
+dynamics:
+  - [1, 96]             # f: the wind chord (oboes, clarinets, bassoons, horns), hairpin to pp by bar 3; a held note
+                        # keeps its onset velocity, so the chord cannot fade
+  - [3, 52]             # p: the theme in violas, cellos and basses (bars 3-18)
+  - [19, 40]            # pp: its second half repeated (bars 19-26)
+  - [27, 52]            # p: second violins take the theme, violas + cellos the countermelody (the basses are marked pp)
+  - [43, 40]            # pp (bars 43-50)
+  - [51, 52]            # p: first violins take the theme; cresc. poco a poco in all strings
+  - [67, 96, ramp]      # ... to f at bar 67; oboes and bassoons enter with cresc.
+  - [69, 104]           # piu f. (strings); flutes and horns enter with cresc. at bar 73
+  - [75, 112]           # ff tutti: winds, trumpets and timpani join the theme (bars 75-90)
+  - [91, 112]           # dimin. at bar 91, sempre dimin. at bar 95 ...
+  - [98, 52, ramp]      # ... to p at bar 98 (trumpets and timpani already mark p at bar 96); bars 99-100 stay p:
+                        # the wind + first-violin echo that ends on the A minor chord
+scale: {tonic: 57, steps: [0, 2, 3, 5, 7, 8, 10]}   # A natural minor
+replace: [{stem: perc, instrument: pads}, {stem: fl, instrument: harp}, {stem: reeds, instrument: keys}]
+credits:
+  - text: "Ludwig van Beethoven, Symphony No. 7, Op. 92, II. Allegretto. Score from the Mutopia Project (piece 595), after the Litolff edition, typeset by Stelios Samelis; public domain. Rendered with VSCO 2 Community Edition samples (CC0)."
+    licence: Public Domain
+    url: https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=595
+# Velocity curve per family: vel' = 127 * (vel/127)^gamma * gain, then +-jitter (seeded).
+families:
+  strings: {gamma: 0.85, gain: 1.00, jitter: 4}
+  winds:   {gamma: 0.95, gain: 0.95, jitter: 4}
+  brass:   {gamma: 1.10, gain: 0.92, jitter: 3}
+  perc:    {gamma: 1.00, gain: 0.95, jitter: 3}
+short_beats: 0.5                       # a note of <= this many quarter beats uses the part's `short` patch
+# Transposing instruments (`transpose`, semitones added to the MIDI pitch). The parts are written at transposed pitch,
+# but Symphony7_2.ly declares the wrong \transposition for the MIDI, so three tracks are not at concert pitch:
+# - Clarinetti in A: declared a' (+9 over written) instead of a (-3), so the MIDI is an octave high. The G7 and E7 in
+#   bars 75-82 are written Bb6/G6 (clarinetti.ly lines 13-17, octaves with Bb5/G5), which sound G6/E6, doubling the
+#   flutes' E6; in the MIDI they sit an octave above the flutes and above the clarinet's range. Bar 1: written G4 C5
+#   sound E4 A4, not the MIDI's E5 A5.
+# - Corni in E: declared e' (+4) instead of e (-8), an octave high. Corrected, the bar 1 chord has the horns' E3 as its
+#   bass, the A minor 6/4 the movement opens with; in the MIDI its lowest note is the bassoons' A3.
+# - Trombe in D: declared a' (+9) instead of d' (+2), a fifth high. Corrected, their written G3/G4 and D5 sound A3/A4
+#   and E5, the same A and E the timpani strike on the same beats (bars 75-98); the MIDI has E and B.
+# The written notes in the LilyPond parts are right, so whole tracks shift; no single note is edited.
+# Per-stem loudness target (integrated LUFS, measured with ffmpeg loudnorm) keeps the orchestral balance.
+stems:
+  vln:    {family: strings, lufs: -23, parts: [{tracks: ["eight", "nine"], long: ViolinEnsSusVib.sfz, short: ViolinEnsSpic.sfz}]}   # Violino I, II
+  vla_vc: {family: strings, lufs: -24, parts: [{tracks: ["ten"], long: ViolaEnsSusVib.sfz, short: ViolaEnsSpic.sfz},              # Viola
+                                               {tracks: ["eleven"], long: CelloEnsSusVib.sfz, short: CelloEnsSpic.sfz}]}         # Violoncello I
+  cb:     {family: strings, lufs: -26, parts: [{tracks: ["twelve"], long: ContrabassSusVB.sfz, short: ContrabassSpic.sfz}]}      # Violoncello II e Basso
+  fl:     {family: winds,   lufs: -27, parts: [{tracks: ["one"], long: FluteSusVib.sfz, short: FluteStac.sfz}]}                  # Flauti
+  reeds:  {family: winds,   lufs: -25, parts: [{tracks: ["two"], long: OboeSusVib.sfz, short: OboeStac.sfz},                     # Oboi
+                                               {tracks: ["three"], long: ClarinetSus.sfz, short: ClarinetStac.sfz, transpose: -12},   # Clarinetti in A
+                                               {tracks: ["four"], long: BassoonSus.sfz, short: BassoonStac.sfz}]}                # Fagotti
+  hn:     {family: brass,   lufs: -26, parts: [{tracks: ["five"], long: FHornSus.sfz, short: FHornStac.sfz, transpose: -12}]}    # Corni in E
+  brass:  {family: brass,   lufs: -27, parts: [{tracks: ["six"], long: TrumpetSus.sfz, short: TrumpetStac.sfz, transpose: -7}]}  # Trombe in D
+  perc:   {family: perc,    lufs: -28, parts: [{tracks: ["seven"], long: TimpaniRolls.sfz, short: Timpani.sfz, short_beats: 1.0}]}  # Timpani in A, E (long notes = rolls)

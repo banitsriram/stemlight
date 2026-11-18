@@ -6,7 +6,7 @@ import { createBus } from './bus';
 import { createEngine } from './audio/engine';
 import { loadPiece } from './audio/loader';
 import { createParts } from './audio/parts';
-import { PIECE_ORDER } from './audio/sequence';
+import { SONGS, TUTORIAL_PIECE } from './audio/sequence';
 import { initLifecycle } from './audio/lifecycle';
 import { createSave } from './audio/save/store';
 import { initPersist } from './audio/save/persist';
@@ -18,9 +18,10 @@ import { initShell, reachSpot } from './world/shell';
 import { SEA } from './world/deepsea';
 import { initSfx } from './ui/sfx';
 import { initStory } from './story';
-import { endCardSprite, initSequencer } from './story/sequencer';
+import { endCardLines, endCardSprite } from './story/sequencer';
 import { initInput } from './input/system';
 import { initRemake } from './ui/remake';
+import { initSongs } from './ui/remake/songs';
 
 const world = await World.create(document.getElementById('scene-container') as HTMLDivElement, projectOptions);
 world.scene.background = new Color(SEA.abyss);
@@ -69,7 +70,8 @@ world.registerSystem(class WorldSystem extends createSystem() {
   update(delta: number) { shell.update(delta); story.update(); }
 });
 const gestures = initInput(ctx, world, { parts, beats: () => engine.beats().beats });
-initRemake(ctx, world.scene, { world, parts, head, beats: () => engine.beats() }); // ribbon, lane, pads, reset shell
+let pickerUp = () => false; // the song picker hides the play surfaces while it's up (bound below)
+const remake = initRemake(ctx, world.scene, { world, parts, head, beats: () => engine.beats(), hidden: () => pickerUp() }); // ribbon, lane, pads, reset shell
 // DevHandPose and the gesture log are dev-only and never reach dist/ (F38).
 if (import.meta.env.DEV) (await import('./dev/devInput')).initDevInput(world, ctx, gestures);
 // The landing page shows at once; the first piece downloads and decodes behind it (cold start).
@@ -97,6 +99,8 @@ const landing = {
       session.addEventListener('end', () => mountLanding(landingRoot, landing, COPY.resume));
     }
     await pieceReady;
+    if (songs.isOpen()) return; // back from a pause with the song picker up: it's still there
+    if (startAtPicker) { startAtPicker = false; songs.open('start'); return; }
     ctx.transport.play();
   }),
 };
@@ -111,10 +115,22 @@ world.registerSystem(class NotesSystem extends createSystem() {
   }
 });
 
-// The sequencer listens before the first piece loads, so that piece's credits reach the end card.
-initSequencer(ctx, PIECE_ORDER, (id) => loadPiece(engine, bus, id), endCard.show);
-// ?piece=<id> picks a piece; otherwise the first piece (dev only: the fixture if it's missing).
-const piece = (new URLSearchParams(location.search).get('piece') ?? PIECE_ORDER[0]) as PieceId;
+// The songs (18 Nov): when a song ends (the tutorial song first) the picker opens and plays the song touched.
+// It listens before the first piece loads, so it knows the current song. banit's end card carries the credits.
+const songs = initSongs(ctx, world.scene, {
+  world, songs: SONGS, head,
+  frames: () => { const v = remake.view(); return { seat: v.seat, play: v.play }; },
+  load: (id) => loadPiece(engine, bus, id),
+  fadeOut: (sec) => engine.fadeOut(sec),
+  card: endCard,
+  creditLines: (c) => ['Credits', ...endCardLines(c).slice(3)],
+});
+pickerUp = songs.isOpen;
+// ?piece=<id> plays that piece first (dev only: the fixture if it's missing); otherwise the tutorial song, or the
+// picker for a returning player (tutorial done).
+const asked = new URLSearchParams(location.search).get('piece') as PieceId | null;
+let startAtPicker = !asked && ctx.save.load().tutorialDone;
+const piece = asked ?? TUTORIAL_PIECE;
 const manifest = await loadPiece(engine, bus, piece).catch((e) => {
   if (!import.meta.env.DEV) throw e; // never ship the synthetic fixture to a judge
   console.warn(`[audio] ${piece} unavailable, using the fixture`, e);
@@ -128,5 +144,5 @@ if (import.meta.env.DEV) {
   world.registerSystem(class DevStatsSystem extends createSystem() {
     update() { stats.update(); }
   });
-  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, stats: stats.sample, statsReset: stats.resetMax } });
+  Object.assign(window, { __stemlight: { world, ctx, engine, parts, lifecycle, story, songs, stats: stats.sample, statsReset: stats.resetMax } });
 }

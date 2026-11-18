@@ -99,6 +99,8 @@ export function installKeyMap({ bus, transport, audio }: AppContext, manifest: P
     'app:pause': ['z', () => ({})],
     'app:resume': ['y', () => ({})],
     'tutorial:step': ['u', () => ({ step: 'summon' })],
+    'songs:open': ['o', () => ({ why: 'shell' })],
+    'songs:pick': ['j', () => ({ id: 'dvorak9' })],
   };
 
   addEventListener('keydown', (e) => {
