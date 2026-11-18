@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Color } from 'three';
 import { SEA_PALETTE, SEA_UNIFORMS, WORLD_GLOW, setPalette } from '../../src/world/deepsea.ts';
-import { createStarry } from '../../src/world/starry.ts';
+import { CHURCH, COTTAGES, CYPRESS, FAR_COTTAGES, createStarry, groundY } from '../../src/world/starry.ts';
 import {
   AURORA_PALETTE, DEFAULT_WORLD, FADE_SEC, STARRY_PALETTE, WORLDS, WORLD_KEY, fadeAt, isWorld, loadWorld, saveWorld, worldInfo,
 } from '../../src/world/worldList.ts';
@@ -71,7 +71,7 @@ test('setPalette writes the shared uniforms every lit material reads, and glides
   assert.equal(typeof WORLD_GLOW.value, 'number');
 });
 
-test('Starry Night: sky, hilltop + cypress, motes (three draw calls); fade, time and beat reach every material', () => {
+test('Starry Night: sky, toon land, fireflies (three draw calls); fade, time and beat reach every material', () => {
   const w = createStarry();
   assert.equal(w.objects.length, 3);
   const [sky, hill, motes] = w.objects;
@@ -133,4 +133,40 @@ test('the orb row sits where the layout says (frame-local -12/0/+12 cm, 26.5 cm 
   p.open(0, FRAME);
   assert.deepEqual(p.orbs().map((c) => c.map((x) => +x.toFixed(3))), [[-0.12, 0.935, -0.43], [0, 0.935, -0.43], [0.12, 0.935, -0.43]]);
   assert.deepEqual(toWorld(FRAME, [0, -ORBS.below, ORBS.ahead]).map((x) => +x.toFixed(3)), [0, 0.935, -0.43]);
+});
+
+test('Starry Night land: opaque toon mesh (writes depth, so instruments sort against it) with every shared palette uniform', () => {
+  const [, land] = createStarry().objects;
+  assert.equal(land.material.transparent, false);
+  assert.equal(land.material.depthWrite, true);
+  for (const k of Object.keys(SEA_UNIFORMS)) assert.equal(land.material.uniforms[k], SEA_UNIFORMS[k], `${k} shared by reference`);
+  for (const a of ['tint', 'glow', 'hull', 'faceUv', 'kind', 'normal']) assert.ok(land.geometry.getAttribute(a), `attribute ${a}`);
+  const hull = land.geometry.getAttribute('hull');
+  let outlined = 0;
+  for (let i = 0; i < hull.count; i++) outlined += hull.getX(i) > 0.5 ? 1 : 0;
+  assert.ok(outlined > 1000, `the cottages, church, cypress and bushes carry outline shells (${outlined} hull vertices)`);
+});
+
+test('Starry Night village (sir: close round you, open straight ahead): no cottage ahead within 35 degrees closer than 15 m', () => {
+  const az = (h) => Math.atan2(h.x, -h.z) * 57.2958, dist = (h) => Math.hypot(h.x, h.z);
+  assert.ok(COTTAGES.length >= 12, `${COTTAGES.length} cottages round you`);
+  for (const h of COTTAGES) {
+    assert.ok(dist(h) >= 5, `cottage at ${az(h).toFixed(0)} deg is ${dist(h).toFixed(1)} m away (5 m or more)`);
+    assert.ok(Math.abs(az(h)) >= 35 || dist(h) >= 15, `cottage at ${az(h).toFixed(0)} deg, ${dist(h).toFixed(1)} m: not in the open view`);
+  }
+  // None overlap each other or the cypress (footprints as circles round their corners).
+  const foot = (h) => Math.hypot(h.w, h.d) / 2 + 0.3;
+  const all = [...COTTAGES, ...FAR_COTTAGES];
+  for (let i = 0; i < all.length; i++) {
+    for (let j = i + 1; j < all.length; j++) {
+      const gap = Math.hypot(all[i].x - all[j].x, all[i].z - all[j].z) - foot(all[i]) - foot(all[j]);
+      assert.ok(gap > -0.6, `cottages ${i} and ${j} overlap by ${(-gap).toFixed(2)} m`);
+    }
+    assert.ok(Math.hypot(all[i].x - CYPRESS.x, all[i].z - CYPRESS.z) > foot(all[i]) + CYPRESS.radius, `cottage ${i} clear of the cypress`);
+  }
+  // The church and its spire stand ahead and a little right, beyond the open view; the cypress on the left.
+  assert.ok(az(CHURCH) > 0 && az(CHURCH) < 15 && dist(CHURCH) > 18 && dist(CHURCH) < 30, `church at ${az(CHURCH).toFixed(1)} deg, ${dist(CHURCH).toFixed(1)} m`);
+  assert.ok(az(CYPRESS) < -30 && az(CYPRESS) > -55, `cypress on the left (${az(CYPRESS).toFixed(0)} deg)`);
+  // The ground falls away ahead (the far village sits lower) and the seat area stays near the old floor height.
+  assert.ok(Math.abs(groundY(0, 0) + 0.6) < 0.25 && groundY(0, -25) < groundY(0, 0) - 2, 'the meadow falls away ahead');
 });

@@ -53,6 +53,8 @@ for (const w of WORLDS) {
   }
 }
 lookAt(eye, 0, 8);
+// Leave the shared dev browser on the default world, so other scripts' evidence runs in the deep sea.
+await evalInPage(() => { window.__stemlight.worlds.set('sea'); localStorage.removeItem('stemlight.world'); return true; });
 const errors = iw('browser', 'logs', { level: 'error', count: 30 });
 log(`console errors: ${String(JSON.stringify(errors) ?? 'none').slice(0, 600)}`);
 writeFileSync(join(OUT, `${DATE}-worlds.txt`), lines.join('\n') + '\n');

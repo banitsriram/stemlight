@@ -74,6 +74,8 @@ for (const [i, want] of [[1, 'starry'], [2, 'aurora'], [0, 'sea'], [1, 'starry']
 await fresh(true);
 s = await state();
 check(s.world === 'starry', `after a reload the device keeps its world (${s.world})`);
+// Leave the shared dev browser on the default world, so other scripts' evidence runs in the deep sea.
+await evalInPage(() => { localStorage.removeItem('stemlight.world'); return true; });
 const errors = iw('browser', 'logs', { level: 'error', count: 30 });
 log(`console errors: ${String(JSON.stringify(errors) ?? 'none').slice(0, 600)}`);
 writeFileSync(join(OUT, `${DATE}-orbs.txt`), lines.join('\n') + '\n');

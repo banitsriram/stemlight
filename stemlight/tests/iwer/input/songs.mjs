@@ -59,13 +59,14 @@ const touch = async (p) => { const eye = eyeNow(); await tipAt(toward(p, eye, 0.
 const reloadFresh = async (returning) => {
   try { iw('xr', 'exit'); } catch { /* not in XR */ }
   try {
-    evalInPage(() => { indexedDB.deleteDatabase('stemlight'); localStorage.removeItem('stemlight.tutorialStep'); setTimeout(() => location.reload(), 50); return true; });
+    // A clean address: a previous script may have left ?piece=... in it, which plays that piece and skips the picker.
+    evalInPage(() => { indexedDB.deleteDatabase('stemlight'); localStorage.removeItem('stemlight.tutorialStep'); localStorage.removeItem('stemlight.world'); setTimeout(() => { location.href = '/'; }, 50); return true; });
   } catch { /* the reload cuts the call */ }
   await sleep(7000);
   if (returning) {
     await evalInPage(() => { window.__stemlight.ctx.save.patch({ tutorialDone: true }); return true; });
     await sleep(1500); // the save reaches IndexedDB
-    try { evalInPage(() => { setTimeout(() => location.reload(), 50); return true; }); } catch { /* reload */ }
+    try { evalInPage(() => { setTimeout(() => { location.href = '/'; }, 50); return true; }); } catch { /* reload */ }
     await sleep(7000);
   }
   await listen();
@@ -84,7 +85,7 @@ s = await waitFor((x) => x.open, 15000);
 await sleep(1500);
 s = await state();
 check(s.open && !s.playing && s.log.includes('open:end'), `its end opens the picker and the music stays stopped (log ${s.log.join(', ')})`);
-check(s.bubbles.length === 3 && s.kinds.filter((k) => k === 'song').length === 3, `three song bubbles registered (${s.labels.join(' | ')})`);
+check(s.bubbles.length === 3 && s.kinds.filter((k) => k === 'song').length === 6, `three song bubbles (and the three world orbs) registered (${s.labels.join(' | ')})`);
 check(!s.kinds.includes('reset') && !s.kinds.includes('playhead'), 'the play surfaces hide while the picker is up (no reset shell or playhead targets)');
 iw('xr', 'look-at', { device: 'headset', target: { x: s.bubbles[1][0], y: s.bubbles[1][1] + 0.05, z: s.bubbles[1][2] } });
 await sleep(900);

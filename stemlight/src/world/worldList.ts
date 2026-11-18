@@ -23,14 +23,14 @@ export interface WorldParts {
  */
 export interface WorldInfo { id: WorldId; name: string; palette: Palette; orb: [string, string]; glow: number }
 
-/** Night blues of the painting; the light comes from the crescent moon, high on the right ahead. */
-export const STARRY_PALETTE: Palette = { abyss: '#0A1430', deep: '#1D3478', shallows: '#3E6DB5', surface: '#F4DB6A', foam: '#FFF4CC', light: [0.533, 0.5, -0.682], caustic: 0 };
+/** Deep cartoon night blues (18 Nov rebuild); the light comes from the crescent moon, high on the right ahead. */
+export const STARRY_PALETTE: Palette = { abyss: '#070E24', deep: '#142B57', shallows: '#2E5A8E', surface: '#F6D35B', foam: '#FFF4CC', light: [0.533, 0.5, -0.682], caustic: 0 };
 /** An arctic night; the light is the aurora, high ahead. */
 export const AURORA_PALETTE: Palette = { abyss: '#02070F', deep: '#0B2233', shallows: '#1E6E6A', surface: '#8CFFD2', foam: '#F0FBFF', light: [0, 0.8, -0.6], caustic: 0.15 };
 
 export const WORLDS: readonly WorldInfo[] = [
   { id: 'sea', name: 'Deep sea', palette: SEA_PALETTE, orb: [SEA.shallows, SEA.surface], glow: 1 },
-  { id: 'starry', name: 'Starry Night', palette: STARRY_PALETTE, orb: ['#2E4E9E', '#F5D33E'], glow: 0.34 },
+  { id: 'starry', name: 'Starry Night', palette: STARRY_PALETTE, orb: ['#2E4E9E', '#F5D33E'], glow: 0.7 },
   { id: 'aurora', name: 'Aurora', palette: AURORA_PALETTE, orb: ['#0B2233', '#3CFFB0'], glow: 0.8 },
 ];
 export const DEFAULT_WORLD: WorldId = 'sea';

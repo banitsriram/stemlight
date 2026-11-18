@@ -39,12 +39,15 @@ export function initWorlds(scene: Object3D): Worlds {
     const s = scene as Scene;
     if (s.isScene) s.background = new Color(worldInfo(id).palette.abyss);
   };
-  /** Shown worlds draw normally; during a warm-up the hidden ones are drawn too, writing no colour. */
+  // Each material's own depth write, restored when its world shows (an opaque world's land writes depth).
+  const depth0 = new Map<Material, boolean>();
+  for (const id of ids) for (const m of mats(id)) depth0.set(m, m.depthWrite);
+  /** Shown worlds draw normally; during a warm-up the hidden ones are drawn too, writing no colour and no depth. */
   const applyVisibility = () => {
     for (const id of ids) {
       const on = id === shown;
       for (const o of parts[id].objects) o.visible = on || warming > 0;
-      for (const m of mats(id)) m.colorWrite = on;
+      for (const m of mats(id)) { m.colorWrite = on; m.depthWrite = on && (depth0.get(m) ?? true); }
     }
   };
   const look = () => ({ palette: livePalette(), glow: WORLD_GLOW.value });
