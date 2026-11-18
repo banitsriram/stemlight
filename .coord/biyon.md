@@ -2,6 +2,9 @@
 status: working          # working | blocked | paused | idle
 task: FINAL LIVE = assets/index-DEhyi5aU.js (main e56cb6b: banit's theme, loader, Obsidian default world), freeze check 14/14 on the live URL. No deploys after Thu 19 Nov 01:30 IST.
 claims:
+- README.md
+- LICENSE
+- .gitignore
 - stemlight/pipeline/**
 - stemlight/src/audio/**
 - stemlight/src/input/**
