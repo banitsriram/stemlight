@@ -44,7 +44,8 @@ function sky(): Mesh {
     fragmentShader: NOISE + glslStars + /* glsl */ `
 uniform float uTime; uniform float uFade; uniform float uPulse; varying vec3 vDir;
 const vec3 ZENITH = ${g('zenith')}, HORIZON = ${g('horizon')}, TEAL = ${g('teal')}, LIGHT = ${g('light')}, WHITE = ${g('white')},
-  YELLOW = ${g('yellow')}, CREAM = ${g('cream')}, MOONPALE = ${g('moonPale')}, OUTLINE = ${g('outline')}, EDGE = ${g('edge')};
+  YELLOW = ${g('yellow')}, CREAM = ${g('cream')}, MOONPALE = ${g('moonPale')}, OUTLINE = ${g('outline')}, EDGE = ${g('edge')},
+  DEEPINK = ${glslColor('#10233F')};
 const vec2 C1 = vec2(3.0, 33.0), C2 = vec2(19.4, 27.4), MOON = vec2(44.0, 44.3);
 // A swirl: the canvas turned round c (degrees) by up to k radians at the centre, less further out, so straight wind
 // strokes wrap into a spiral there, with no seam and no point where strokes radiate.
@@ -65,19 +66,22 @@ vec2 flow(vec2 p) {
 }
 // One brush dash at q: a comma-like stroke (thick in the middle, tapered at both ends) in rows along the flow, sliding
 // slowly along it; dashes appear with probability density. Returns (coverage, edge, shade 0..1, cell hash).
+const float ROWS = 0.55, ALONG = 0.13; // rows of strokes per degree across the flow, stroke cells per degree along it
 vec4 dash(vec2 q, float t, float density) {
-  float row = floor(q.y * 0.85), across = fract(q.y * 0.85) - 0.5;
-  float along = q.x * 0.24 - t * 0.3 + hash2(vec2(row, 7.0)) * 9.0;
+  float rq = q.y * ROWS, row = floor(rq);
+  float across = fract(rq) - 0.5 + (hash2(vec2(row, 2.0)) - 0.5) * 0.2;
+  float along = q.x * ALONG - t * 0.18 + hash2(vec2(row, 7.0)) * 9.0;
   float cell = floor(along), ph = fract(along);
   float h = hash2(vec2(cell, row));
   if (h > density) return vec4(0.0);
-  float len = 0.55 + 0.35 * hash2(vec2(row, cell + 3.0));
+  float len = 0.62 + 0.33 * hash2(vec2(row, cell + 3.0));
   float k = clamp(ph / len, 0.0, 1.0);
-  float half_ = 0.32 * sin(3.14159 * k) * step(ph, len);
-  float dist = abs(across + 0.08 * sin(k * 3.14159 * 2.0)) - half_; // < 0 inside; a slight S-curve, like a comma
+  // A comma: a round, loaded head that tapers into a long tail, gently S-curved.
+  float half_ = 0.4 * 1.9 * pow(k, 0.4) * pow(1.0 - k, 1.15) * step(ph, len);
+  float dist = abs(across + 0.1 * sin(k * 6.28318)) - half_; // < 0 inside
   float aa = fwidth(dist) * 1.3;
   float cover = 1.0 - smoothstep(-aa, aa, dist);
-  float edge = (1.0 - smoothstep(-aa, aa, dist + 0.07)) * cover; // the inner body; cover - edge is the dark rim
+  float edge = (1.0 - smoothstep(-aa, aa, dist + 0.06)) * cover; // the inner body; cover - edge is the dark rim
   return vec4(cover, edge, hash2(vec2(cell + 11.0, row)), h);
 }
 // Crisp, antialiased coverage of a ring of stroke at radius r0 (r and widths in the same units).
@@ -97,15 +101,25 @@ void main() {
     float sw = max(exp(-dot(p - C1, p - C1) / 140.0), 0.8 * exp(-dot(p - C2, p - C2) / 55.0));
     float bd = (el - (15.0 + 0.16 * az + 3.5 * sin(az * 0.06))) / 5.0;
     float band = exp(-bd * bd) * smoothstep(-60.0, -20.0, az) * (1.0 - smoothstep(55.0, 80.0, az));
-    float density = (0.3 + 0.5 * sw + 0.45 * band) * smoothstep(-3.0, 4.0, el);
-    vec4 dsh = dash(flow(p), t, density);
+    float density = (0.34 + 0.45 * sw + 0.62 * band) * smoothstep(-3.0, 4.0, el);
+    vec2 q = flow(p);
+    // Where the swirl squeezes the rows below a pixel apart, fine strokes would shimmer: fade them to their average.
+    float clear = 1.0 - smoothstep(0.12, 0.32, fwidth(q.y) * ROWS);
+    // Depth first: a faint layer of darker navy strokes behind, on its own rows.
+    vec4 back = dash(q + vec2(31.7, 0.9), t * 0.7, 0.42);
+    c = mix(c, DEEPINK, back.x * 0.75 * clear);
+    vec4 dsh = dash(q, t, density);
     // Behind you the azimuth wraps from +180 to -180: blend with the dashes a turn away, so there's no seam.
     float wrap = smoothstep(150.0, 180.0, abs(az));
     if (wrap > 0.0) dsh = mix(dsh, dash(flow(p - vec2(360.0 * squeeze * sign(az), 0.0)), t, density), wrap * 0.5);
     vec3 body = mix(TEAL, LIGHT, step(0.55, dsh.z));
-    body = mix(body, mix(WHITE, CREAM, step(0.5, dsh.z)), band * step(0.35, dsh.w * 2.0 + 0.1));
-    c = mix(c, EDGE, dsh.x * 0.9);
-    c = mix(c, body, dsh.y);
+    // The band above the hills is a bright river of white and cream strokes, with a few light-blue ones.
+    body = mix(body, dsh.z < 0.4 ? WHITE : dsh.z < 0.8 ? CREAM : LIGHT, smoothstep(0.25, 0.6, band));
+    c = mix(c, EDGE, dsh.x * 0.9 * clear);
+    c = mix(c, body, dsh.y * clear);
+    c = mix(c, mix(TEAL, LIGHT, 0.5) * 0.55, (1.0 - clear) * 0.7); // the squeezed middle: a soft average
+    // The great swirl's eye glows softly, as on the canvas.
+    c += LIGHT * 0.16 * exp(-dot(p - C1, p - C1) / 28.0) + LIGHT * 0.06 * exp(-dot(p - C2, p - C2) / 14.0);
     // Stars: the nearest one, a glowing yellow core outlined in navy, ringed with crisp strokes that swell on the beat.
     float best = 1e3; vec3 star = vec3(0.0);
     for (int i = 0; i < NSTARS; i++) { float dd = length(p - STARS[i].xy) / STARS[i].z; if (dd < best) { best = dd; star = STARS[i]; } }
@@ -115,18 +129,26 @@ void main() {
       vec2 sd = (p - star.xy) / star.z; float rr = length(sd);
       float turn = atan(sd.y, sd.x) / 6.28318 + t * 0.03;
       float swell = 1.0 + 0.4 * uPulse;
+      // A warm halo first, so the ring strokes sit in light.
+      c += YELLOW * (0.32 * exp(-rr * rr * 0.8)) * (1.0 + 2.0 * uPulse);
       for (int k = 0; k < 2; k++) {
-        float R = (k == 0 ? 0.95 : 1.55) * swell, n = k == 0 ? 9.0 : 14.0;
+        float R = (k == 0 ? 0.95 : 1.6) * swell, n = k == 0 ? 8.0 : 12.0;
         float cellA = fract(turn * n + float(k) * 0.37);
-        float on = step(0.3, hash2(vec2(floor(turn * n + float(k) * 0.37), float(k) + star.x)));
-        float dashK = sin(3.14159 * clamp(cellA / 0.7, 0.0, 1.0)) * step(cellA, 0.7);
-        float dd = abs(rr - R) - 0.1 * dashK;
+        float on = step(0.22, hash2(vec2(floor(turn * n + float(k) * 0.37), float(k) + star.x)));
+        // Longer strokes round the ring, thick at the head, tapering (the same comma as the sky's strokes).
+        float kk = clamp(cellA / 0.82, 0.0, 1.0);
+        float dashK = 1.9 * pow(kk, 0.4) * pow(1.0 - kk, 1.15) * step(cellA, 0.82);
+        float dd = abs(rr - R) - (k == 0 ? 0.13 : 0.11) * dashK;
         float aa = fwidth(dd) * 1.3;
         float cov = (1.0 - smoothstep(-aa, aa, dd)) * on;
-        c = mix(c, k == 0 ? mix(CREAM, YELLOW, step(0.5, hash2(vec2(cellA, star.y)))) : TEAL, cov);
+        c = mix(c, k == 0 ? mix(CREAM, YELLOW, step(0.5, hash2(vec2(floor(turn * n), star.y)))) : mix(TEAL, LIGHT, 0.35), cov);
       }
-      c += YELLOW * (0.9 * exp(-rr * rr * 7.0) + 0.25 * exp(-rr * rr * 1.4)) * (1.0 + 2.5 * uPulse);
-      c = mix(c, WHITE, exp(-rr * rr * 30.0) * 0.8);
+      // The core: a bright glow with a few cream brush dabs swirled into it.
+      float cd = fract(turn * 5.0 + rr * 1.5);
+      float dabs = step(0.55, cd) * (1.0 - smoothstep(0.25, 0.45, rr)) * smoothstep(0.08, 0.16, rr);
+      c += YELLOW * 1.0 * exp(-rr * rr * 6.0) * (1.0 + 2.0 * uPulse);
+      c = mix(c, CREAM, dabs * 0.6);
+      c = mix(c, WHITE, exp(-rr * rr * 26.0) * 0.85);
     }
     // Faint stars round the rest of the sky (on the plain azimuth, 40 cells of 9 degrees per turn: they wrap exactly).
     vec2 ga = vec2(mod(az + 180.0, 360.0), el), gi = floor(ga / 9.0);
@@ -136,6 +158,8 @@ void main() {
     }
     // The crescent moon high on the right: a bold yellow crescent on a pale disc, outlined, ringed with strokes.
     vec2 md = p - MOON; float mr = length(md);
+    // The moon's warm glow reaches far, so it is added everywhere (clipped, it showed a hard edge).
+    c += YELLOW * (0.6 * exp(-mr * mr * 0.03) + 0.28 * exp(-mr * mr * 0.006)) * (1.0 + 2.0 * uPulse);
     if (mr < 14.0) {
       float turn = atan(md.y, md.x) / 6.28318 + t * 0.02, swell = 1.0 + 0.25 * uPulse;
       for (int k = 0; k < 2; k++) {
@@ -147,7 +171,6 @@ void main() {
         float aa = fwidth(dd) * 1.3;
         c = mix(c, k == 0 ? CREAM : TEAL, (1.0 - smoothstep(-aa, aa, dd)) * on);
       }
-      c += YELLOW * (0.5 * exp(-mr * mr * 0.035) + 0.2 * exp(-mr * mr * 0.008)) * (1.0 + 2.0 * uPulse);
       float edge = fwidth(mr);
       float disc = 1.0 - smoothstep(4.5 - edge, 4.5, mr);
       float bite = 1.0 - smoothstep(4.0 - edge, 4.0, length(md - vec2(-2.0, 1.6)));
